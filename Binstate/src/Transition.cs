@@ -24,7 +24,7 @@ namespace Binstate
       if(ArgumentType != null) throw new InvalidOperationException("Transition is configured as required a parameter");
     }
     
-    public void ValidateParameter<T>([MaybeNull]T parameter)
+    public void ValidateParameter<T>(T parameter) 
     {
       if (ArgumentType == null) throw new InvalidOperationException("Transition is not configured as accepted any parameter");
       if(!_allowNull && ReferenceEquals(null, parameter)) throw new InvalidOperationException("Transition can't accept null value");

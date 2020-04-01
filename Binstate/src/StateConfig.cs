@@ -24,33 +24,33 @@ namespace Binstate
   {
     internal StateConfig(object state) : base(state){}
 
-    public StateConfigContinuation OnEntry(Action<IStateMachine> onEntry)
+    public StateConfigContinuation OnEnter(Action<IStateMachine> onEnter)
     {
-      if(IsAsyncMethod(onEntry.Method))
+      if(IsAsyncMethod(onEnter.Method))
         throw new InvalidOperationException("'async void' methods are not supported, use Task return type for async method");
       
-      Enter = EnterInvoker.Create(onEntry);
+      Enter = EnterInvoker.Create(onEnter);
       return this;
     }
 
-    public StateConfigContinuation OnEntry(Func<IStateMachine, Task> onEntry)
+    public StateConfigContinuation OnEnter(Func<IStateMachine, Task> onEnter)
     {
-      Enter = EnterInvoker.Create(onEntry);
+      Enter = EnterInvoker.Create(onEnter);
       return this;
     }
 
-    public StateConfigContinuation OnEntry<T>(Action<IStateMachine, T> onEntry)
+    public StateConfigContinuation OnEnter<T>(Action<IStateMachine, T> onEnter)
     {
-      if(IsAsyncMethod(onEntry.Method))
+      if(IsAsyncMethod(onEnter.Method))
         throw new InvalidOperationException("'async void' methods are not supported, use Task return type for async method");
       
-      Enter = EnterInvoker.Create(onEntry);
+      Enter = EnterInvoker.Create(onEnter);
       return this;
     }
 
-    public StateConfigContinuation OnEntry<T>(Func<IStateMachine, T, Task> onEntry)
+    public StateConfigContinuation OnEnter<T>(Func<IStateMachine, T, Task> onEnter)
     {
-      Enter = EnterInvoker.Create(onEntry);
+      Enter = EnterInvoker.Create(onEnter);
       return this;
     }
     

@@ -14,7 +14,7 @@ namespace Binstate
 
     public TransitionConfig AddTransition<TParameter>(object trigger, object state, bool parameterCanBeNull = false)
     {
-      Transitions.Add(new Transition(trigger, null, state, parameterCanBeNull));
+      Transitions.Add(new Transition(trigger, typeof(TParameter), state, parameterCanBeNull));
       return this;
     }
   }

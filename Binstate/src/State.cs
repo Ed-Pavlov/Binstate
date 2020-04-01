@@ -13,19 +13,19 @@ namespace Binstate
     private Task? _task;
     
     public readonly object Id;
-    private readonly Dictionary<object, Transition> _transitions;
+    public readonly Dictionary<object, Transition> Transitions;
 
     public State(object id, EnterInvoker? enter, Action? exit, Dictionary<object, Transition> transitions)
     {
       Id = id;
       _enter = enter;
       _exit = exit;
-      _transitions = transitions;
+      Transitions = transitions;
     }
 
     public Transition FindTransition(object trigger)
     {
-      if (!_transitions.TryGetValue(trigger, out var transition))
+      if (!Transitions.TryGetValue(trigger, out var transition))
         throw new InvalidOperationException($"Transition '{trigger}' is not allowed from the state '{Id}'");
       return transition;
     }
@@ -33,7 +33,7 @@ namespace Binstate
     public Task? Enter(IStateMachine stateMachine, object? arg)
     {
       _event.Reset();
-      _task = _enter!.Invoke(stateMachine, arg);
+      _task = _enter?.Invoke(stateMachine, arg);
       _event.Set();
       return _task;
     }

@@ -6,4 +6,12 @@
         <Nullable>disable</Nullable>
     </PropertyGroup>
 
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
+    </PropertyGroup>
+
 </Project>

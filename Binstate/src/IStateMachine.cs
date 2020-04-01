@@ -1,9 +1,11 @@
+using JetBrains.Annotations;
+
 namespace Binstate
 {
   public interface IStateMachine
   {
     bool InMyState { get; }
-    void Fire(object trigger);
-    void Fire<T>(object trigger, T parameter);
+    void Fire([NotNull] object trigger);
+    void Fire<T>([NotNull] object trigger, [NotNull] T parameter);
   }
 }

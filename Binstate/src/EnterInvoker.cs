@@ -5,30 +5,37 @@ namespace Binstate
 {
   internal class EnterInvoker
   {
-    private readonly Func<IStateMachine, object?, Task?> _action;
-
-    private EnterInvoker(Func<IStateMachine, object?, Task?> action) => _action = action;
-
-    public Task? Invoke(IStateMachine isInState, object? arg) => _action(isInState, arg);
-
-    public static EnterInvoker Create(Action<IStateMachine> action) => new EnterInvoker((isInState, arg) =>
+    public static NoParameterEnterInvoker Create(Action<IStateMachine> action) => new NoParameterEnterInvoker((stateMachine) =>
     {
-      action(isInState);
-      return null;
-    });
-
-    public static EnterInvoker Create<T>(Action<IStateMachine, T> action) => new EnterInvoker((isInState, arg) =>
-    {
- #pragma warning disable 8601
-      action(isInState, (T) arg);
-#pragma warning restore 8601
+      action(stateMachine);
       return null;
     });
     
-    public static EnterInvoker Create(Func<IStateMachine, Task> action) => new EnterInvoker((isInState, arg) => action(isInState));
+    public static NoParameterEnterInvoker Create(Func<IStateMachine, Task> action) => new NoParameterEnterInvoker(action);
     
-#pragma warning disable 8601
-    public static EnterInvoker Create<T>(Func<IStateMachine, T, Task> action) => new EnterInvoker((isInState, arg) => action(isInState, (T)arg));
-#pragma warning restore 8601
+    public static EnterInvoker<T> Create<T>(Action<IStateMachine, T> action) => new EnterInvoker<T>((stateMachine, arg) =>
+    {
+       action(stateMachine, arg);
+       return null;
+    });
+    
+    public static EnterInvoker<T> Create<T>(Func<IStateMachine, T, Task> action) => new EnterInvoker<T>(action);
+  }
+
+  internal class NoParameterEnterInvoker : EnterInvoker
+  {
+    private readonly Func<IStateMachine, Task> _action;
+    public NoParameterEnterInvoker(Func<IStateMachine, Task> action) => _action = action;
+
+    public Task Invoke(IStateMachine stateMachine) => _action(stateMachine);
+  }
+  
+  internal class EnterInvoker<T> : EnterInvoker
+  {
+    private readonly Func<IStateMachine, T, Task> _action;
+    
+    public EnterInvoker(Func<IStateMachine, T, Task> action) => _action = action;
+    
+    public Task Invoke(IStateMachine isInState, T arg) => _action(isInState, arg);
   }
 }

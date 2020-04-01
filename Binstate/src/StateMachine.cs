@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace Binstate
 {
@@ -17,10 +18,17 @@ namespace Binstate
     
     internal StateMachine(Dictionary<object, State> states) => _states = states;
 
-    public void Start(object initialState) => Start<object>(initialState, null);
-    public void Start<T>(object initialState, T parameter)
+    public void Start([NotNull] object initialState)
     {
+      if (initialState == null) throw new ArgumentNullException(nameof(initialState));
+      Start<Unit>(initialState, null);
+    }
+
+    public void Start<T>([NotNull] object initialState, [CanBeNull] T parameter)
+    {
+      if (initialState == null) throw new ArgumentNullException(nameof(initialState));
       if(_started) throw  new InvalidOperationException("Is already started");
+      
       _started = true;
       _currentState = GetState(initialState);
       EnterCurrentState(parameter);
@@ -32,12 +40,31 @@ namespace Binstate
       ExitCurrentState();
     }
 
-    public void Fire(object trigger) => FireInternal(trigger, _ => _.ValidateParameter(), null);
-    public void Fire<T>(object trigger, T parameter) => FireInternal(trigger, _ => _.ValidateParameter(parameter), parameter);
-    public Task FireAsync(object trigger) => Task.Run(() => FireInternal(trigger, _ => _.ValidateParameter(), null));
-    public Task FireAsync<T>(object trigger, T parameter) => Task.Run(() => FireInternal(trigger, _ => _.ValidateParameter(parameter), parameter));
+    public void Fire([NotNull] object trigger)
+    {
+      if (trigger == null) throw new ArgumentNullException(nameof(trigger));
+      FireInternal<Unit>(trigger, _ => _.ValidateParameter(), null);
+    }
 
-    private void FireInternal(object trigger, Action<Transition> transitionValidator, object parameter)
+    public void Fire<T>([NotNull] object trigger, [CanBeNull] T parameter)
+    {
+      if (trigger == null) throw new ArgumentNullException(nameof(trigger));
+      FireInternal(trigger, _ => _.ValidateParameter(parameter), parameter);
+    }
+
+    public Task FireAsync([NotNull] object trigger)
+    {
+      if (trigger == null) throw new ArgumentNullException(nameof(trigger));
+      return Task.Run(() => FireInternal<Unit>(trigger, _ => _.ValidateParameter(), null));
+    }
+
+    public Task FireAsync<T>([NotNull] object trigger, [CanBeNull] T parameter)
+    {
+      if (trigger == null) throw new ArgumentNullException(nameof(trigger));
+      return Task.Run(() => FireInternal(trigger, _ => _.ValidateParameter(parameter), parameter));
+    }
+
+    private void FireInternal<T>(object trigger, Action<Transition> transitionValidator, T parameter)
     {
       lock(_access)
       {
@@ -60,7 +87,7 @@ namespace Binstate
       }
     }
 
-    private void EnterCurrentState(object parameter)
+    private void EnterCurrentState<T>(T parameter)
     {
       _currentStateInternal = _currentState.Id;
       _currentState.Enter(new Controller(_currentState.Id, this), parameter);

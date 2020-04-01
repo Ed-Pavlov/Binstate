@@ -1,16 +1,18 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using JetBrains.Annotations;
 
 namespace Binstate
 {
   public class Builder
   {
-    private  readonly List<StateConfig> _states = new List<StateConfig>();
+    private  readonly List<Config.Entering> _states = new List<Config.Entering>();
     
-    public StateConfig AddState(object state)
+    public Config.Entering AddState([NotNull] object state)
     {
-      var stateConfig = new StateConfig(state);
+      if (state == null) throw new ArgumentNullException(nameof(state));
+      
+      var stateConfig = new Config.Entering(state);
       _states.Add(stateConfig);
       return stateConfig;
     }

@@ -152,8 +152,8 @@ namespace Instate.Tests
     private static IEnumerable<TestCaseData> should_exit_current_state_before_entering_next_source_with_parameter()
     {
       // using blocking and Async.Wait in order test should not exit before firing trigger is completely handled
-      yield return new TestCaseData(new Action<StateMachine>(_ => _.Fire(terminate, (int?)5))).SetName("Blocking fire param");
-      yield return new TestCaseData(new Action<StateMachine>(_ => _.FireAsync(terminate, (int?)5).Wait())).SetName("Async fire param");
+      yield return new TestCaseData(new Action<StateMachine>(_ => _.Fire(terminate, 5))).SetName("Blocking fire param");
+      yield return new TestCaseData(new Action<StateMachine>(_ => _.FireAsync(terminate, 5).Wait())).SetName("Async fire param");
     }
     
     [TestCaseSource(nameof(should_exit_current_state_before_entering_next_source_with_parameter))]
@@ -167,11 +167,11 @@ namespace Instate.Tests
       builder
         .AddState(state1)
         .OnExit(state1Exit.Object)
-        .AddTransition<int?>(terminate, terminated);
+        .AddTransition<int>(terminate, terminated);
 
       builder
         .AddState(terminated)
-        .OnEnter<int?>((_, i) => 
+        .OnEnter<int>((_, i) => 
             state1Exit.Verify(action => action.Invoke(), Times.Once) // --assert, when call enter of terminated, exit of state1 should be already called
         );
 

@@ -1,0 +1,19 @@
+# Nuget packages
+Packages/
+
+#Private files
+private
+
+# Compiling result files
+Bin/
+Obj/
+
+# Visual Studion and ReSharper files
+_ReSharper.Caches/
+.vs/
+*.sdf
+*.suo
+*.user
+
+# Rider Files
+.idea/

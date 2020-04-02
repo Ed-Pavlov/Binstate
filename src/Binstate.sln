@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binstate", "Binstate\Binsta
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binstate.Tests", "Binstate.Tests\Binstate.Tests.csproj", "{6F7ED14B-4563-449C-9DF7-257A3FB33058}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binstate.Tests", "..\tests\Binstate.Tests\Binstate.Tests.csproj", "{1815BD5A-2FF1-4213-860D-021E24FC40B8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -16,6 +18,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{A127DD60-A615-4E6A-87AB-77CDD5C5A24C} = {159800A0-47C2-4A48-927F-EB09CF9497AC}
 		{6F7ED14B-4563-449C-9DF7-257A3FB33058} = {903ABD44-0ABA-458A-A2A8-6E2114661153}
+		{1815BD5A-2FF1-4213-860D-021E24FC40B8} = {903ABD44-0ABA-458A-A2A8-6E2114661153}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A127DD60-A615-4E6A-87AB-77CDD5C5A24C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -26,5 +29,9 @@ Global
 		{6F7ED14B-4563-449C-9DF7-257A3FB33058}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F7ED14B-4563-449C-9DF7-257A3FB33058}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F7ED14B-4563-449C-9DF7-257A3FB33058}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1815BD5A-2FF1-4213-860D-021E24FC40B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1815BD5A-2FF1-4213-860D-021E24FC40B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1815BD5A-2FF1-4213-860D-021E24FC40B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1815BD5A-2FF1-4213-860D-021E24FC40B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

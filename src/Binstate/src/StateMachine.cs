@@ -11,7 +11,7 @@ namespace Binstate
     
     private readonly Dictionary<object, State> _states;
     
-    private volatile object _currentStateInternal;
+    private object _currentControllerState;
     private State _currentState;
 
     private readonly object _access = new object();
@@ -30,16 +30,27 @@ namespace Binstate
       if(_started) throw  new InvalidOperationException("Is already started");
       
       _started = true;
-      _currentState = GetState(initialState);
-      EnterCurrentState(parameter);
+      lock (_access)
+      {
+        _currentState = GetState(initialState);
+        EnterCurrentState(parameter);
+      }
     }
     
     public void Stop()
     {
       if(!_started) throw new InvalidOperationException("StateMachine is not started");
-      ExitCurrentState();
+      _started = false;
+      
+      lock (_access) 
+        ExitCurrentState();
     }
 
+    /// <summary>
+    /// Fires the trigger in the blocking way.
+    /// If OnEnter method of the state is blocking, <see cref="Fire"/> will block till on entering method will finish.
+    /// If OnEnter method of the state is async, <see cref="Fire"/> will return just after OnExit of previous state is finished and state is changed.
+    /// </summary>
     public void Fire([NotNull] object trigger)
     {
       if (trigger == null) throw new ArgumentNullException(nameof(trigger));
@@ -52,6 +63,11 @@ namespace Binstate
       FireInternal(trigger, _ => _.ValidateParameter(parameter), parameter);
     }
 
+    /// <summary>
+    /// Fires the trigger in the asynchronous way. Execution can be controller by returned <see cref="Task"/>.
+    /// If OnEnter method of the state is blocking, Task will be completed when on entering method will finish.
+    /// If OnEnter method of the state is async, Task will be completed just after OnExit of previous state is finished and state is changed. 
+    /// </summary>
     public Task FireAsync([NotNull] object trigger)
     {
       if (trigger == null) throw new ArgumentNullException(nameof(trigger));
@@ -89,13 +105,13 @@ namespace Binstate
 
     private void EnterCurrentState<T>(T parameter)
     {
-      _currentStateInternal = _currentState.Id;
+      _currentControllerState = _currentState.Id;
       _currentState.Enter(new Controller(_currentState.Id, this), parameter);
     }
     
     private void ExitCurrentState()
     {
-      _currentStateInternal = null; // signal current state routine to stop
+      _currentControllerState = null; // signal current state routine to stop
       _currentState.Exit(); // wait current onEntry finished, then call OnExit
     }
 
@@ -105,7 +121,5 @@ namespace Binstate
         throw new InvalidOperationException($"State '{state}' is not registered in the state machine");
       return result;
     }
-
-    private bool IsInStateInternal(object state) => Equals(state, _currentStateInternal);
   }
 }

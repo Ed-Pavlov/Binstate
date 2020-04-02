@@ -4,14 +4,24 @@
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <LangVersion>8</LangVersion>
         <Nullable>disable</Nullable>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>..\..\private\binstate.snk</AssemblyOriginatorKeyFile>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
       <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
+      <DocumentationFile>bin\Debug\Binstate.xml</DocumentationFile>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
+      <DocumentationFile>bin\Release\Binstate.xml</DocumentationFile>
     </PropertyGroup>
+
+    <ItemGroup>
+      <None Include="..\..\private\binstate.snk">
+        <Link>binstate.snk</Link>
+      </None>
+    </ItemGroup>
 
 </Project>

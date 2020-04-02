@@ -5,6 +5,8 @@ namespace Binstate
 {
   public partial class StateMachine
   {
+    private bool IsControllerInState(object state) => Equals(state, _currentControllerState);
+    
     private class Controller : IStateMachine
     {
       private readonly object _state;
@@ -28,7 +30,7 @@ namespace Binstate
         _stateMachine.Fire(trigger, parameter);
       }
 
-      public bool InMyState => _stateMachine.IsInStateInternal(_state);
+      public bool InMyState => _stateMachine.IsControllerInState(_state);
     }
   }
 }

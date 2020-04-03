@@ -20,6 +20,10 @@ jobs:
     - name: Install dependencies
       working-directory: src
       run: dotnet restore
+    - name: Unzip strong name snk
+        uses: montudor/action-zip@v0.1.0
+         with:
+          args: unzip -qq ./tools/strong_name/binstate.snk.7z -d ./private
     - name: Build
       working-directory: src
       run: dotnet build --configuration Release --no-restore

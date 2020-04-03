@@ -16,8 +16,7 @@ jobs:
     - name: Unzip strong name snk
       uses: montudor/action-zip@v0.1.0
       with:
-        strong-snk: ${{ secrets.strong_snk }}
-        args: unzip -P "$strong-snk" ./tools/strong_name/binstate.snk.zip -d ./private
+        args: unzip -P ${{ secrets.strong_snk }} ./tools/strong_name/binstate.snk.zip -d ./private
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:

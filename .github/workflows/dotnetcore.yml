@@ -40,7 +40,12 @@ jobs:
       run: dotnet restore
     - name: Build
       working-directory: src
-      run: dotnet build --configuration Release --no-restore -p:CoreOnly=True
-    - name: Test
+      run: dotnet build --configuration Release --no-restore -p:net-core-only=True
+    - name: Test .NET Core 2.2
       working-directory: src
-      run: dotnet test --no-restore --verbosity normal --framework netcoreapp2.2 --framework netcoreapp3.1
+      run: dotnet test --no-restore --verbosity normal --framework netcoreapp2.2
+    - name: Test .NET Core 3.1
+      working-directory: src
+      run: dotnet test --no-restore --verbosity normal --framework netcoreapp3.1
+      
+      

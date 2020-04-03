@@ -12,7 +12,7 @@
 
         <OutputType>Library</OutputType>
 
-        <TargetFrameworks>net472;netcoreapp2.2;netcoreapp3.1</TargetFrameworks>
+        <TargetFrameworks>netcoreapp2.2;netcoreapp3.1</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>

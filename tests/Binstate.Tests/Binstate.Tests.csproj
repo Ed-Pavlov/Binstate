@@ -12,8 +12,8 @@
 
         <OutputType>Library</OutputType>
 
-        <TargetFrameworks Condition="'$(CoreOnly)' == 'True'">netcoreapp2.2;netcoreapp3.1</TargetFrameworks>
-        <TargetFrameworks Condition="'$(CoreOnly)' != 'True'">net471;netcoreapp2.2;netcoreapp3.1</TargetFrameworks>
+        <TargetFrameworks Condition="'$(net-core-only)' == 'True'">netcoreapp2.2;netcoreapp3.1</TargetFrameworks>
+        <TargetFrameworks Condition="'$(net-core-only)' != 'True'">net471;netcoreapp2.2;netcoreapp3.1</TargetFrameworks>
 
     </PropertyGroup>
 

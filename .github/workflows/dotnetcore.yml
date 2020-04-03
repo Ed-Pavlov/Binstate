@@ -40,7 +40,7 @@ jobs:
       run: dotnet restore
     - name: Build
       working-directory: src
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --configuration Release --no-restore --framework netcoreapp2.2 --framework netcoreapp3.1
     - name: Test
       working-directory: src
       run: dotnet test --no-restore --verbosity normal --framework netcoreapp2.2 --framework netcoreapp3.1

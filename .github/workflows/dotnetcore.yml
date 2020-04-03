@@ -43,4 +43,4 @@ jobs:
       run: dotnet build --configuration Release --no-restore
     - name: Test
       working-directory: src
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test --no-restore --verbosity normal --framework netcoreapp2.2 --framework netcoreapp3.1

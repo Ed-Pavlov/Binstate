@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
 
         <IsPackable>false</IsPackable>
 
@@ -10,6 +9,10 @@
         <Nullable>disable</Nullable>
 
         <RootNamespace>Instate.Tests</RootNamespace>
+
+        <OutputType>Library</OutputType>
+
+        <TargetFrameworks>net472;netcoreapp2.2;netcoreapp3.1</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>

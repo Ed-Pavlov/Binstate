@@ -6,7 +6,13 @@ namespace Binstate
 {
   public class Builder
   {
-    private  readonly List<Config.Entering> _states = new List<Config.Entering>();
+    private readonly Config.Entering _initialState = new Config.Entering(Guid.NewGuid().ToString());
+
+    private readonly List<Config.Entering> _states = new List<Config.Entering>();
+
+    public Builder() => _states = new List<Config.Entering>() {_initialState};
+
+    public Config.Transition InitialState => _initialState;
     
     public Config.Entering AddState([NotNull] object state)
     {
@@ -35,7 +41,7 @@ namespace Binstate
 
       ValidateStateMachine(states);
       
-      return new StateMachine(states);
+      return new StateMachine(states[_initialState.State], states);
     }
 
     private static void ValidateStateMachine(Dictionary<object, State> states)

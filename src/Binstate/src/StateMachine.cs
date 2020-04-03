@@ -7,8 +7,6 @@ namespace Binstate
 {
   public partial class StateMachine
   {
-    private volatile bool _started;
-    
     private readonly Dictionary<object, State> _states;
     
     private object _currentControllerState;
@@ -16,34 +14,11 @@ namespace Binstate
 
     private readonly object _access = new object();
     
-    internal StateMachine(Dictionary<object, State> states) => _states = states;
-
-    public void Start([NotNull] object initialState)
+    internal StateMachine(State initialState, Dictionary<object, State> states)
     {
-      if (initialState == null) throw new ArgumentNullException(nameof(initialState));
-      Start<Unit>(initialState, null);
-    }
-
-    public void Start<T>([NotNull] object initialState, [CanBeNull] T parameter)
-    {
-      if (initialState == null) throw new ArgumentNullException(nameof(initialState));
-      if(_started) throw  new InvalidOperationException("Is already started");
-      
-      _started = true;
-      lock (_access)
-      {
-        _currentState = GetState(initialState);
-        EnterCurrentState(parameter);
-      }
-    }
-    
-    public void Stop()
-    {
-      if(!_started) throw new InvalidOperationException("StateMachine is not started");
-      _started = false;
-      
-      lock (_access) 
-        ExitCurrentState();
+      _states = states;
+      _currentControllerState = initialState.Id;
+      _currentState = initialState;
     }
 
     /// <summary>

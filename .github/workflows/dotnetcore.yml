@@ -13,6 +13,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Unzip strong name snk
+      uses: montudor/action-zip@v0.1.0
+      with:
+        strong-snk: ${{ secrets.strong_snk }}
+        args: unzip -P "$strong-snk" -qq ./tools/strong_name/binstate.snk.zip -d ./private
     - name: Setup .NET Core
       uses: actions/setup-dotnet@v1
       with:
@@ -20,11 +25,6 @@ jobs:
     - name: Install dependencies
       working-directory: src
       run: dotnet restore
-    - name: Unzip strong name snk
-      uses: montudor/action-zip@v0.1.0
-      with:
-        strong-snk: ${{ secrets.strong_snk }}
-        args: unzip -P "$strong-snk" -qq ./tools/strong_name/binstate.snk.7z -d ./private
     - name: Build
       working-directory: src
       run: dotnet build --configuration Release --no-restore

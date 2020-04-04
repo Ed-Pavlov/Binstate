@@ -10,12 +10,12 @@
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
       <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
-      <DocumentationFile></DocumentationFile>
+      <DocumentationFile>bin\Debug\Binstate.xml</DocumentationFile>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
       <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
-      <DocumentationFile></DocumentationFile>
+      <DocumentationFile>bin\Release\Binstate.xml</DocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>

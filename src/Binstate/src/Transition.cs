@@ -9,15 +9,15 @@ namespace Binstate
     [CanBeNull] 
     private readonly Type _argumentType;
     
-    public Transition(object trigger, Type argumentType, object state, bool allowNull)
+    public Transition(object @event, Type argumentType, object state, bool allowNull)
     {
       _allowNull = allowNull;
-      Trigger = trigger;
+      Event = @event;
       _argumentType = argumentType;
       State = state;
     }
 
-    public object Trigger { get; }
+    public object @Event { get; }
     
     public object State { get; }
 

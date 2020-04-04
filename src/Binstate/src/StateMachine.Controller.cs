@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace Binstate
@@ -18,16 +19,16 @@ namespace Binstate
         _stateMachine = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));
       }
 
-      public void Fire(object trigger)
+      public Task RaiseAsync([NotNull] object @event)
       {
-        if (trigger == null) throw new ArgumentNullException(nameof(trigger));
-        _stateMachine.Fire(trigger);
+        if (@event == null) throw new ArgumentNullException(nameof(@event));
+        return _stateMachine.RaiseAsync(@event);
       }
 
-      public void Fire<T>(object trigger, [CanBeNull] T parameter)
+      public Task RaiseAsync<T>([NotNull] object @event, [CanBeNull] T parameter)
       {
-        if (trigger == null) throw new ArgumentNullException(nameof(trigger));
-        _stateMachine.Fire(trigger, parameter);
+        if (@event == null) throw new ArgumentNullException(nameof(@event));
+        return _stateMachine.RaiseAsync(@event, parameter);
       }
 
       public bool InMyState => _stateMachine.IsControllerInState(_state);

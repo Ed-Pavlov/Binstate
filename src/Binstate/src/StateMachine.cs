@@ -5,6 +5,9 @@ using JetBrains.Annotations;
 
 namespace Binstate
 {
+  /// <summary>
+  /// The state machine
+  /// </summary>
   public partial class StateMachine
   {
     private readonly Dictionary<object, State> _states;
@@ -22,44 +25,54 @@ namespace Binstate
     }
 
     /// <summary>
-    /// Fires the trigger in the blocking way.
-    /// If OnEnter method of the state is blocking, <see cref="Fire"/> will block till on entering method will finish.
-    /// If OnEnter method of the state is async, <see cref="Fire"/> will return just after OnExit of previous state is finished and state is changed.
+    /// Raises the event in the blocking way. It waits while on entering and exiting actions (if defined) of the current state is finished, then:
+    /// if the entering action of the target state is blocking, it will block till on entering method will finish.
+    /// if the entering action of the target state is async, it will return after the state is changed.
     /// </summary>
-    public void Fire([NotNull] object trigger)
+    public void Raise([NotNull] object @event)
     {
-      if (trigger == null) throw new ArgumentNullException(nameof(trigger));
-      FireInternal<Unit>(trigger, _ => _.ValidateParameter(), null);
-    }
-
-    public void Fire<T>([NotNull] object trigger, [CanBeNull] T parameter)
-    {
-      if (trigger == null) throw new ArgumentNullException(nameof(trigger));
-      FireInternal(trigger, _ => _.ValidateParameter(parameter), parameter);
+      if (@event == null) throw new ArgumentNullException(nameof(@event));
+      RaiseInternal<Unit>(@event, _ => _.ValidateParameter(), null);
     }
 
     /// <summary>
-    /// Fires the trigger in the asynchronous way. Execution can be controller by returned <see cref="Task"/>.
-    /// If OnEnter method of the state is blocking, Task will be completed when on entering method will finish.
-    /// If OnEnter method of the state is async, Task will be completed just after OnExit of previous state is finished and state is changed. 
+    /// Raises the event with parameter in the blocking way. It waits while on entering and exiting actions (if defined) of the current state is finished, then:
+    /// if the entering action of the target state is blocking, it will block till on entering method will finish.
+    /// if the entering action of the target state is async, it will return after the state is changed.
     /// </summary>
-    public Task FireAsync([NotNull] object trigger)
+    public void Raise<T>([NotNull] object @event, [CanBeNull] T parameter)
     {
-      if (trigger == null) throw new ArgumentNullException(nameof(trigger));
-      return Task.Run(() => FireInternal<Unit>(trigger, _ => _.ValidateParameter(), null));
+      if (@event == null) throw new ArgumentNullException(nameof(@event));
+      RaiseInternal(@event, _ => _.ValidateParameter(parameter), parameter);
     }
 
-    public Task FireAsync<T>([NotNull] object trigger, [CanBeNull] T parameter)
+    /// <summary>
+    /// Raises the event asynchronously. Finishing can be controller by returned <see cref="Task"/>.
+    /// if the entering action of the target state is blocking, Task is finished when the entering action is finished.
+    /// if the entering action of the target state is async, Task is finishes after the state is changed. 
+    /// </summary>
+    public Task RaiseAsync([NotNull] object @event)
     {
-      if (trigger == null) throw new ArgumentNullException(nameof(trigger));
-      return Task.Run(() => FireInternal(trigger, _ => _.ValidateParameter(parameter), parameter));
+      if (@event == null) throw new ArgumentNullException(nameof(@event));
+      return Task.Run(() => RaiseInternal<Unit>(@event, _ => _.ValidateParameter(), null));
     }
 
-    private void FireInternal<T>(object trigger, Action<Transition> transitionValidator, T parameter)
+    /// <summary>
+    /// Raises the event with parameter asynchronously. Finishing can be controller by returned <see cref="Task"/>.
+    /// if the entering action of the target state is blocking, Task is finished when the entering action is finished.
+    /// if the entering action of the target state is async, Task is finishes after the state is changed. 
+    /// </summary>
+    public Task RaiseAsync<T>([NotNull] object @event, [CanBeNull] T parameter)
+    {
+      if (@event == null) throw new ArgumentNullException(nameof(@event));
+      return Task.Run(() => RaiseInternal(@event, _ => _.ValidateParameter(parameter), parameter));
+    }
+
+    private void RaiseInternal<T>(object @event, Action<Transition> transitionValidator, T parameter)
     {
       lock(_access)
       {
-        var transition = _currentState.FindTransition(trigger);
+        var transition = _currentState.FindTransition(@event);
         transitionValidator(transition);
 
         ExitCurrentState();

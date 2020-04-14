@@ -1,8 +1,8 @@
-#Binstate
+# Binstate
 
 Simple but yet powerful state machine. Thread safe. Supports async methods.
 
-###Example
+### Example
 
 **Telephone call**
 
@@ -15,7 +15,7 @@ Simple but yet powerful state machine. Thread safe. Supports async methods.
       builder
         .AddState(Ringing)
         .AddTransition(HungUp, OffHook)
-        .AddTransition(CallConnected, OnHold);
+        .AddTransition(CallConnected, Connected);
       
       builder
         .AddState(Connected)
@@ -26,7 +26,6 @@ Simple but yet powerful state machine. Thread safe. Supports async methods.
       builder
         .AddState(OnHold)
         .OnEnter(PlayMusic)
-        .OnExit(StopMusic)
         .AddTransition(TakenOffHold, Connected)
         .AddTransition(HungUp, OffHook)
         .AddTransition(PhoneHurledAgainstWall, PhoneDestroyed);
@@ -39,7 +38,7 @@ Simple but yet powerful state machine. Thread safe. Supports async methods.
       // ... 
       stateMachine.RaiseAsync(CallDialed);
       
-###Features
+### Features
       
 **Safe checking if state machine still in the state**
 
@@ -59,17 +58,17 @@ No knowledge which state to check, less errors
  **Enter actions with parameters**
  
          builder
-           .AddState(WaitingForGame)
-           .OnEnter(WaitForGame)
-           .AddTransition<string>(GameStarted, TrackingGame)
-           ...
+          .AddState(WaitingForGame)
+          .OnEnter(WaitForGame)
+          .AddTransition<string>(GameStarted, TrackingGame)
+          ...
  
          builder
            .AddState(TrackingGame)
            .OnEnter<string>(TrackGame)
            ...
            
-**Changing state from entering action**
+**Changing state from enter action**
 
       private async Task TrackGame(IStateMachine stateMachine, string opponentName)
       {
@@ -77,6 +76,6 @@ No knowledge which state to check, less errors
         {
           // track game
           if(IsGameFinished())
-            stateMachine.Raise(GameFinished);
+            stateMachine.RaiseAsync(GameFinished);
         }
       }

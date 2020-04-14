@@ -17,92 +17,88 @@ namespace Binstate
     /// </summary>
     public class Transitions
     {
-      internal readonly object State;
-
+      internal readonly object StateId;
       
       /// <summary>
       /// Protected ctor
       /// </summary>
-      protected Transitions(object state) => State = state;
+      protected Transitions(object stateId) => StateId = stateId;
 
       internal readonly List<Transition> TransitionList = new List<Transition>();
 
       /// <summary>
-      /// Allows transition from the currently configured state to the <param name="state"> specified state</param> when <param name="event"> event is triggered</param> 
+      /// Defines transition from the currently configured state to the <param name="stateId"> specified state</param> when <param name="event"> event is raised</param> 
       /// </summary>
-      public Transitions AddTransition([NotNull] object @event, [NotNull] object state)
+      public Transitions AddTransition([NotNull] object @event, [NotNull] object stateId)
       {
         if (@event == null) throw new ArgumentNullException(nameof(@event));
-        if (state == null) throw new ArgumentNullException(nameof(state));
+        if (stateId == null) throw new ArgumentNullException(nameof(stateId));
         
-        TransitionList.Add(new Transition(@event, null, state, false));
+        TransitionList.Add(new Transition(@event, null, stateId, false));
         return this;
       }
 
       /// <summary>
-      /// Allows transition from the currently configured state to the <paramref name="state"> specified state</paramref> when
-      /// <paramref name="event"> event is triggered</paramref>
-      /// Use this overload if target state on enter action requires an input parameter. 
+      /// Defines transition from the currently configured state to the <paramref name="stateId"> specified state</paramref> when
+      /// <paramref name="event"> event is raised</paramref>
+      /// Use this overload if target state enter action requires an input parameter.
       /// </summary>
-      /// <typeparam name="TParameter">The type of the input parameter required by the target state of the transition</typeparam>
-      public Transitions AddTransition<TParameter>([NotNull] object @event, [NotNull] object state, bool parameterCanBeNull = false)
+      public Transitions AddTransition<TParameter>([NotNull] object @event, [NotNull] object stateId, bool parameterCanBeNull = false)
       {
         if (@event == null) throw new ArgumentNullException(nameof(@event));
-        if (state == null) throw new ArgumentNullException(nameof(state));
+        if (stateId == null) throw new ArgumentNullException(nameof(stateId));
         
-        TransitionList.Add(new Transition(@event, typeof(TParameter), state, parameterCanBeNull));
+        TransitionList.Add(new Transition(@event, typeof(TParameter), stateId, parameterCanBeNull));
         return this;
       }
 
       /// <summary>
-      /// Allows transition from the state to itself when <param name="event"> is triggered. Entering action is called in case of such transition.</param>
+      /// Defines transition from the state to itself when <param name="event"> is raised. Exit and enter actions are called in case of such transition.</param>
       /// </summary>
-      public Transitions AllowReentrancy(object @event)
-      {
-        TransitionList	.Add	(new Transition(@event, null, State, false));
-        return this;
-      }
+      public void AllowReentrancy(object @event) => TransitionList.Add	(new Transition(@event, null, StateId, false));
     }
     
     /// <summary>
-    /// This class is used to configure exiting action of the currently configured state.
+    /// This class is used to configure exit action of the currently configured state.
     /// </summary>
-    public class Exiting : Transitions
+    public class Exit : Transitions
     {
-      [CanBeNull] internal EnterInvoker Enter;
-      [CanBeNull] internal Action Exit;
+      [CanBeNull] internal EnterActionInvoker EnterAction;
+      [CanBeNull] internal Action ExitAction;
 
       /// <inheritdoc />
-      protected Exiting(object state) : base(state) { }
+      protected Exit(object stateId) : base(stateId) { }
       
       /// <summary>
       /// Specifies the action to be called on exiting the currently configured state.
       /// </summary>
-      public Transitions OnExit([NotNull] Action onExit)
+      public Transitions OnExit([NotNull] Action exitAction)
       {
-        Exit = onExit ?? throw new ArgumentNullException(nameof(onExit));
+        ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
         return this;
       }
     }
 
-    /// <inheritdoc />
-    public class Entering : Exiting
+    /// <summary>
+    /// This class is used to configure enter action of the currently configured state.
+    /// </summary>
+    public class Enter : Exit
     {
       private const string asyncVoidMethodNotSupported = "'async void' methods are not supported, use Task return type for async method";
 
-      internal Entering([NotNull] object state) : base(state){}
+      internal Enter([NotNull] object stateId) : base(stateId){}
 
       /// <summary>
       /// Specifies the action to be called on entering the currently configured state.
       /// This overload is used to provide blocking action. To provide async action use <see cref="OnEnter(Func{IStateMachine, Task})"/>.
       /// </summary>
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-      public Exiting OnEnter([NotNull] Action<IStateMachine> onEnter)
+      public Exit OnEnter([NotNull] Action<IStateMachine> enterAction)
       {
-        if (onEnter == null) throw new ArgumentNullException(nameof(onEnter));
-        if(IsAsyncMethod(onEnter.Method)) throw new InvalidOperationException(asyncVoidMethodNotSupported);
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(asyncVoidMethodNotSupported);
 
-        Enter = EnterInvoker.Create(onEnter);
+        EnterAction = EnterActionInvoker.Create(enterAction);
         return this;
       }
 
@@ -111,11 +107,11 @@ namespace Binstate
       /// This overload is used to provide non-blocking async action.
       /// </summary>
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-      public Exiting OnEnter([NotNull] Func<IStateMachine, Task> onEnter)
+      public Exit OnEnter([NotNull] Func<IStateMachine, Task> enterAction)
       {
-        if (onEnter == null) throw new ArgumentNullException(nameof(onEnter));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
         
-        Enter = EnterInvoker.Create(onEnter);
+        EnterAction = EnterActionInvoker.Create(enterAction);
         return this;
       }
 
@@ -127,12 +123,12 @@ namespace Binstate
       /// </see>.
       /// </summary>
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-      public Exiting OnEnter<T>([NotNull] Action<IStateMachine, T> onEnter)
+      public Exit OnEnter<T>([NotNull] Action<IStateMachine, T> enterAction)
       {
-        if (onEnter == null) throw new ArgumentNullException(nameof(onEnter));
-        if(IsAsyncMethod(onEnter.Method)) throw new InvalidOperationException(asyncVoidMethodNotSupported);
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(asyncVoidMethodNotSupported);
       
-        Enter = EnterInvoker.Create(onEnter);
+        EnterAction = EnterActionInvoker.Create(enterAction);
         return this;
       }
 
@@ -141,11 +137,11 @@ namespace Binstate
       /// This overload is used to provide non-blocking async action.
       /// </summary>
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-      public Exiting OnEnter<T>([NotNull] Func<IStateMachine, T, Task> onEnter)
+      public Exit OnEnter<T>([NotNull] Func<IStateMachine, T, Task> enterAction)
       {
-        if (onEnter == null) throw new ArgumentNullException(nameof(onEnter));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
         
-        Enter = EnterInvoker.Create(onEnter);
+        EnterAction = EnterActionInvoker.Create(enterAction);
         return this;
       }
     

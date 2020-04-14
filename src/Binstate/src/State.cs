@@ -8,59 +8,98 @@ namespace Binstate
 {
   internal sealed class State
   {
+    /// <summary>
+    /// This event is used to avoid race condition when <see cref="Exit"/> method is called before <see cref="Enter{T}"/> method.
+    /// See usages for details.
+    /// </summary>
+    private readonly ManualResetEvent _entered = new ManualResetEvent(true);
+    
+    /// <summary>
+    /// This event is used to wait while state's OnEnter action is finished before call OnExit action and change the active state of the state machine.
+    /// See usages for details. 
+    /// </summary>
     private readonly ManualResetEvent _enterFunctionFinished = new ManualResetEvent(true);
-    [CanBeNull] private readonly EnterInvoker _enter;
-    [CanBeNull] private readonly Action _exit;
+    
+    /// <summary>
+    /// This task is used to wait while state's OnEnter action is finished before call OnExit action and change the active state of the state machine in
+    /// case of async OnEnter action.
+    /// See usages for details. 
+    /// </summary>
+    [CanBeNull] 
+    private Task _task;
+    
+    [CanBeNull] 
+    private readonly EnterActionInvoker _enter;
+    [CanBeNull] 
+    private readonly Action _exit;
 
     public readonly object Id;
     public readonly Dictionary<object, Transition> Transitions;
-    
-    [CanBeNull] private Task _task;
 
-    public State(object id, EnterInvoker enter, Action exit, Dictionary<object, Transition> transitions)
+    public State([NotNull] object id, [CanBeNull] EnterActionInvoker enter, [CanBeNull] Action exit, [NotNull] Dictionary<object, Transition> transitions)
     {
-      Id = id;
+      Id = id ?? throw new ArgumentNullException(nameof(id));
       _enter = enter;
       _exit = exit;
-      Transitions = transitions;
+      Transitions = transitions ?? throw new ArgumentNullException(nameof(transitions));
     }
 
-    public Transition FindTransition(object trigger)
+    public Transition FindTransition(object @event)
     {
-      if (!Transitions.TryGetValue(trigger, out var transition))
-        throw new InvalidOperationException($"Transition '{trigger}' is not allowed from the state '{Id}'");
+      if (!Transitions.TryGetValue(@event, out var transition))
+        throw new TransitionException($"No transition defined by raising the event '{@event}' in the state '{Id}'");
       return transition;
     }
-    
-    public Task Enter<T>(IStateMachine stateMachine, T arg)
+
+    /// <summary>
+    /// This method is called from protected by lock part of the code so it's no need synchronization
+    /// see <see cref="StateMachine.RaiseInternal{T}"/> implementation for details.
+    /// </summary>
+    public void SetAsActive() => _entered.Reset();
+
+    public void Enter<T>(IStateMachine stateMachine, T arg)
     {
-      if (_enter == null) return null;
-      
-      _enterFunctionFinished.Reset();
-      if (typeof(T) == typeof(Unit))
+      try
       {
-        var noParameterEnter = (NoParameterEnterInvoker) _enter;
-        _task = noParameterEnter.Invoke(stateMachine);
+        _enterFunctionFinished.Reset(); // Exit will wait this event before call OnExit so after reseting it
+        _entered.Set();                 // it is safe to set the state as entered
+
+        if (_enter == null) return;
+        
+        if (typeof(T) == typeof(Unit))
+        {
+          var noParameterEnter = (NoParameterEnterInvoker) _enter;
+          _task = noParameterEnter.Invoke(stateMachine);
+        }
+        else
+        {
+          var typedEnter = (EnterInvoker<T>) _enter;
+          _task = typedEnter.Invoke(stateMachine, arg);
+        }
       }
-      else
+      finally
       {
-        var typedEnter = (EnterInvoker<T>) _enter;
-        _task = typedEnter.Invoke(stateMachine, arg);
+        _enterFunctionFinished.Set();  
       }
-      _enterFunctionFinished.Set();
-      return _task;
     }
 
+    /// <summary>
+    /// <see cref="Exit"/> can be called earlier then <see cref="Enter{T}"/> of the activated state,
+    /// see <see cref="StateMachine.RaiseInternal{T}"/> implementation for details.
+    /// In this case it should wait till <see cref="Enter{T}"/> will be called and exited, before call exit action
+    /// </summary>
     public void Exit()
     {
-      WaitForStopRoutine();
+      // if action is set as active but enter action still is not called, wait for it 
+      _entered.WaitOne();
+      
+      // wait till State.Enter function finishes
+      // if enter action is blocking or no action: _enterFunctionFinished is set means it finishes
+      _enterFunctionFinished.WaitOne(Timeout.Infinite);
+      // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till action finishes
+      _task?.Wait(Timeout.Infinite);
+      
       _exit?.Invoke();
-    }
-
-    private bool WaitForStopRoutine(int timeout = Timeout.Infinite)
-    {
-      // if entry method async it returns task and we wait it, if entry method is blocking we wait for event 
-      return _task?.Wait(timeout) ?? _enterFunctionFinished.WaitOne(timeout);
     }
   }
 }

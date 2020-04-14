@@ -4,7 +4,7 @@
         <!-- Required elements-->
         <id>Binstate</id>
         <title>Binstate</title>
-        <version>1.0.0</version>
+        <version>1.0.2</version>
         <authors>Ed Pavlov</authors>
         <owners>Ed Pavlov</owners>
         <copyright>Copyright © 2020 Ed Pavlov</copyright>
@@ -14,9 +14,7 @@
         <icon>images\logo128.png</icon>
         <tags>.NET StateMachine state-machine</tags>
 
-        <description>Binstate is a lightweight but yet powerful implementation of the state machine for .NET.
-            Threadsafe. Supports async methods.
-        </description>
+        <description>Binstate is a lightweight but yet powerful implementation of the state machine for .NET. Threadsafe. Supports async methods.</description>
     </metadata>
     <files>
         <file src="..\..\..\branding\logo128.png" target="images"/>

@@ -1,6 +1,9 @@
 using System.Net;
 using System.Threading.Tasks;
 using Binstate;
+// ReSharper disable All
+
+#pragma warning disable 1998
 
 namespace Instate.Tests.example
 {
@@ -9,14 +12,14 @@ namespace Instate.Tests.example
     public class GameTracker
     {
       // states
-      const string WaitingForGame = nameof(WaitingForGame);
-      const string TrackingGame = nameof(TrackingGame);
-      const string Terminated = nameof(Terminated);
+      private const string WaitingForGame = nameof(WaitingForGame);
+      private const string TrackingGame = nameof(TrackingGame);
+      private const string Terminated = nameof(Terminated);
       
       // events
-      const string GameStarted = nameof(GameStarted);
-      const string GameFinished = nameof(GameFinished);
-      const string Terminate = nameof(Terminate);
+      private const string GameStarted = nameof(GameStarted);
+      private const string GameFinished = nameof(GameFinished);
+      private const string Terminate = nameof(Terminate);
 
       public GameTracker()
       {
@@ -50,6 +53,7 @@ namespace Instate.Tests.example
       {
         while (stateMachine.InMyState)
         {
+          await Task.Delay(100); // do some work
           // track game
           if(IsGameFinished())
             stateMachine.RaiseAsync(GameFinished);

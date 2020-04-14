@@ -16,35 +16,35 @@ namespace Instate.Tests
       var builder = new Builder();
 
       builder
-        .AddState(initial)
-        .AddTransition(event1, "null_state");
+        .AddState(Initial)
+        .AddTransition(Event1, "null_state");
       
       // --act
-      Action action = () => builder.Build(initial);
+      Action action = () => builder.Build(Initial);
       
       // --assert
-      action.Should().ThrowExactly<InvalidOperationException>().Where(_ => _.Message.Contains("references nonexistent state"));
+      action.Should().ThrowExactly<InvalidOperationException>().Where(_ => _.Message.Contains("references not defined state"));
     }
 
     [Test]
-    public void should_fail_if_triggers_reference_one_state()
+    public void should_fail_if_transitions_reference_one_state()
     {
       var builder = new Builder();
 
       builder
-        .AddState(initial)
-        .AddTransition(event1, state1)
-        .AddTransition(event1, terminated);
+        .AddState(Initial)
+        .AddTransition(Event1, State1)
+        .AddTransition(Event1, Terminated);
 
       // --act
-      Action action = () => builder.Build(initial);
+      Action action = () => builder.Build(Initial);
       
       // --assert
-      action.Should().ThrowExactly<InvalidOperationException>().Where(_ => _.Message.Contains("is already added to state"));
+      action.Should().ThrowExactly<InvalidOperationException>().Where(_ => _.Message.Contains("Duplicated event"));
     }
     
     [Test]
-    public void should_change_state_on_trigger()
+    public void should_change_state_on_event()
     {
       var actual = new List<string>();
       
@@ -52,27 +52,27 @@ namespace Instate.Tests
       var builder = new Builder();
 
       builder
-        .AddState(initial)
-        .AddTransition(event1, state1);
+        .AddState(Initial)
+        .AddTransition(Event1, State1);
 
       builder
-        .AddState(state1)
-        .OnEnter(_ => actual.Add(state1));
+        .AddState(State1)
+        .OnEnter(_ => actual.Add(State1));
 
-      var stateMachine = builder.Build(initial);
+      var stateMachine = builder.Build(Initial);
 
       // --act
-      stateMachine.Raise(event1);
+      stateMachine.Raise(Event1);
       
       // --assert
-      actual.Should().BeEquivalentTo(state1);
+      actual.Should().BeEquivalentTo(State1);
     }
     
     private static IEnumerable<TestCaseData> raise_terminate_source()
     {
-      // using blocking and Async.Wait in order test should not exit before firing trigger is completely handled
-      yield return new TestCaseData(new Action<StateMachine>(_ => _.Raise(terminate))).SetName("Raise");
-      yield return new TestCaseData(new Action<StateMachine>(_ => _.RaiseAsync(terminate).Wait())).SetName("RaiseAsync");
+      // using blocking and Async.Wait in order test should not exit before raising an event is completely handled
+      yield return new TestCaseData(new Action<StateMachine>(_ => _.Raise(Terminate))).SetName("Raise");
+      yield return new TestCaseData(new Action<StateMachine>(_ => _.RaiseAsync(Terminate).Wait())).SetName("RaiseAsync");
     }
     
     [TestCaseSource(nameof(raise_terminate_source))]
@@ -83,23 +83,23 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder();
       builder
-        .AddState(initial)
-        .AddTransition(event1, state1);
+        .AddState(Initial)
+        .AddTransition(Event1, State1);
 
       builder
-        .AddState(state1)
+        .AddState(State1)
         .OnEnter((_ =>
         {
           Thread.Sleep(299);
           actual.Add(OnEnter);
         }))
         .OnExit(() => actual.Add(OnExit)) 
-        .AddTransition(terminate, terminated);
+        .AddTransition(Terminate, Terminated);
       
-      builder.AddState(terminated);
+      builder.AddState(Terminated);
 
-      var target = builder.Build(initial);
-      target.Raise(event1);
+      var target = builder.Build(Initial);
+      target.Raise(Event1);
       
       // --act
       raiseTerminated(target);
@@ -115,10 +115,10 @@ namespace Instate.Tests
       
       // --arrange
       var builder = new Builder();
-      builder.AddState(initial).AddTransition(event1, state1);
+      builder.AddState(Initial).AddTransition(Event1, State1);
 
       builder
-        .AddState(state1)
+        .AddState(State1)
         .OnEnter(async _ =>
         {
           while (_.InMyState)
@@ -129,12 +129,12 @@ namespace Instate.Tests
           actual.Add(OnEnter);
         })
         .OnExit(() => actual.Add(OnExit)) 
-        .AddTransition(terminate, terminated);
+        .AddTransition(Terminate, Terminated);
       
-      builder.AddState(terminated);
+      builder.AddState(Terminated);
 
-      var target = builder.Build(initial);
-      target.Raise(event1);
+      var target = builder.Build(Initial);
+      target.Raise(Event1);
       
       // --act
       raiseTerminated(target);
@@ -150,29 +150,29 @@ namespace Instate.Tests
       
       // --arrange
       var builder = new Builder();
-      builder.AddState(initial).AddTransition(event1, state1);
+      builder.AddState(Initial).AddTransition(Event1, State1);
 
       builder
-        .AddState(state1)
+        .AddState(State1)
         .OnEnter(_ =>
         {
           Thread.Sleep(287);
           actual.Add(OnEnter);
         })
-        .AddTransition(terminate, terminated);
+        .AddTransition(Terminate, Terminated);
       
       builder
-        .AddState(terminated)
-        .OnEnter(_ => actual.Add(terminated));
+        .AddState(Terminated)
+        .OnEnter(_ => actual.Add(Terminated));
 
-      var target = builder.Build(initial);
-      target.Raise(event1);
+      var target = builder.Build(Initial);
+      target.Raise(Event1);
       
       // --act
       raiseTerminated(target);
       
       // --assert
-      actual.Should().BeEquivalentTo(OnEnter, terminated);
+      actual.Should().BeEquivalentTo(OnEnter, Terminated);
     }
 
     [TestCaseSource(nameof(raise_terminate_source))]
@@ -182,10 +182,10 @@ namespace Instate.Tests
       
       // --arrange
       var builder = new Builder();
-      builder.AddState(initial).AddTransition(event1, state1);
+      builder.AddState(Initial).AddTransition(Event1, State1);
 
       builder
-        .AddState(state1)
+        .AddState(State1)
         .OnEnter((async _ =>
         {
           while (_.InMyState)
@@ -195,27 +195,27 @@ namespace Instate.Tests
           }
           actual.Add(OnEnter);
         }))
-        .AddTransition(terminate, terminated);
+        .AddTransition(Terminate, Terminated);
       
       builder
-        .AddState(terminated)
-        .OnEnter(_ => actual.Add(terminated));
+        .AddState(Terminated)
+        .OnEnter(_ => actual.Add(Terminated));
 
-      var target = builder.Build(initial);
-      target.Raise(event1);
+      var target = builder.Build(Initial);
+      target.Raise(Event1);
       
       // --act
       raiseTerminated(target);
       
       // --assert
-      actual.Should().BeEquivalentTo(OnEnter, terminated);
+      actual.Should().BeEquivalentTo(OnEnter, Terminated);
     }
     
     private static IEnumerable<TestCaseData> raise_terminated_with_param_source()
     {
-      // using blocking and Async.Wait in order test should not exit before firing trigger is completely handled
-      yield return new TestCaseData(new Action<StateMachine, int>((_, param) => _.Raise(terminate, param))).SetName("Raise");
-      yield return new TestCaseData(new Action<StateMachine, int>((_, param) => _.RaiseAsync(terminate, param).Wait())).SetName("RaiseAsync");
+      // using blocking and Async.Wait in order test should not exit before raising an event is completely handled
+      yield return new TestCaseData(new Action<StateMachine, int>((_, param) => _.Raise(Terminate, param))).SetName("Raise");
+      yield return new TestCaseData(new Action<StateMachine, int>((_, param) => _.RaiseAsync(Terminate, param).Wait())).SetName("RaiseAsync");
     }
     
     [TestCaseSource(nameof(raise_terminated_with_param_source))]
@@ -228,14 +228,14 @@ namespace Instate.Tests
       var builder = new Builder();
      
       builder
-        .AddState(state1)
-        .AddTransition<int>(terminate, terminated);
+        .AddState(State1)
+        .AddTransition<int>(Terminate, Terminated);
 
       builder
-        .AddState(terminated)
+        .AddState(Terminated)
         .OnEnter<int>((_, param) => actual = param);
 
-      var stateMachine = builder.Build(state1);
+      var stateMachine = builder.Build(State1);
 
       // --act
       raiseTerminated(stateMachine, expected);
@@ -252,18 +252,18 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder();
       
-      builder.AddState(initial).AddTransition(event1, state1);
+      builder.AddState(Initial).AddTransition(Event1, State1);
       builder
-        .AddState(state1)
+        .AddState(State1)
         .OnEnter(_ => actual.Add("Enter"))
         .OnExit(() => actual.Add("Exit"))
-        .AllowReentrancy(event1);
+        .AllowReentrancy(Event1);
 
-      var target = builder.Build(initial);
-      target.Raise(event1);
+      var target = builder.Build(Initial);
+      target.Raise(Event1);
 
       // --act
-      target.Raise(event1);
+      target.Raise(Event1);
       
       // --assert
       actual.Should().BeEquivalentTo("Enter", "Exit", "Enter");

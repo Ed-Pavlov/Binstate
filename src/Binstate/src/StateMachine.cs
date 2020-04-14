@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 namespace Binstate
 {
   /// <summary>
-  /// The state machine
+  /// The state machine. Use <see cref="Builder"/> to configure and build a state machine.
   /// </summary>
   public partial class StateMachine
   {
@@ -15,7 +15,7 @@ namespace Binstate
     private object _currentControllerState;
     private State _currentState;
 
-    private readonly object _access = new object();
+    private readonly object _currentStateAccess = new object();
     
     internal StateMachine(State initialState, Dictionary<object, State> states)
     {
@@ -37,7 +37,7 @@ namespace Binstate
 
     /// <summary>
     /// Raises the event with parameter in the blocking way. It waits while on entering and exiting actions (if defined) of the current state is finished, then:
-    /// if the entering action of the target state is blocking, it will block till on entering method will finish.
+    /// if the entering action of the target state is blocking, it will block till on entering method of the new state will finish.
     /// if the entering action of the target state is async, it will return after the state is changed.
     /// </summary>
     public void Raise<T>([NotNull] object @event, [CanBeNull] T parameter)
@@ -47,9 +47,10 @@ namespace Binstate
     }
 
     /// <summary>
-    /// Raises the event asynchronously. Finishing can be controller by returned <see cref="Task"/>.
-    /// if the entering action of the target state is blocking, Task is finished when the entering action is finished.
-    /// if the entering action of the target state is async, Task is finishes after the state is changed. 
+    /// Raises the event asynchronously. Finishing can be controller by returned <see cref="Task"/>, entering and exiting actions (if defined) of the current
+    /// state is finished, then:
+    /// if the entering action of the target state is blocking, Task finishes when entering action of the new state is finished;
+    /// if the entering action of the target state is async, Task finishes right after the state is changed.
     /// </summary>
     public Task RaiseAsync([NotNull] object @event)
     {
@@ -57,11 +58,10 @@ namespace Binstate
       return Task.Run(() => RaiseInternal<Unit>(@event, _ => _.ValidateParameter(), null));
     }
 
-    /// <summary>
-    /// Raises the event with parameter asynchronously. Finishing can be controller by returned <see cref="Task"/>.
-    /// if the entering action of the target state is blocking, Task is finished when the entering action is finished.
-    /// if the entering action of the target state is async, Task is finishes after the state is changed. 
-    /// </summary>
+    /// Raises the event with parameter asynchronously. Finishing can be controller by returned <see cref="Task"/>, entering and exiting actions (if defined)
+    /// of the current state is finished, then:
+    /// if the entering action of the target state is blocking, Task finishes when entering action of the new state is finished;
+    /// if the entering action of the target state is async, Task finishes right after the state is changed.
     public Task RaiseAsync<T>([NotNull] object @event, [CanBeNull] T parameter)
     {
       if (@event == null) throw new ArgumentNullException(nameof(@event));
@@ -70,39 +70,25 @@ namespace Binstate
 
     private void RaiseInternal<T>(object @event, Action<Transition> transitionValidator, T parameter)
     {
-      lock(_access)
+      State newState;
+      lock(_currentStateAccess)
       {
         var transition = _currentState.FindTransition(@event);
         transitionValidator(transition);
 
-        ExitCurrentState();
+        _currentControllerState = null; // signal Controller that current state is deactivated 
+        _currentState.Exit(); // wait current OnEnter finished (if still is not), then call OnExit
         
-        var previousState = _currentState;
-        _currentState = GetState(transition.State);
-        
-        try {
-          EnterCurrentState(parameter);
-        }
-        catch {
-          _currentState = previousState;
-          EnterCurrentState(parameter);
-          throw;
-        }
-      }
-    }
+        newState = GetState(transition.State);
+        newState.SetAsActive();
 
-    private void EnterCurrentState<T>(T parameter)
-    {
-      _currentControllerState = _currentState.Id;
-      _currentState.Enter(new Controller(_currentState.Id, this), parameter);
+        _currentState = newState;
+        _currentControllerState = newState.Id;
+      }
+      // call Enter out of a lock due to it can block execution till the state machine will transit to another state
+      newState.Enter(new Controller(_currentState.Id, this), parameter);
     }
     
-    private void ExitCurrentState()
-    {
-      _currentControllerState = null; // signal current state routine to stop
-      _currentState.Exit(); // wait current onEntry finished, then call OnExit
-    }
-
     private State GetState(object state)
     {
       if (!_states.TryGetValue(state, out var result))

@@ -17,19 +17,19 @@ namespace Binstate
       State = state;
     }
 
-    public object @Event { get; }
+    public object Event { get; }
     
     public object State { get; }
 
     public void ValidateParameter()
     {
-      if(_argumentType != null) throw new InvalidOperationException("Transition is configured as required a parameter");
+      if(_argumentType != null) throw new TransitionException("Transition is configured as required a parameter");
     }
     
     public void ValidateParameter<T>([CanBeNull] T parameter) 
     {
-      if (_argumentType == null) throw new InvalidOperationException("Transition is not configured as accepted any parameter");
-      if(!_allowNull && ReferenceEquals(null, parameter)) throw new InvalidOperationException("Transition can't accept null value");
+      if (_argumentType == null) throw new TransitionException("Transition is not configured as accepted any parameter");
+      if(!_allowNull && ReferenceEquals(null, parameter)) throw new TransitionException("Transition can't accept null value");
       
       var parameterType = typeof(T);
       if(!_argumentType.IsAssignableFrom(parameterType)) 

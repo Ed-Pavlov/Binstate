@@ -32,17 +32,17 @@ namespace Instate.Tests.example
       builder
         .AddState(Ringing)
         .AddTransition(HungUp, OffHook)
-        .AddTransition(CallConnected, OnHold);
+        .AddTransition(CallConnected, Connected);
       
       builder
-        .AddState(OnHold)
-        .OnEnter(PlayMusic)
+        .AddState(Connected)
         .AddTransition(LeftMessage, OffHook)
         .AddTransition(HungUp, OffHook)
         .AddTransition(PlacedOnHold, OnHold);
       
       builder
         .AddState(OnHold)
+        .OnEnter(PlayMusic)
         .AddTransition(TakenOffHold, Connected)
         .AddTransition(HungUp, OffHook)
         .AddTransition(PhoneHurledAgainstWall, PhoneDestroyed);

@@ -33,10 +33,10 @@ namespace Binstate
     [CanBeNull] 
     private readonly Action _exit;
 
-    public readonly object Id;
-    public readonly Dictionary<object, Transition<TState, TEvent>> Transitions;
+    public readonly TState Id;
+    public readonly Dictionary<TEvent, Transition<TState, TEvent>> Transitions;
 
-    public State([NotNull] object id, [CanBeNull] EnterActionInvoker<TEvent> enter, [CanBeNull] Action exit, [NotNull] Dictionary<object, Transition<TState, TEvent>> transitions)
+    public State([NotNull] TState id, [CanBeNull] EnterActionInvoker<TEvent> enter, [CanBeNull] Action exit, [NotNull] Dictionary<TEvent, Transition<TState, TEvent>> transitions)
     {
       Id = id ?? throw new ArgumentNullException(nameof(id));
       _enter = enter;

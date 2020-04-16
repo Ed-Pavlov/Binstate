@@ -30,14 +30,14 @@ namespace Binstate
     /// </summary>
     /// <param name="initialState">The initial state of the state machine. The entering action of the initial state is not called by building the state machine.</param>
     /// <exception cref="InvalidOperationException">Throws if there are any inconsistencies in the provided configuration.</exception>
-    public StateMachine<TState, TEvent> Build([NotNull] object initialState)
+    public StateMachine<TState, TEvent> Build([NotNull] TState initialState)
     {
       if (initialState == null) throw new ArgumentNullException(nameof(initialState));
 
-      var states = new Dictionary<object, State<TState, TEvent>>();
+      var states = new Dictionary<TState, State<TState, TEvent>>();
       foreach (var stateConfig in _states)
       {
-        var transitions = new Dictionary<object, Transition<TState, TEvent>>();
+        var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();
         foreach (var transition in stateConfig.TransitionList)
         {
           if (transitions.ContainsKey(transition.Event))
@@ -56,15 +56,13 @@ namespace Binstate
       return new StateMachine<TState, TEvent>(states[initialState], states);
     }
 
-    private static void ValidateStateMachine(Dictionary<object, State<TState, TEvent>> states)
+    private static void ValidateStateMachine(Dictionary<TState, State<TState, TEvent>> states)
     {
       foreach (var state in states.Values)
+      foreach (var transition in state.Transitions.Values)
       {
-        foreach (var transition in state.Transitions.Values)
-        {
-          if (!states.ContainsKey(transition.State))
-            throw new InvalidOperationException($"Transition '{transition.Event}' from state '{state.Id}' references not defined state '{transition.State}'");
-        }
+        if (!states.ContainsKey(transition.State))
+          throw new InvalidOperationException($"Transition '{transition.Event}' from state '{state.Id}' references not defined state '{transition.State}'");
       }
     }
   }

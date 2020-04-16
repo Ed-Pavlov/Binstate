@@ -17,14 +17,14 @@ namespace Instate.Tests
       var actual = new List<string>();
       var entered = new ManualResetEvent(false);
       
-      void BlockingEnter(IStateMachine<string> machine)
+      void BlockingEnter(IStateMachine<int> machine)
       {
         entered.Set();
         while (machine.InMyState) Thread.Sleep(100);
         actual.Add(OnEnter);
       }
       
-      var builder = new Builder<string, string>();
+      var builder = new Builder<string, int>();
       
       builder
         .AddState(Initial)
@@ -58,13 +58,13 @@ namespace Instate.Tests
       // --arrange
       var entered = new ManualResetEvent(false);
       
-      async Task AsyncEnter(IStateMachine<string> stateMachine)
+      async Task AsyncEnter(IStateMachine<int> stateMachine)
       {
         entered.Set();
         while (stateMachine.InMyState) await Task.Delay(100);
       }
       
-      var builder = new Builder<string, string>();
+      var builder = new Builder<string, int>();
       builder
         .AddState(Initial)
         .AddTransition(Event1, State1);

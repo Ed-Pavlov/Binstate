@@ -5,14 +5,14 @@ namespace Binstate
 {
   public partial class StateMachine<TState, TEvent>
   {
-    private bool IsControllerInState(object state) => Equals(state, _currentControllerState);
+    private bool IsControllerInState(TState state) => Equals(state, _currentControllerState);
     
     private class Controller : IStateMachine<TEvent>
     {
-      private readonly object _stateId;
+      private readonly TState _stateId;
       private readonly StateMachine<TState, TEvent> _stateMachine;
 
-      public Controller([NotNull] object stateId, [NotNull] StateMachine<TState, TEvent> stateMachine)
+      public Controller([NotNull] TState stateId, [NotNull] StateMachine<TState, TEvent> stateMachine)
       {
         _stateId = stateId ?? throw new ArgumentNullException(nameof(stateId));
         _stateMachine = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));

@@ -6,18 +6,18 @@ using JetBrains.Annotations;
 namespace Binstate
 {
   /// <summary>
-  /// The state machine. Use <see cref="Builder"/> to configure and build a state machine.
+  /// The state machine. Use <see cref="Builder{TState, TEvent}"/> to configure and build a state machine.
   /// </summary>
   public partial class StateMachine<TState, TEvent>
   {
-    private readonly Dictionary<object, State<TState, TEvent>> _states;
+    private readonly Dictionary<TState, State<TState, TEvent>> _states;
     
     private object _currentControllerState;
     private State<TState, TEvent> _currentState;
 
     private readonly object _currentStateAccess = new object();
     
-    internal StateMachine(State<TState, TEvent> initialState, Dictionary<object, State<TState, TEvent>> states)
+    internal StateMachine(State<TState, TEvent> initialState, Dictionary<TState, State<TState, TEvent>> states)
     {
       _states = states;
       _currentControllerState = initialState.Id;
@@ -89,7 +89,7 @@ namespace Binstate
       newState.Enter(new Controller(_currentState.Id, this), parameter);
     }
     
-    private State<TState, TEvent> GetState(object state)
+    private State<TState, TEvent> GetState(TState state)
     {
       if (!_states.TryGetValue(state, out var result))
         throw new InvalidOperationException($"State '{state}' is not registered in the state machine");

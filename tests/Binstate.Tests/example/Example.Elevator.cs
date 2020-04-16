@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using Binstate;
+using FluentAssertions;
 
 namespace Instate.Tests.example
 {
@@ -17,6 +18,8 @@ namespace Instate.Tests.example
         Healthy,
         OnFloor,
         Moving,
+        MovingUp,
+        MovingDown,
         DoorOpen,
         DoorClosed,
         Error
@@ -51,14 +54,12 @@ namespace Instate.Tests.example
           .OnExit(() => Beep(2))
           .AddTransition(Events.CloseDoor, States.DoorClosed)
           .AddTransition(Events.OpenDoor, States.DoorOpen)
-          .AddTransition(Events.GoUp, States.Moving);
+          .AddTransition(Events.GoUp, States.MovingUp)
+          .AddTransition(Events.GoDown, States.MovingDown);
 
         builder
           .AddState(States.Moving)
-          .OnEnter(CheckOverload);
-
-        builder
-          .AddState(States.Moving)
+          .OnEnter(CheckOverload)
           .AddTransition(Events.Stop, States.OnFloor);
 
         _elevator = builder.Build(States.OnFloor);

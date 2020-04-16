@@ -32,7 +32,7 @@ namespace Binstate
     public void Raise([NotNull] TEvent @event)
     {
       if (@event == null) throw new ArgumentNullException(nameof(@event));
-      RaiseInternal<Unit>(@event, _ => _.ValidateParameter(), null);
+      ExecuteTransition<Unit>(@event, _ => _.ValidateParameter(), null);
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ namespace Binstate
     public void Raise<T>([NotNull] TEvent @event, [CanBeNull] T parameter)
     {
       if (@event == null) throw new ArgumentNullException(nameof(@event));
-      RaiseInternal(@event, _ => _.ValidateParameter(parameter), parameter);
+      ExecuteTransition(@event, _ => _.ValidateParameter(parameter), parameter);
     }
 
     /// <summary>
@@ -55,7 +55,7 @@ namespace Binstate
     public Task RaiseAsync([NotNull] TEvent @event)
     {
       if (@event == null) throw new ArgumentNullException(nameof(@event));
-      return Task.Run(() => RaiseInternal<Unit>(@event, _ => _.ValidateParameter(), null));
+      return Task.Run(() => ExecuteTransition<Unit>(@event, _ => _.ValidateParameter(), null));
     }
 
     /// Raises the event with parameter asynchronously. Finishing can be controller by returned <see cref="Task"/>, entering and exiting actions (if defined)
@@ -65,10 +65,10 @@ namespace Binstate
     public Task RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T parameter)
     {
       if (@event == null) throw new ArgumentNullException(nameof(@event));
-      return Task.Run(() => RaiseInternal(@event, _ => _.ValidateParameter(parameter), parameter));
+      return Task.Run(() => ExecuteTransition(@event, _ => _.ValidateParameter(parameter), parameter));
     }
 
-    private void RaiseInternal<T>(TEvent @event, Action<Transition<TState, TEvent>> transitionValidator, T parameter)
+    private void ExecuteTransition<T>(TEvent @event, Action<Transition<TState, TEvent>> transitionValidator, T parameter)
     {
       State<TState, TEvent> newState;
       lock(_currentStateAccess)
@@ -76,11 +76,15 @@ namespace Binstate
         var transition = _currentState.FindTransition(@event);
         transitionValidator(transition);
 
+        var stateId = transition.GetTargetStateId();
+        if(stateId == null)
+          return;
+        
+        newState = GetState(stateId);
+        newState.SetAsActive();
+        
         _currentControllerState = null; // signal Controller that current state is deactivated 
         _currentState.Exit(); // wait current OnEnter finished (if still is not), then call OnExit
-        
-        newState = GetState(transition.State);
-        newState.SetAsActive();
 
         _currentState = newState;
         _currentControllerState = newState.Id;
@@ -89,7 +93,7 @@ namespace Binstate
       newState.Enter(new Controller(_currentState.Id, this), parameter);
     }
     
-    private State<TState, TEvent> GetState(TState state)
+    private State<TState, TEvent> GetState([NotNull] TState state)
     {
       if (!_states.TryGetValue(state, out var result))
         throw new InvalidOperationException($"State '{state}' is not registered in the state machine");

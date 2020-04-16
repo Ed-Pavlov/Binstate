@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 
 namespace Binstate
@@ -16,7 +17,7 @@ namespace Binstate
     /// </summary>
     /// <param name="stateId">Id of the state, is used to reference it from other elements of the state machine.</param>
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
-    public Config<TState, TEvent>.Enter AddState([NotNull] TState stateId)
+    public Config<TState, TEvent>.Enter DefineState([NotNull] TState stateId)
     {
       if (stateId == null) throw new ArgumentNullException(nameof(stateId));
 
@@ -59,10 +60,10 @@ namespace Binstate
     private static void ValidateStateMachine(Dictionary<TState, State<TState, TEvent>> states)
     {
       foreach (var state in states.Values)
-      foreach (var transition in state.Transitions.Values)
+      foreach (var transition in state.Transitions.Values.Where(_ => _.IsStatic))
       {
-        if (!states.ContainsKey(transition.State))
-          throw new InvalidOperationException($"Transition '{transition.Event}' from state '{state.Id}' references not defined state '{transition.State}'");
+        if (!states.ContainsKey(transition.GetTargetStateId()))
+          throw new InvalidOperationException($"Transition '{transition.Event}' from state '{state.Id}' references not defined state '{transition.GetTargetStateId}'");
       }
     }
   }

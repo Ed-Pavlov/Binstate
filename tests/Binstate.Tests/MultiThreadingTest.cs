@@ -27,17 +27,17 @@ namespace Instate.Tests
       var builder = new Builder<string, int>();
       
       builder
-        .AddState(Initial)
+        .DefineState(Initial)
         .AddTransition(Event1, State1);
 
       builder
-        .AddState(State1)
+        .DefineState(State1)
         .OnEnter(BlockingEnter)
         .OnExit(() => actual.Add(OnExit))
         .AddTransition(Terminate, Terminated);
 
       builder
-        .AddState(Terminated)
+        .DefineState(Terminated)
         .OnEnter(_ => actual.Add(Terminated));
       
       var target = builder.Build(Initial);
@@ -66,16 +66,16 @@ namespace Instate.Tests
       
       var builder = new Builder<string, int>();
       builder
-        .AddState(Initial)
+        .DefineState(Initial)
         .AddTransition(Event1, State1);
 
       builder
-        .AddState(State1)
+        .DefineState(State1)
         .OnEnter(AsyncEnter)
         .AddTransition(Terminate, Terminated);
 
       builder
-        .AddState(Terminated);
+        .DefineState(Terminated);
       
       var target = builder.Build(Initial);
       

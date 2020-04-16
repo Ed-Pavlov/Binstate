@@ -5,6 +5,7 @@ namespace Instate.Tests
     protected const string Initial = "Initial";
     protected const int Event1 = 1;
     protected const string State1 = "state1";
+    protected const string State2 = "state2";
     protected const string Terminated = "Terminated";
     protected const int Terminate = 2;
     

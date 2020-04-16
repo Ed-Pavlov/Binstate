@@ -16,7 +16,7 @@ namespace Instate.Tests
       var builder = new Builder<string, int>();
 
       builder
-        .AddState(Initial)
+        .DefineState(Initial)
         .AddTransition(Event1, "null_state");
       
       // --act
@@ -32,7 +32,7 @@ namespace Instate.Tests
       var builder = new Builder<string, int>();
 
       builder
-        .AddState(Initial)
+        .DefineState(Initial)
         .AddTransition(Event1, State1)
         .AddTransition(Event1, Terminated);
 
@@ -52,11 +52,11 @@ namespace Instate.Tests
       var builder = new Builder<string, int>();
 
       builder
-        .AddState(Initial)
+        .DefineState(Initial)
         .AddTransition(Event1, State1);
 
       builder
-        .AddState(State1)
+        .DefineState(State1)
         .OnEnter(_ => actual.Add(State1));
 
       var stateMachine = builder.Build(Initial);
@@ -83,11 +83,11 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, int>();
       builder
-        .AddState(Initial)
+        .DefineState(Initial)
         .AddTransition(Event1, State1);
 
       builder
-        .AddState(State1)
+        .DefineState(State1)
         .OnEnter((_ =>
         {
           Thread.Sleep(299);
@@ -96,7 +96,7 @@ namespace Instate.Tests
         .OnExit(() => actual.Add(OnExit)) 
         .AddTransition(Terminate, Terminated);
       
-      builder.AddState(Terminated);
+      builder.DefineState(Terminated);
 
       var target = builder.Build(Initial);
       target.Raise(Event1);
@@ -115,10 +115,10 @@ namespace Instate.Tests
       
       // --arrange
       var builder = new Builder<string, int>();
-      builder.AddState(Initial).AddTransition(Event1, State1);
+      builder.DefineState(Initial).AddTransition(Event1, State1);
 
       builder
-        .AddState(State1)
+        .DefineState(State1)
         .OnEnter(async _ =>
         {
           while (_.InMyState)
@@ -131,7 +131,7 @@ namespace Instate.Tests
         .OnExit(() => actual.Add(OnExit)) 
         .AddTransition(Terminate, Terminated);
       
-      builder.AddState(Terminated);
+      builder.DefineState(Terminated);
 
       var target = builder.Build(Initial);
       target.Raise(Event1);
@@ -150,10 +150,10 @@ namespace Instate.Tests
       
       // --arrange
       var builder = new Builder<string, int>();
-      builder.AddState(Initial).AddTransition(Event1, State1);
+      builder.DefineState(Initial).AddTransition(Event1, State1);
 
       builder
-        .AddState(State1)
+        .DefineState(State1)
         .OnEnter(_ =>
         {
           Thread.Sleep(287);
@@ -162,7 +162,7 @@ namespace Instate.Tests
         .AddTransition(Terminate, Terminated);
       
       builder
-        .AddState(Terminated)
+        .DefineState(Terminated)
         .OnEnter(_ => actual.Add(Terminated));
 
       var target = builder.Build(Initial);
@@ -182,10 +182,10 @@ namespace Instate.Tests
       
       // --arrange
       var builder = new Builder<string, int>();
-      builder.AddState(Initial).AddTransition(Event1, State1);
+      builder.DefineState(Initial).AddTransition(Event1, State1);
 
       builder
-        .AddState(State1)
+        .DefineState(State1)
         .OnEnter((async _ =>
         {
           while (_.InMyState)
@@ -198,7 +198,7 @@ namespace Instate.Tests
         .AddTransition(Terminate, Terminated);
       
       builder
-        .AddState(Terminated)
+        .DefineState(Terminated)
         .OnEnter(_ => actual.Add(Terminated));
 
       var target = builder.Build(Initial);
@@ -228,11 +228,11 @@ namespace Instate.Tests
       var builder = new Builder<string, int>();
      
       builder
-        .AddState(State1)
+        .DefineState(State1)
         .AddTransition<int>(Terminate, Terminated);
 
       builder
-        .AddState(Terminated)
+        .DefineState(Terminated)
         .OnEnter<int>((_, param) => actual = param);
 
       var stateMachine = builder.Build(State1);
@@ -252,9 +252,9 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, int>();
       
-      builder.AddState(Initial).AddTransition(Event1, State1);
+      builder.DefineState(Initial).AddTransition(Event1, State1);
       builder
-        .AddState(State1)
+        .DefineState(State1)
         .OnEnter(_ => actual.Add("Enter"))
         .OnExit(() => actual.Add("Exit"))
         .AllowReentrancy(Event1);
@@ -268,5 +268,37 @@ namespace Instate.Tests
       // --assert
       actual.Should().BeEquivalentTo("Enter", "Exit", "Enter");
     }
+
+    [Test]
+    public void should_transit_via_dynamic_transition([Values(State1, State2)] string targetState)
+    {
+      var actual = new List<string>();
+      
+      // --arrange
+      var builder = new Builder<string, int>();
+
+      string DynamicTransition() => targetState;
+
+      builder
+        .DefineState(Initial)
+        .AddTransition(Event1, DynamicTransition);
+      
+      builder
+        .DefineState(State1)
+        .OnEnter(_ => actual.Add(State1));
+      
+      builder
+        .DefineState(State2)
+        .OnEnter(_ => actual.Add(State2));
+
+      var target = builder.Build(Initial);
+      
+      // --act
+      target.Raise(Event1);
+      
+      // --assert
+      actual.Should().BeEquivalentTo(targetState);
+    }
+    
   }
 }

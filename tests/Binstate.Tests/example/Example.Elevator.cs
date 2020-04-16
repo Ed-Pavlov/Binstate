@@ -41,15 +41,15 @@ namespace Instate.Tests.example
         var builder = new Builder<States, Events>();
 
         builder
-          .AddState(States.Healthy)
+          .DefineState(States.Healthy)
           .AddTransition(Events.Error, States.Error);
 
         builder
-          .AddState(States.Error)
+          .DefineState(States.Error)
           .AddTransition(Events.Reset, States.Healthy);
 
         builder
-          .AddState(States.OnFloor)
+          .DefineState(States.OnFloor)
           .OnEnter(AnnounceFloor)
           .OnExit(() => Beep(2))
           .AddTransition(Events.CloseDoor, States.DoorClosed)
@@ -58,7 +58,7 @@ namespace Instate.Tests.example
           .AddTransition(Events.GoDown, States.MovingDown);
 
         builder
-          .AddState(States.Moving)
+          .DefineState(States.Moving)
           .OnEnter(CheckOverload)
           .AddTransition(Events.Stop, States.OnFloor);
 

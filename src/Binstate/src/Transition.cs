@@ -5,21 +5,23 @@ namespace Binstate
 {
   internal class Transition<TState, TEvent>
   {
-    private readonly bool _allowNull;
+    private readonly bool _allowNullArgument;
     [CanBeNull] 
     private readonly Type _argumentType;
-    
-    public Transition(TEvent @event, Type argumentType, TState state, bool allowNull)
+
+    public Transition(TEvent @event, Type argumentType, Func<TState> getTargetStateId, bool isStatic, bool allowNullArgument)
     {
-      _allowNull = allowNull;
+      _allowNullArgument = allowNullArgument;
       Event = @event;
       _argumentType = argumentType;
-      State = state;
+      IsStatic = isStatic;
+      GetTargetStateId = getTargetStateId;
     }
 
     public TEvent Event { get; }
     
-    public TState State { get; }
+    public readonly bool IsStatic;
+    public Func<TState> GetTargetStateId { get; }
 
     public void ValidateParameter()
     {
@@ -29,7 +31,7 @@ namespace Binstate
     public void ValidateParameter<T>([CanBeNull] T parameter) 
     {
       if (_argumentType == null) throw new TransitionException("Transition is not configured as accepted any parameter");
-      if(!_allowNull && ReferenceEquals(null, parameter)) throw new TransitionException("Transition can't accept null value");
+      if(!_allowNullArgument && ReferenceEquals(null, parameter)) throw new TransitionException("Transition can't accept null value");
       
       var parameterType = typeof(T);
       if(!_argumentType.IsAssignableFrom(parameterType)) 

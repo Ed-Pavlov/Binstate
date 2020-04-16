@@ -26,29 +26,29 @@ namespace Instate.Tests.example
       var builder = new Builder<string, string>();
 
       builder
-        .AddState(OffHook)
+        .DefineState(OffHook)
         .AddTransition(CallDialed, Ringing);
       
       builder
-        .AddState(Ringing)
+        .DefineState(Ringing)
         .AddTransition(HungUp, OffHook)
         .AddTransition(CallConnected, Connected);
       
       builder
-        .AddState(Connected)
+        .DefineState(Connected)
         .AddTransition(LeftMessage, OffHook)
         .AddTransition(HungUp, OffHook)
         .AddTransition(PlacedOnHold, OnHold);
       
       builder
-        .AddState(OnHold)
+        .DefineState(OnHold)
         .OnEnter(PlayMusic)
         .AddTransition(TakenOffHold, Connected)
         .AddTransition(HungUp, OffHook)
         .AddTransition(PhoneHurledAgainstWall, PhoneDestroyed);
 
       builder
-        .AddState(PhoneDestroyed);
+        .DefineState(PhoneDestroyed);
 
       var stateMachine = builder.Build(OffHook);
     }

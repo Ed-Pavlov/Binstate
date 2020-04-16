@@ -26,13 +26,13 @@ namespace Instate.Tests.example
         var builder = new Builder<string, string>();
 
         builder
-          .AddState(WaitingForGame)
+          .DefineState(WaitingForGame)
           .OnEnter(WaitForGame)
           .AddTransition<string>(GameStarted, TrackingGame)
           .AddTransition(Terminate, Terminated);
 
         builder
-          .AddState(TrackingGame)
+          .DefineState(TrackingGame)
           .OnEnter<string>(TrackGame)
           .AddTransition(GameFinished, WaitingForGame)
           .AddTransition(Terminate, Terminated);

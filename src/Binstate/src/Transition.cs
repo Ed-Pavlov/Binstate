@@ -3,13 +3,13 @@ using JetBrains.Annotations;
 
 namespace Binstate
 {
-  internal class Transition
+  internal class Transition<TState, TEvent>
   {
     private readonly bool _allowNull;
     [CanBeNull] 
     private readonly Type _argumentType;
     
-    public Transition(object @event, Type argumentType, object state, bool allowNull)
+    public Transition(TEvent @event, Type argumentType, TState state, bool allowNull)
     {
       _allowNull = allowNull;
       Event = @event;
@@ -17,9 +17,9 @@ namespace Binstate
       State = state;
     }
 
-    public object Event { get; }
+    public TEvent Event { get; }
     
-    public object State { get; }
+    public TState State { get; }
 
     public void ValidateParameter()
     {

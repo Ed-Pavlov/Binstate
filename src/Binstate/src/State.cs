@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 
 namespace Binstate
 {
-  internal sealed class State
+  internal sealed class State<TState, TEvent>
   {
     /// <summary>
     /// This event is used to avoid race condition when <see cref="Exit"/> method is called before <see cref="Enter{T}"/> method.
@@ -29,14 +29,14 @@ namespace Binstate
     private Task _task;
     
     [CanBeNull] 
-    private readonly EnterActionInvoker _enter;
+    private readonly EnterActionInvoker<TEvent> _enter;
     [CanBeNull] 
     private readonly Action _exit;
 
     public readonly object Id;
-    public readonly Dictionary<object, Transition> Transitions;
+    public readonly Dictionary<object, Transition<TState, TEvent>> Transitions;
 
-    public State([NotNull] object id, [CanBeNull] EnterActionInvoker enter, [CanBeNull] Action exit, [NotNull] Dictionary<object, Transition> transitions)
+    public State([NotNull] object id, [CanBeNull] EnterActionInvoker<TEvent> enter, [CanBeNull] Action exit, [NotNull] Dictionary<object, Transition<TState, TEvent>> transitions)
     {
       Id = id ?? throw new ArgumentNullException(nameof(id));
       _enter = enter;
@@ -44,7 +44,7 @@ namespace Binstate
       Transitions = transitions ?? throw new ArgumentNullException(nameof(transitions));
     }
 
-    public Transition FindTransition(object @event)
+    public Transition<TState, TEvent> FindTransition(TEvent @event)
     {
       if (!Transitions.TryGetValue(@event, out var transition))
         throw new TransitionException($"No transition defined by raising the event '{@event}' in the state '{Id}'");
@@ -53,27 +53,27 @@ namespace Binstate
 
     /// <summary>
     /// This method is called from protected by lock part of the code so it's no need synchronization
-    /// see <see cref="StateMachine.RaiseInternal{T}"/> implementation for details.
+    /// see <see cref="StateMachine{TEvent, TState}.RaiseInternal{T}"/> implementation for details.
     /// </summary>
     public void SetAsActive() => _entered.Reset();
 
-    public void Enter<T>(IStateMachine stateMachine, T arg)
+    public void Enter<TArg>(IStateMachine<TEvent> stateMachine, TArg arg)
     {
       try
       {
-        _enterFunctionFinished.Reset(); // Exit will wait this event before call OnExit so after reseting it
+        _enterFunctionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
         _entered.Set();                 // it is safe to set the state as entered
 
         if (_enter == null) return;
         
-        if (typeof(T) == typeof(Unit))
+        if (typeof(TArg) == typeof(Unit))
         {
-          var noParameterEnter = (NoParameterEnterInvoker) _enter;
+          var noParameterEnter = (NoParameterEnterInvoker<TEvent>) _enter;
           _task = noParameterEnter.Invoke(stateMachine);
         }
         else
         {
-          var typedEnter = (EnterInvoker<T>) _enter;
+          var typedEnter = (EnterInvoker<TEvent, TArg>) _enter;
           _task = typedEnter.Invoke(stateMachine, arg);
         }
       }
@@ -85,7 +85,7 @@ namespace Binstate
 
     /// <summary>
     /// <see cref="Exit"/> can be called earlier then <see cref="Enter{T}"/> of the activated state,
-    /// see <see cref="StateMachine.RaiseInternal{T}"/> implementation for details.
+    /// see <see cref="StateMachine{TEvent, TState}.RaiseInternal{T}"/> implementation for details.
     /// In this case it should wait till <see cref="Enter{T}"/> will be called and exited, before call exit action
     /// </summary>
     public void Exit()

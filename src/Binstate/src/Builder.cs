@@ -7,20 +7,20 @@ namespace Binstate
   /// <summary>
   /// This class is used to configure and build a state machine.  
   /// </summary>
-  public class Builder
+  public class Builder<TState, TEvent>
   {
-    private readonly List<Config.Enter> _states = new List<Config.Enter>();
+    private readonly List<Config<TState, TEvent>.Enter> _states = new List<Config<TState, TEvent>.Enter>();
 
     /// <summary>
     /// Defines the new state in the state machine
     /// </summary>
     /// <param name="stateId">Id of the state, is used to reference it from other elements of the state machine.</param>
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
-    public Config.Enter AddState([NotNull] object stateId)
+    public Config<TState, TEvent>.Enter AddState([NotNull] TState stateId)
     {
       if (stateId == null) throw new ArgumentNullException(nameof(stateId));
 
-      var stateConfig = new Config.Enter(stateId);
+      var stateConfig = new Config<TState, TEvent>.Enter(stateId);
       _states.Add(stateConfig);
       return stateConfig;
     }
@@ -30,14 +30,14 @@ namespace Binstate
     /// </summary>
     /// <param name="initialState">The initial state of the state machine. The entering action of the initial state is not called by building the state machine.</param>
     /// <exception cref="InvalidOperationException">Throws if there are any inconsistencies in the provided configuration.</exception>
-    public StateMachine Build([NotNull] object initialState)
+    public StateMachine<TState, TEvent> Build([NotNull] object initialState)
     {
       if (initialState == null) throw new ArgumentNullException(nameof(initialState));
 
-      var states = new Dictionary<object, State>();
+      var states = new Dictionary<object, State<TState, TEvent>>();
       foreach (var stateConfig in _states)
       {
-        var transitions = new Dictionary<object, Transition>();
+        var transitions = new Dictionary<object, Transition<TState, TEvent>>();
         foreach (var transition in stateConfig.TransitionList)
         {
           if (transitions.ContainsKey(transition.Event))
@@ -45,7 +45,7 @@ namespace Binstate
           transitions.Add(transition.Event, transition);
         }
 
-        var state = new State(stateConfig.StateId, stateConfig.EnterAction, stateConfig.ExitAction, transitions);
+        var state = new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterAction, stateConfig.ExitAction, transitions);
         states.Add(stateConfig.StateId, state);
       }
 
@@ -53,10 +53,10 @@ namespace Binstate
         throw new ArgumentException($"No state '{initialState}' is defined");
       ValidateStateMachine(states);
 
-      return new StateMachine(states[initialState], states);
+      return new StateMachine<TState, TEvent>(states[initialState], states);
     }
 
-    private static void ValidateStateMachine(Dictionary<object, State> states)
+    private static void ValidateStateMachine(Dictionary<object, State<TState, TEvent>> states)
     {
       foreach (var state in states.Values)
       {

@@ -3,28 +3,28 @@ using JetBrains.Annotations;
 
 namespace Binstate
 {
-  public partial class StateMachine
+  public partial class StateMachine<TState, TEvent>
   {
     private bool IsControllerInState(object state) => Equals(state, _currentControllerState);
     
-    private class Controller : IStateMachine
+    private class Controller : IStateMachine<TEvent>
     {
       private readonly object _stateId;
-      private readonly StateMachine _stateMachine;
+      private readonly StateMachine<TState, TEvent> _stateMachine;
 
-      public Controller([NotNull] object stateId, [NotNull] StateMachine stateMachine)
+      public Controller([NotNull] object stateId, [NotNull] StateMachine<TState, TEvent> stateMachine)
       {
         _stateId = stateId ?? throw new ArgumentNullException(nameof(stateId));
         _stateMachine = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));
       }
 
-      public void RaiseAsync([NotNull] object @event)
+      public void RaiseAsync([NotNull] TEvent @event)
       {
         if (@event == null) throw new ArgumentNullException(nameof(@event));
         _stateMachine.RaiseAsync(@event);
       }
 
-      public void RaiseAsync<T>([NotNull] object @event, [CanBeNull] T parameter)
+      public void RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T parameter)
       {
         if (@event == null) throw new ArgumentNullException(nameof(@event));
         _stateMachine.RaiseAsync(@event, parameter);

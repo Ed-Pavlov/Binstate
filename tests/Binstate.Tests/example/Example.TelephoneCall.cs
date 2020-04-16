@@ -23,7 +23,7 @@ namespace Instate.Tests.example
       const string OnHold = nameof(OnHold);
       const string PhoneDestroyed = nameof(PhoneDestroyed);
       
-      var builder = new Builder();
+      var builder = new Builder<string, string>();
 
       builder
         .AddState(OffHook)
@@ -53,7 +53,7 @@ namespace Instate.Tests.example
       var stateMachine = builder.Build(OffHook);
     }
 
-    private static Task PlayMusic(IStateMachine stateMachine)
+    private static Task PlayMusic(IStateMachine<string> stateMachine)
     {
       return Task.Run(() =>
       {

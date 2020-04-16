@@ -13,7 +13,7 @@ namespace Instate.Tests
     [Test]
     public void should_fail_if_transition_to_unknown_state()
     {
-      var builder = new Builder();
+      var builder = new Builder<string, string>();
 
       builder
         .AddState(Initial)
@@ -29,7 +29,7 @@ namespace Instate.Tests
     [Test]
     public void should_fail_if_transitions_reference_one_state()
     {
-      var builder = new Builder();
+      var builder = new Builder<string, string>();
 
       builder
         .AddState(Initial)
@@ -49,7 +49,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder();
+      var builder = new Builder<string, string>();
 
       builder
         .AddState(Initial)
@@ -71,17 +71,17 @@ namespace Instate.Tests
     private static IEnumerable<TestCaseData> raise_terminate_source()
     {
       // using blocking and Async.Wait in order test should not exit before raising an event is completely handled
-      yield return new TestCaseData(new Action<StateMachine>(_ => _.Raise(Terminate))).SetName("Raise");
-      yield return new TestCaseData(new Action<StateMachine>(_ => _.RaiseAsync(Terminate).Wait())).SetName("RaiseAsync");
+      yield return new TestCaseData(new Action<StateMachine<string, string>>(_ => _.Raise(Terminate))).SetName("Raise");
+      yield return new TestCaseData(new Action<StateMachine<string, string>>(_ => _.RaiseAsync(Terminate).Wait())).SetName("RaiseAsync");
     }
     
     [TestCaseSource(nameof(raise_terminate_source))]
-    public void should_finish_enter_before_call_exit(Action<StateMachine> raiseTerminated)
+    public void should_finish_enter_before_call_exit(Action<StateMachine<string, string>> raiseTerminated)
     {
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder();
+      var builder = new Builder<string, string>();
       builder
         .AddState(Initial)
         .AddTransition(Event1, State1);
@@ -109,12 +109,12 @@ namespace Instate.Tests
     }
 
     [TestCaseSource(nameof(raise_terminate_source))]
-    public void should_finish_async_enter_before_call_exit(Action<StateMachine> raiseTerminated)
+    public void should_finish_async_enter_before_call_exit(Action<StateMachine<string, string>> raiseTerminated)
     {
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder();
+      var builder = new Builder<string, string>();
       builder.AddState(Initial).AddTransition(Event1, State1);
 
       builder
@@ -144,12 +144,12 @@ namespace Instate.Tests
     }
 
     [TestCaseSource(nameof(raise_terminate_source))]
-    public void should_finish_enter_before_call_next_enter(Action<StateMachine> raiseTerminated)
+    public void should_finish_enter_before_call_next_enter(Action<StateMachine<string, string>> raiseTerminated)
     {
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder();
+      var builder = new Builder<string, string>();
       builder.AddState(Initial).AddTransition(Event1, State1);
 
       builder
@@ -176,12 +176,12 @@ namespace Instate.Tests
     }
 
     [TestCaseSource(nameof(raise_terminate_source))]
-    public void should_finish_async_enter_before_call_next_enter(Action<StateMachine> raiseTerminated)
+    public void should_finish_async_enter_before_call_next_enter(Action<StateMachine<string, string>> raiseTerminated)
     {
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder();
+      var builder = new Builder<string, string>();
       builder.AddState(Initial).AddTransition(Event1, State1);
 
       builder
@@ -214,18 +214,18 @@ namespace Instate.Tests
     private static IEnumerable<TestCaseData> raise_terminated_with_param_source()
     {
       // using blocking and Async.Wait in order test should not exit before raising an event is completely handled
-      yield return new TestCaseData(new Action<StateMachine, int>((_, param) => _.Raise(Terminate, param))).SetName("Raise");
-      yield return new TestCaseData(new Action<StateMachine, int>((_, param) => _.RaiseAsync(Terminate, param).Wait())).SetName("RaiseAsync");
+      yield return new TestCaseData(new Action<StateMachine<string, string>, int>((_, param) => _.Raise(Terminate, param))).SetName("Raise");
+      yield return new TestCaseData(new Action<StateMachine<string, string>, int>((_, param) => _.RaiseAsync(Terminate, param).Wait())).SetName("RaiseAsync");
     }
     
     [TestCaseSource(nameof(raise_terminated_with_param_source))]
-    public void should_pass_parameter_to_enter(Action<StateMachine, int> raiseTerminated)
+    public void should_pass_parameter_to_enter(Action<StateMachine<string, string>, int> raiseTerminated)
     {
       const int expected = 5;
       var actual = expected - 139;
       
       // --arrange
-      var builder = new Builder();
+      var builder = new Builder<string, string>();
      
       builder
         .AddState(State1)
@@ -250,7 +250,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder();
+      var builder = new Builder<string, string>();
       
       builder.AddState(Initial).AddTransition(Event1, State1);
       builder

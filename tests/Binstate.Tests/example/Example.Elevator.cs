@@ -10,7 +10,7 @@ namespace Instate.Tests.example
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public class Elevator
     {
-      private readonly StateMachine _elevator;
+      private readonly StateMachine<States, Events> _elevator;
 
       private enum States
       {
@@ -35,7 +35,7 @@ namespace Instate.Tests.example
 
       public Elevator()
       {
-        var builder = new Builder();
+        var builder = new Builder<States, Events>();
 
         builder
           .AddState(States.Healthy)
@@ -93,7 +93,7 @@ namespace Instate.Tests.example
         _elevator.Raise(Events.Reset);
       }
 
-      private void AnnounceFloor(IStateMachine stateMachine)
+      private void AnnounceFloor(IStateMachine<Events> stateMachine)
       {
         /* announce floor number */
       }
@@ -108,12 +108,12 @@ namespace Instate.Tests.example
         /* beep */
       }
 
-      private void CheckOverload(IStateMachine stateMachine)
+      private void CheckOverload(IStateMachine<Events> stateMachine)
       {
         if (IsOverloaded())
         {
           AnnounceOverload();
-          stateMachine.RaiseAsync(States.OnFloor);
+          stateMachine.RaiseAsync(Events.Stop);
         }
       }
 

@@ -6,46 +6,45 @@ namespace Binstate
   
   /// <summary>
   /// Base class of the invoker of enter action is used to be able to assign both generic and plain invoker instances to the one variable.
-  /// See <see cref="State.Enter{T}"/> implementation for details  
+  /// See <see cref="State{TEvent, TState}.Enter{T}"/> implementation for details  
   /// </summary>
-  internal abstract class EnterActionInvoker
+  internal abstract class EnterActionInvoker<TEvent>
   {
-    public static NoParameterEnterInvoker Create(Action<IStateMachine> action) => new NoParameterEnterInvoker((stateMachine) =>
+    public static NoParameterEnterInvoker<TEvent> Create(Action<IStateMachine<TEvent>> action) => new NoParameterEnterInvoker<TEvent>((stateMachine) =>
     {
       action(stateMachine);
       return null;
     });
     
-    public static NoParameterEnterInvoker Create(Func<IStateMachine, Task> action) => new NoParameterEnterInvoker(action);
+    public static NoParameterEnterInvoker<TEvent> Create(Func<IStateMachine<TEvent>, Task> action) => new NoParameterEnterInvoker<TEvent>(action);
     
-    public static EnterInvoker<T> Create<T>(Action<IStateMachine, T> action) => new EnterInvoker<T>((stateMachine, arg) =>
+    public static EnterInvoker<TEvent, TArg> Create<TArg>(Action<IStateMachine<TEvent>, TArg> action) => new EnterInvoker<TEvent, TArg>((stateMachine, arg) =>
     {
        action(stateMachine, arg);
        return null;
     });
     
-    public static EnterInvoker<T> Create<T>(Func<IStateMachine, T, Task> action) => new EnterInvoker<T>(action);
+    public static EnterInvoker<TEvent, TArg> Create<TArg>(Func<IStateMachine<TEvent>, TArg, Task> action) => new EnterInvoker<TEvent, TArg>(action);
   }
 
-  internal class NoParameterEnterInvoker : EnterActionInvoker
+  internal class NoParameterEnterInvoker<TEvent> : EnterActionInvoker<TEvent>
   {
-    private readonly Func<IStateMachine, Task> _action;
-    public NoParameterEnterInvoker(Func<IStateMachine, Task> action) => _action = action;
+    private readonly Func<IStateMachine<TEvent>, Task> _action;
+    public NoParameterEnterInvoker(Func<IStateMachine<TEvent>, Task> action) => _action = action;
 
-    public Task Invoke(IStateMachine stateMachine) => _action(stateMachine);
+    public Task Invoke(IStateMachine<TEvent> stateMachine) => _action(stateMachine);
   }
   
   
   /// <summary>
   /// Generic version of the invoker of enter action introduced to avoid boxing in case of Value Type parameter
   /// </summary>
-  /// <typeparam name="T"></typeparam>
-  internal class EnterInvoker<T> : EnterActionInvoker
+  internal class EnterInvoker<TEvent, TArg> : EnterActionInvoker<TEvent>
   {
-    private readonly Func<IStateMachine, T, Task> _action;
+    private readonly Func<IStateMachine<TEvent>, TArg, Task> _action;
     
-    public EnterInvoker(Func<IStateMachine, T, Task> action) => _action = action;
+    public EnterInvoker(Func<IStateMachine<TEvent>, TArg, Task> action) => _action = action;
     
-    public Task Invoke(IStateMachine isInState, T arg) => _action(isInState, arg);
+    public Task Invoke(IStateMachine<TEvent> isInState, TArg arg) => _action(isInState, arg);
   }
 }

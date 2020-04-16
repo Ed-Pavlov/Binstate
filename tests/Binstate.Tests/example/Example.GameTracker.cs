@@ -23,7 +23,7 @@ namespace Instate.Tests.example
 
       public GameTracker()
       {
-        var builder = new Builder();
+        var builder = new Builder<string, string>();
 
         builder
           .AddState(WaitingForGame)
@@ -38,7 +38,7 @@ namespace Instate.Tests.example
           .AddTransition(Terminate, Terminated);
       }
       
-      private async Task WaitForGame(IStateMachine stateMachine)
+      private async Task WaitForGame(IStateMachine<string> stateMachine)
       {
         while (stateMachine.InMyState)
         {
@@ -49,7 +49,7 @@ namespace Instate.Tests.example
         }
       }
 
-      private async Task TrackGame(IStateMachine stateMachine, string opponentName)
+      private async Task TrackGame(IStateMachine<string> stateMachine, string opponentName)
       {
         while (stateMachine.InMyState)
         {

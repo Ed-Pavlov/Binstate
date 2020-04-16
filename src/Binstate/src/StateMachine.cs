@@ -8,16 +8,16 @@ namespace Binstate
   /// <summary>
   /// The state machine. Use <see cref="Builder"/> to configure and build a state machine.
   /// </summary>
-  public partial class StateMachine
+  public partial class StateMachine<TState, TEvent>
   {
-    private readonly Dictionary<object, State> _states;
+    private readonly Dictionary<object, State<TState, TEvent>> _states;
     
     private object _currentControllerState;
-    private State _currentState;
+    private State<TState, TEvent> _currentState;
 
     private readonly object _currentStateAccess = new object();
     
-    internal StateMachine(State initialState, Dictionary<object, State> states)
+    internal StateMachine(State<TState, TEvent> initialState, Dictionary<object, State<TState, TEvent>> states)
     {
       _states = states;
       _currentControllerState = initialState.Id;
@@ -29,7 +29,7 @@ namespace Binstate
     /// if the entering action of the target state is blocking, it will block till on entering method will finish.
     /// if the entering action of the target state is async, it will return after the state is changed.
     /// </summary>
-    public void Raise([NotNull] object @event)
+    public void Raise([NotNull] TEvent @event)
     {
       if (@event == null) throw new ArgumentNullException(nameof(@event));
       RaiseInternal<Unit>(@event, _ => _.ValidateParameter(), null);
@@ -40,7 +40,7 @@ namespace Binstate
     /// if the entering action of the target state is blocking, it will block till on entering method of the new state will finish.
     /// if the entering action of the target state is async, it will return after the state is changed.
     /// </summary>
-    public void Raise<T>([NotNull] object @event, [CanBeNull] T parameter)
+    public void Raise<T>([NotNull] TEvent @event, [CanBeNull] T parameter)
     {
       if (@event == null) throw new ArgumentNullException(nameof(@event));
       RaiseInternal(@event, _ => _.ValidateParameter(parameter), parameter);
@@ -52,7 +52,7 @@ namespace Binstate
     /// if the entering action of the target state is blocking, Task finishes when entering action of the new state is finished;
     /// if the entering action of the target state is async, Task finishes right after the state is changed.
     /// </summary>
-    public Task RaiseAsync([NotNull] object @event)
+    public Task RaiseAsync([NotNull] TEvent @event)
     {
       if (@event == null) throw new ArgumentNullException(nameof(@event));
       return Task.Run(() => RaiseInternal<Unit>(@event, _ => _.ValidateParameter(), null));
@@ -62,15 +62,15 @@ namespace Binstate
     /// of the current state is finished, then:
     /// if the entering action of the target state is blocking, Task finishes when entering action of the new state is finished;
     /// if the entering action of the target state is async, Task finishes right after the state is changed.
-    public Task RaiseAsync<T>([NotNull] object @event, [CanBeNull] T parameter)
+    public Task RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T parameter)
     {
       if (@event == null) throw new ArgumentNullException(nameof(@event));
       return Task.Run(() => RaiseInternal(@event, _ => _.ValidateParameter(parameter), parameter));
     }
 
-    private void RaiseInternal<T>(object @event, Action<Transition> transitionValidator, T parameter)
+    private void RaiseInternal<T>(TEvent @event, Action<Transition<TState, TEvent>> transitionValidator, T parameter)
     {
-      State newState;
+      State<TState, TEvent> newState;
       lock(_currentStateAccess)
       {
         var transition = _currentState.FindTransition(@event);
@@ -89,7 +89,7 @@ namespace Binstate
       newState.Enter(new Controller(_currentState.Id, this), parameter);
     }
     
-    private State GetState(object state)
+    private State<TState, TEvent> GetState(object state)
     {
       if (!_states.TryGetValue(state, out var result))
         throw new InvalidOperationException($"State '{state}' is not registered in the state machine");

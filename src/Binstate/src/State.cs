@@ -34,28 +34,46 @@ namespace Binstate
     private readonly Action _exit;
 
     public readonly TState Id;
+    private /*readonly*/ State<TState, TEvent> _parentState; // building can be optimized (using topology sorting) and parent state could be passed into ctor
     public readonly Dictionary<TEvent, Transition<TState, TEvent>> Transitions;
 
-    public State([NotNull] TState id, [CanBeNull] EnterActionInvoker<TEvent> enter, [CanBeNull] Action exit, [NotNull] Dictionary<TEvent, Transition<TState, TEvent>> transitions)
+    private volatile bool _isActive;
+
+    public State(TState id, EnterActionInvoker<TEvent> enter, Action exit, Dictionary<TEvent, Transition<TState, TEvent>> transitions)
     {
-      Id = id ?? throw new ArgumentNullException(nameof(id));
+      Id = id;
       _enter = enter;
       _exit = exit;
-      Transitions = transitions ?? throw new ArgumentNullException(nameof(transitions));
+      Transitions = transitions;
     }
 
-    public Transition<TState, TEvent> FindTransition(TEvent @event)
+    public Transition<TState, TEvent> FindTransitionTransitive(TEvent @event)
     {
-      if (!Transitions.TryGetValue(@event, out var transition))
-        throw new TransitionException($"No transition defined by raising the event '{@event}' in the state '{Id}'");
-      return transition;
+      var state = this;
+      while (state != null)
+      {
+        if (state.Transitions.TryGetValue(@event, out var transition))
+          return transition;
+        state = state._parentState;
+      }
+      
+      // no transition found through all parents
+      throw new TransitionException($"No transition defined by raising the event '{@event}' in the state '{Id}'");
     }
 
     /// <summary>
-    /// This method is called from protected by lock part of the code so it's no need synchronization
-    /// see <see cref="StateMachine{TEvent, TState}.RaiseInternal{T}"/> implementation for details.
+    /// This property is set from protected by lock part of the code so it's no need synchronization
+    /// see <see cref="StateMachine{TState,TEvent}.ExecuteTransition{T}"/> implementation for details.
     /// </summary>
-    public void SetAsActive() => _entered.Reset();
+    public bool IsActive
+    {
+      get => _isActive;
+      set
+      {
+        if (value) _entered.Reset();
+        _isActive = value;
+      }
+    }
 
     public void Enter<TArg>(IStateMachine<TEvent> stateMachine, TArg arg)
     {
@@ -85,11 +103,13 @@ namespace Binstate
 
     /// <summary>
     /// <see cref="Exit"/> can be called earlier then <see cref="Enter{T}"/> of the activated state,
-    /// see <see cref="StateMachine{TEvent, TState}.RaiseInternal{T}"/> implementation for details.
+    /// see <see cref="StateMachine{TState,TEvent}.ExecuteTransition{T}"/> implementation for details.
     /// In this case it should wait till <see cref="Enter{T}"/> will be called and exited, before call exit action
     /// </summary>
     public void Exit()
     {
+      IsActive = false; // signal that current state is no more active
+      
       // if action is set as active but enter action still is not called, wait for it 
       _entered.WaitOne();
       
@@ -100,6 +120,24 @@ namespace Binstate
       _task?.Wait(Timeout.Infinite);
       
       _exit?.Invoke();
+    }
+
+    public void AddParent([NotNull] State<TState, TEvent> parentState) => _parentState = parentState ?? throw new ArgumentNullException(nameof(parentState));
+    
+    public bool IsSubstateOf(State<TState, TEvent> state) => _parentState != null && (ReferenceEquals(state, _parentState) || _parentState.IsSubstateOf(state));
+
+    public IReadOnlyCollection<State<TState, TEvent>> GetAllStatesForActivationFrom(State<TState, TEvent> tillState)
+    {
+      var states = new List<State<TState, TEvent>>();
+      var parent = _parentState;
+      while (parent != null && !ReferenceEquals(parent, tillState))
+      {
+        states.Add(parent);
+        parent = parent._parentState;
+      }
+      states.Reverse();
+      states.Add(this);
+      return states;
     }
   }
 }

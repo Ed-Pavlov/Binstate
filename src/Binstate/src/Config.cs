@@ -31,8 +31,8 @@ namespace Binstate
       /// </summary>
       public Transitions AddTransition([NotNull] TEvent @event, [NotNull] TState stateId)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
-        if (stateId == null) throw new ArgumentNullException(nameof(stateId));
+        if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+        if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
 
         return AddTransition(@event, () => stateId, true, null, false);
       }
@@ -44,8 +44,8 @@ namespace Binstate
       /// <param name="getState">If getState returns null no transition executed</param>
       public Transitions AddTransition([NotNull] TEvent @event, [NotNull] Func<TState> getState)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
-        if (getState == null) throw new ArgumentNullException(nameof(getState));
+        if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+        if (getState.IsNull()) throw new ArgumentNullException(nameof(getState));
         
         return AddTransition(@event, getState, false, null, false);
       }
@@ -53,12 +53,12 @@ namespace Binstate
       /// <summary>
       /// Defines transition from the currently configured state to the <paramref name="stateId"> specified state</paramref> when
       /// <paramref name="event"> event is raised</paramref>
-      /// Use this overload if target state enter action requires an input parameter.
+      /// Use this overload if target state enter action requires an input argument.
       /// </summary>
       public Transitions AddTransition<TArgument>([NotNull] TEvent @event, [NotNull] TState stateId, bool argumentCanBeNull = false)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
-        if (stateId == null) throw new ArgumentNullException(nameof(stateId));
+        if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+        if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
         
         return AddTransition(@event, () => stateId, true, typeof(TArgument), argumentCanBeNull);
       }
@@ -67,12 +67,12 @@ namespace Binstate
       /// Defines transition from the currently configured state to the state calculated dynamically depending on other application state. 
       /// </summary>
       /// <param name="event"></param>
-      /// <param name="getState">If getState returns null no transition executed</param>
+      /// <param name="getState">If getState returns default(TState) no transition executed</param>
       /// <param name="argumentCanBeNull">True if argument passed to enter action can be null</param>
       public Transitions AddTransition<TArgument>([NotNull] TEvent @event, [NotNull] Func<TState> getState, bool argumentCanBeNull = false)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
-        if (getState == null) throw new ArgumentNullException(nameof(getState));
+        if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+        if (getState.IsNull()) throw new ArgumentNullException(nameof(getState));
         
         return AddTransition(@event, getState, false, typeof(TArgument), argumentCanBeNull);
       }
@@ -83,14 +83,16 @@ namespace Binstate
       public void AllowReentrancy(TEvent @event) => AddTransition(@event, () => StateId, true, null, false);
       
       /// <summary>
-      /// Defines transition from the state to itself when <param name="event"> is raised. Exit and enter actions are called in case of such transition.</param>
-      /// Use this overload if the state enter action requires an input parameter.
+      /// Defines transition from the state to itself when <paramref name="event"> is raised. Exit and enter actions are called in case of such transition.</paramref>
+      /// Use this overload if the state enter action requires an input argument.
       /// </summary>
+      /// <param name="event"></param>
+      /// <param name="argumentCanBeNull">True if argument passed to enter action can be null</param>
       public void AllowReentrancy<TArgument>(TEvent @event, bool argumentCanBeNull = false) => AddTransition(@event, () => StateId, true, typeof(TArgument), argumentCanBeNull);
       
-      private Transitions AddTransition([NotNull] TEvent @event, [NotNull] Func<TState> getState, bool isStatic, Type argumentType, bool argumentCanBeNull)
+      private Transitions AddTransition(TEvent @event, Func<TState> getState, bool isStatic, Type parameterType, bool argumentCanBeNull)
       {
-        TransitionList.Add(new Transition<TState, TEvent>(@event, argumentType, getState, isStatic, argumentCanBeNull));
+        TransitionList.Add(new Transition<TState, TEvent>(@event, getState, isStatic, parameterType, argumentCanBeNull));
         return this;
       }
     }
@@ -100,8 +102,8 @@ namespace Binstate
     /// </summary>
     public class Exit : Transitions
     {
-      [CanBeNull] internal EnterActionInvoker<TEvent> EnterAction;
-      [CanBeNull] internal Action ExitAction;
+      [CanBeNull] 
+      internal Action ExitAction;
 
       /// <inheritdoc />
       protected Exit(TState stateId) : base(stateId) { }
@@ -123,7 +125,10 @@ namespace Binstate
     {
       private const string AsyncVoidMethodNotSupported = "'async void' methods are not supported, use Task return type for async method";
 
-      internal Enter([NotNull] TState stateId) : base(stateId){}
+      [CanBeNull] 
+      internal EnterActionInvoker<TEvent> EnterAction;
+      
+      internal Enter(TState stateId) : base(stateId){}
 
       /// <summary>
       /// Specifies the action to be called on entering the currently configured state.
@@ -132,7 +137,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter([NotNull] Action<IStateMachine<TEvent>> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
         if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
         EnterAction = EnterActionInvoker<TEvent>.Create(enterAction);
@@ -146,7 +151,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter([NotNull] Func<IStateMachine<TEvent>, Task> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
         
         EnterAction = EnterActionInvoker<TEvent>.Create(enterAction);
         return this;
@@ -162,7 +167,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument>([NotNull] Action<IStateMachine<TEvent>, TArgument> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
         if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
       
         EnterAction = EnterActionInvoker<TEvent>.Create(enterAction);
@@ -176,13 +181,33 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument>([NotNull] Func<IStateMachine<TEvent>, TArgument, Task> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
         
         EnterAction = EnterActionInvoker<TEvent>.Create(enterAction);
         return this;
       }
     
       private static bool IsAsyncMethod(MemberInfo method) => method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null;
+    }
+
+    /// <summary>
+    /// This class is used to configure composite states. 
+    /// </summary>
+    public class Substate : Enter
+    {
+      internal TState ParentStateId; 
+      
+      internal Substate(TState stateId) : base(stateId)
+      { }
+
+      /// <summary>
+      /// Defines the currently configured state as a subset of a composite state 
+      /// </summary>
+      public Enter AsSubsetOf(TState parentStateId)
+      {
+        ParentStateId = parentStateId;
+        return this;
+      }
     }
   }
 }

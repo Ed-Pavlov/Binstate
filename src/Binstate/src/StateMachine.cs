@@ -10,18 +10,21 @@ namespace Binstate
   /// </summary>
   public partial class StateMachine<TState, TEvent>
   {
+    /// <summary>
+    /// The map of all defined states
+    /// </summary>
     private readonly Dictionary<TState, State<TState, TEvent>> _states;
-    
-    private object _currentControllerState;
-    private State<TState, TEvent> _currentState;
 
+    /// <summary>
+    /// Active composite (hierarchy of) state
+    /// </summary>
+    private readonly Stack<State<TState, TEvent>> _activeStates = new Stack<State<TState, TEvent>>();
     private readonly object _currentStateAccess = new object();
-    
+
     internal StateMachine(State<TState, TEvent> initialState, Dictionary<TState, State<TState, TEvent>> states)
     {
       _states = states;
-      _currentControllerState = initialState.Id;
-      _currentState = initialState;
+      _activeStates.Push(initialState);
     }
 
     /// <summary>
@@ -29,10 +32,11 @@ namespace Binstate
     /// if the entering action of the target state is blocking, it will block till on entering method will finish.
     /// if the entering action of the target state is async, it will return after the state is changed.
     /// </summary>
-    public void Raise([NotNull] TEvent @event)
+    /// <returns>Returns true if state was changed, false if not</returns>
+    public bool Raise([NotNull] TEvent @event)
     {
-      if (@event == null) throw new ArgumentNullException(nameof(@event));
-      ExecuteTransition<Unit>(@event, _ => _.ValidateParameter(), null);
+      if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+      return ExecuteTransition<Unit>(@event, _ => _.ValidateParameter(), null);
     }
 
     /// <summary>
@@ -40,10 +44,11 @@ namespace Binstate
     /// if the entering action of the target state is blocking, it will block till on entering method of the new state will finish.
     /// if the entering action of the target state is async, it will return after the state is changed.
     /// </summary>
-    public void Raise<T>([NotNull] TEvent @event, [CanBeNull] T parameter)
+    /// <returns>Returns true if state was changed, false if not</returns>
+    public bool Raise<T>([NotNull] TEvent @event, [CanBeNull] T parameter)
     {
-      if (@event == null) throw new ArgumentNullException(nameof(@event));
-      ExecuteTransition(@event, _ => _.ValidateParameter(parameter), parameter);
+      if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+      return ExecuteTransition(@event, _ => _.ValidateParameter(parameter), parameter);
     }
 
     /// <summary>
@@ -52,9 +57,9 @@ namespace Binstate
     /// if the entering action of the target state is blocking, Task finishes when entering action of the new state is finished;
     /// if the entering action of the target state is async, Task finishes right after the state is changed.
     /// </summary>
-    public Task RaiseAsync([NotNull] TEvent @event)
+    public Task<bool> RaiseAsync([NotNull] TEvent @event)
     {
-      if (@event == null) throw new ArgumentNullException(nameof(@event));
+      if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
       return Task.Run(() => ExecuteTransition<Unit>(@event, _ => _.ValidateParameter(), null));
     }
 
@@ -62,41 +67,59 @@ namespace Binstate
     /// of the current state is finished, then:
     /// if the entering action of the target state is blocking, Task finishes when entering action of the new state is finished;
     /// if the entering action of the target state is async, Task finishes right after the state is changed.
-    public Task RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T parameter)
+    public Task<bool> RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T parameter)
     {
-      if (@event == null) throw new ArgumentNullException(nameof(@event));
+      if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
       return Task.Run(() => ExecuteTransition(@event, _ => _.ValidateParameter(parameter), parameter));
     }
 
-    private void ExecuteTransition<T>(TEvent @event, Action<Transition<TState, TEvent>> transitionValidator, T parameter)
+    private bool ExecuteTransition<T>(TEvent @event, Action<Transition<TState, TEvent>> transitionValidator, T argument)
     {
-      State<TState, TEvent> newState;
+      var enterActions = new List<Action>();
+
       lock(_currentStateAccess)
       {
-        var transition = _currentState.FindTransition(@event);
+        var activeState = _activeStates.Peek(); // there should be at least one active state, don't need to check count
+        
+        var transition = activeState.FindTransitionTransitive(@event); // looks for a transition through all parent states
         transitionValidator(transition);
 
         var stateId = transition.GetTargetStateId();
-        if(stateId == null)
-          return;
+        if(stateId.IsNull()) // dynamic transition can return null, means no transition needed
+          return false;
         
-        newState = GetState(stateId);
-        newState.SetAsActive();
-        
-        _currentControllerState = null; // signal Controller that current state is deactivated 
-        _currentState.Exit(); // wait current OnEnter finished (if still is not), then call OnExit
+        var newState = GetState(stateId);
 
-        _currentState = newState;
-        _currentControllerState = newState.Id;
+        // exit all active states which are not parent for the new state
+        while (activeState != null && !newState.IsSubstateOf(activeState))
+        {
+          activeState.Exit();
+          _activeStates.Pop(); // remove from active states
+          activeState = _activeStates.Count == 0 ? null : _activeStates.Peek();
+        }
+
+        // if new state has parent states enter all parent states from the top
+        var states = newState.GetAllStatesForActivationFrom(activeState); // get all states to activate starting from activeState till newState itself
+        foreach (var state in states)
+        {
+          var controller = new Controller(state, this);
+          state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
+          enterActions.Add(() => state.Enter(controller, argument));
+          _activeStates.Push(state);
+        }
       }
-      // call Enter out of a lock due to it can block execution till the state machine will transit to another state
-      newState.Enter(new Controller(_currentState.Id, this), parameter);
+
+      // call Enter actions out of a lock due to it can block execution
+      foreach (var enterAction in enterActions)
+        enterAction();
+      
+      return true;
     }
     
     private State<TState, TEvent> GetState([NotNull] TState state)
     {
       if (!_states.TryGetValue(state, out var result))
-        throw new InvalidOperationException($"State '{state}' is not registered in the state machine");
+        throw new InvalidOperationException($"State '{state}' is not defined");
       return result;
     }
   }

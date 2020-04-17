@@ -10,18 +10,18 @@ namespace Binstate
   /// </summary>
   public class Builder<TState, TEvent>
   {
-    private readonly List<Config<TState, TEvent>.Enter> _states = new List<Config<TState, TEvent>.Enter>();
+    private readonly List<Config<TState, TEvent>.Substate> _states = new List<Config<TState, TEvent>.Substate>();
 
     /// <summary>
     /// Defines the new state in the state machine
     /// </summary>
     /// <param name="stateId">Id of the state, is used to reference it from other elements of the state machine.</param>
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
-    public Config<TState, TEvent>.Enter DefineState([NotNull] TState stateId)
+    public Config<TState, TEvent>.Substate DefineState([NotNull] TState stateId)
     {
-      if (stateId == null) throw new ArgumentNullException(nameof(stateId));
+      if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
 
-      var stateConfig = new Config<TState, TEvent>.Enter(stateId);
+      var stateConfig = new Config<TState, TEvent>.Substate(stateId);
       _states.Add(stateConfig);
       return stateConfig;
     }
@@ -33,8 +33,9 @@ namespace Binstate
     /// <exception cref="InvalidOperationException">Throws if there are any inconsistencies in the provided configuration.</exception>
     public StateMachine<TState, TEvent> Build([NotNull] TState initialState)
     {
-      if (initialState == null) throw new ArgumentNullException(nameof(initialState));
+      if (initialState.IsNull()) throw new ArgumentNullException(nameof(initialState));
 
+      // create all states
       var states = new Dictionary<TState, State<TState, TEvent>>();
       foreach (var stateConfig in _states)
       {
@@ -49,6 +50,15 @@ namespace Binstate
         var state = new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterAction, stateConfig.ExitAction, transitions);
         states.Add(stateConfig.StateId, state);
       }
+
+      // bind states with parent states
+      foreach (var stateConfig in _states)
+        if (stateConfig.ParentStateId.IsNotNull())
+        {
+          var state = states[stateConfig.StateId];
+          var parentState = states[stateConfig.ParentStateId];
+          state.AddParent(parentState);
+        }
 
       if (!states.ContainsKey(initialState))
         throw new ArgumentException($"No state '{initialState}' is defined");

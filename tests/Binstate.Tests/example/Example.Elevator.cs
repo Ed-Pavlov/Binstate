@@ -1,6 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
 using Binstate;
-using FluentAssertions;
 
 namespace Instate.Tests.example
 {
@@ -15,6 +14,7 @@ namespace Instate.Tests.example
 
       private enum States
       {
+        None,
         Healthy,
         OnFloor,
         Moving,
@@ -46,10 +46,12 @@ namespace Instate.Tests.example
 
         builder
           .DefineState(States.Error)
-          .AddTransition(Events.Reset, States.Healthy);
+          .AddTransition(Events.Reset, States.Healthy)
+          .AllowReentrancy(Events.Error);
 
         builder
           .DefineState(States.OnFloor)
+          .AsSubsetOf(States.Healthy)
           .OnEnter(AnnounceFloor)
           .OnExit(() => Beep(2))
           .AddTransition(Events.CloseDoor, States.DoorClosed)
@@ -59,10 +61,29 @@ namespace Instate.Tests.example
 
         builder
           .DefineState(States.Moving)
+          .AsSubsetOf(States.Healthy)
           .OnEnter(CheckOverload)
           .AddTransition(Events.Stop, States.OnFloor);
 
+        builder
+          .DefineState(States.MovingUp)
+          .AsSubsetOf(States.Moving);
+        
+        builder
+          .DefineState(States.MovingDown)
+          .AsSubsetOf(States.Moving);
+
+        builder
+          .DefineState(States.DoorClosed)
+          .AsSubsetOf(States.OnFloor);
+        
+        builder
+          .DefineState(States.DoorOpen)
+          .AsSubsetOf(States.OnFloor);
+        
         _elevator = builder.Build(States.OnFloor);
+        
+        // ready to work
       }
 
       public void GoToUpperLevel()

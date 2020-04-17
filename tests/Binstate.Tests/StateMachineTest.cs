@@ -211,15 +211,15 @@ namespace Instate.Tests
       actual.Should().BeEquivalentTo(OnEnter, Terminated);
     }
     
-    private static IEnumerable<TestCaseData> raise_terminated_with_param_source()
+    private static IEnumerable<TestCaseData> raise_terminated_with_argment_source()
     {
       // using blocking and Async.Wait in order test should not exit before raising an event is completely handled
       yield return new TestCaseData(new Action<StateMachine<string, int>, int>((_, param) => _.Raise(Terminate, param))).SetName("Raise");
       yield return new TestCaseData(new Action<StateMachine<string, int>, int>((_, param) => _.RaiseAsync(Terminate, param).Wait())).SetName("RaiseAsync");
     }
     
-    [TestCaseSource(nameof(raise_terminated_with_param_source))]
-    public void should_pass_parameter_to_enter(Action<StateMachine<string, int>, int> raiseTerminated)
+    [TestCaseSource(nameof(raise_terminated_with_argment_source))]
+    public void should_pass_argument_to_enter(Action<StateMachine<string, int>, int> raiseTerminated)
     {
       const int Expected = 5;
       var actual = Expected - 139;

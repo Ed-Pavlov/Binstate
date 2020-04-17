@@ -5,32 +5,30 @@ namespace Binstate
 {
   public partial class StateMachine<TState, TEvent>
   {
-    private bool IsControllerInState(TState state) => Equals(state, _currentControllerState);
-    
     private class Controller : IStateMachine<TEvent>
     {
-      private readonly TState _stateId;
-      private readonly StateMachine<TState, TEvent> _stateMachine;
+      private readonly State<TState, TEvent> _state;
+      private readonly StateMachine<TState, TEvent> _owner;
 
-      public Controller([NotNull] TState stateId, [NotNull] StateMachine<TState, TEvent> stateMachine)
+      internal Controller(State<TState, TEvent> state, StateMachine<TState, TEvent> stateMachine)
       {
-        _stateId = stateId ?? throw new ArgumentNullException(nameof(stateId));
-        _stateMachine = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));
+        _state = state ?? throw new ArgumentNullException(nameof(state));
+        _owner = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));
       }
+
+      public bool InMyState => _state.IsActive;
 
       public void RaiseAsync([NotNull] TEvent @event)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
-        _stateMachine.RaiseAsync(@event);
+        if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+        _owner.RaiseAsync(@event);
       }
 
       public void RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T parameter)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
-        _stateMachine.RaiseAsync(@event, parameter);
+        if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+        _owner.RaiseAsync(@event, parameter);
       }
-
-      public bool InMyState => _stateMachine.IsControllerInState(_stateId);
     }
   }
 }

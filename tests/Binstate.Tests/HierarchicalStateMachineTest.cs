@@ -26,17 +26,17 @@ namespace Instate.Tests
 
       builder
         .DefineState(Branch1Level1)
-        .AsSubsetOf(Root)
+        .AsSubstateOf(Root)
         .OnEnter(_ => actual.Add(Branch1Level1));
 
       builder
         .DefineState(Branch1Level2)
-        .AsSubsetOf(Branch1Level1)
+        .AsSubstateOf(Branch1Level1)
         .OnEnter(_ => actual.Add(Branch1Level2));
 
       builder
         .DefineState(Branch1Level3)
-        .AsSubsetOf(Branch1Level2)
+        .AsSubstateOf(Branch1Level2)
         .OnEnter(_ => actual.Add(Branch1Level3));
 
       var target = builder.Build(Initial);
@@ -74,19 +74,19 @@ namespace Instate.Tests
 
       builder
         .DefineState(Branch1Level1)
-        .AsSubsetOf(Root)
+        .AsSubstateOf(Root)
         .OnEnter(_ => EnterAsync(_, Branch1Level1))
         .OnExit(() => actual.Add(Branch1Level1));
 
       builder
         .DefineState(Branch1Level2)
-        .AsSubsetOf(Branch1Level1)
+        .AsSubstateOf(Branch1Level1)
         .OnEnter(_ => EnterAsync(_, Branch1Level2))
         .OnExit(() => actual.Add(Branch1Level2));
 
       builder
         .DefineState(Branch1Level3)
-        .AsSubsetOf(Branch1Level2)
+        .AsSubstateOf(Branch1Level2)
         .OnEnter(_ => EnterAsync(_, Branch1Level3))
         .OnExit(() => actual.Add(Branch1Level3))
         .AddTransition(Free1, Free1);
@@ -131,20 +131,20 @@ namespace Instate.Tests
 
       builder
         .DefineState(Branch1Level1)
-        .AsSubsetOf(Root)
+        .AsSubstateOf(Root)
         .OnEnter(_ => EnterAsync(_, Branch1Level1))
         .OnExit(() => actual.Add(Branch1Level1));
 
       builder
         .DefineState(Branch1Level2)
-        .AsSubsetOf(Branch1Level1)
+        .AsSubstateOf(Branch1Level1)
         .OnEnter(_ => EnterAsync(_, Branch1Level2))
         .OnExit(() => actual.Add(Branch1Level2))
         .AddTransition(Branch1Level3, Branch1Level3);
 
       builder
         .DefineState(Branch1Level3)
-        .AsSubsetOf(Branch1Level2)
+        .AsSubstateOf(Branch1Level2)
         .OnEnter(_ => actual.Add(Branch1Level3));
       
       var target = builder.Build(Initial);
@@ -184,23 +184,23 @@ namespace Instate.Tests
 
       builder
         .DefineState(Branch1Level1)
-        .AsSubsetOf(Root)
+        .AsSubstateOf(Root)
         .OnExit(() => actual.Add(Branch1Level1));
 
       builder
         .DefineState(Branch1Level2)
-        .AsSubsetOf(Branch1Level1)
+        .AsSubstateOf(Branch1Level1)
         .OnExit(() => actual.Add(Branch1Level2))
         .AddTransition(Branch2Level2, Branch2Level2);
 
       builder
         .DefineState(Branch2Level1)
-        .AsSubsetOf(Root)
+        .AsSubstateOf(Root)
         .OnEnter(_ => actual.Add(Branch2Level1));
 
       builder
         .DefineState(Branch2Level2)
-        .AsSubsetOf(Branch2Level1)
+        .AsSubstateOf(Branch2Level1)
         .OnEnter(_ => actual.Add(Branch2Level2));
       
       var target = builder.Build(Initial);
@@ -231,11 +231,11 @@ namespace Instate.Tests
 
       builder
         .DefineState(Branch1Level1)
-        .AsSubsetOf(Root);
+        .AsSubstateOf(Root);
 
       builder
         .DefineState(Branch1Level2)
-        .AsSubsetOf(Branch1Level1)
+        .AsSubstateOf(Branch1Level1)
         .OnEnter(_ => actual.Add(Branch1Level2));
 
       builder

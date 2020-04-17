@@ -134,52 +134,39 @@ Supports hierarchically nested states, see "Elevator" example.
   
         public Elevator()
         {
-          var builder = new Builder<States, Events>();
-  
-          builder
-            .DefineState(States.Healthy)
-            .AddTransition(Events.Error, States.Error);
-  
-          builder
-            .DefineState(States.Error)
-            .AddTransition(Events.Reset, States.Healthy)
-            .AllowReentrancy(Events.Error);
-  
-          builder
-            .DefineState(States.OnFloor)
-            .AsSubsetOf(States.Healthy)
-            .OnEnter(AnnounceFloor)
-            .OnExit(() => Beep(2))
-            .AddTransition(Events.CloseDoor, States.DoorClosed)
-            .AddTransition(Events.OpenDoor, States.DoorOpen)
-            .AddTransition(Events.GoUp, States.MovingUp)
-            .AddTransition(Events.GoDown, States.MovingDown);
-  
-          builder
-            .DefineState(States.Moving)
-            .AsSubsetOf(States.Healthy)
-            .OnEnter(CheckOverload)
-            .AddTransition(Events.Stop, States.OnFloor);
-  
-          builder
-            .DefineState(States.MovingUp)
-            .AsSubsetOf(States.Moving);
-          
-          builder
-            .DefineState(States.MovingDown)
-            .AsSubsetOf(States.Moving);
-  
-          builder
-            .DefineState(States.DoorClosed)
-            .AsSubsetOf(States.OnFloor);
-          
-          builder
-            .DefineState(States.DoorOpen)
-            .AsSubsetOf(States.OnFloor);
-          
-          _elevator = builder.Build(States.OnFloor);
-          
-          // ready to work
+            var builder = new Builder<States, Events>();
+            
+            builder
+              .DefineState(States.Healthy)
+              .AddTransition(Events.Error, States.Error);
+            
+            builder
+              .DefineState(States.Error)
+              .AddTransition(Events.Reset, States.Healthy)
+              .AllowReentrancy(Events.Error);
+            
+            builder
+              .DefineState(States.OnFloor).AsSubstateOf(States.Healthy)
+              .OnEnter(AnnounceFloor)
+              .OnExit(() => Beep(2))
+              .AddTransition(Events.CloseDoor, States.DoorClosed)
+              .AddTransition(Events.OpenDoor, States.DoorOpen)
+              .AddTransition(Events.GoUp, States.MovingUp)
+              .AddTransition(Events.GoDown, States.MovingDown);
+            
+            builder
+              .DefineState(States.Moving).AsSubstateOf(States.Healthy)
+              .OnEnter(CheckOverload)
+              .AddTransition(Events.Stop, States.OnFloor);
+            
+            builder.DefineState(States.MovingUp).AsSubstateOf(States.Moving);
+            builder.DefineState(States.MovingDown).AsSubstateOf(States.Moving);
+            builder.DefineState(States.DoorClosed).AsSubstateOf(States.OnFloor);
+            builder.DefineState(States.DoorOpen).AsSubstateOf(States.OnFloor);
+            
+            _elevator = builder.Build(States.OnFloor);
+            
+            // ready to work
         }
   
         public void GoToUpperLevel()
@@ -260,5 +247,4 @@ Supports hierarchically nested states, see "Elevator" example.
           Error,
           Reset
         }
-
       }

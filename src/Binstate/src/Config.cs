@@ -203,7 +203,7 @@ namespace Binstate
       /// <summary>
       /// Defines the currently configured state as a subset of a composite state 
       /// </summary>
-      public Enter AsSubsetOf(TState parentStateId)
+      public Enter AsSubstateOf(TState parentStateId)
       {
         ParentStateId = parentStateId;
         return this;

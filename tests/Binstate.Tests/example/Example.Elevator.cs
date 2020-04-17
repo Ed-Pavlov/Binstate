@@ -12,30 +12,6 @@ namespace Instate.Tests.example
     {
       private readonly StateMachine<States, Events> _elevator;
 
-      private enum States
-      {
-        None,
-        Healthy,
-        OnFloor,
-        Moving,
-        MovingUp,
-        MovingDown,
-        DoorOpen,
-        DoorClosed,
-        Error
-      }
-
-      private enum Events
-      {
-        GoUp,
-        GoDown,
-        OpenDoor,
-        CloseDoor,
-        Stop,
-        Error,
-        Reset
-      }
-
       public Elevator()
       {
         var builder = new Builder<States, Events>();
@@ -50,8 +26,7 @@ namespace Instate.Tests.example
           .AllowReentrancy(Events.Error);
 
         builder
-          .DefineState(States.OnFloor)
-          .AsSubsetOf(States.Healthy)
+          .DefineState(States.OnFloor).AsSubstateOf(States.Healthy)
           .OnEnter(AnnounceFloor)
           .OnExit(() => Beep(2))
           .AddTransition(Events.CloseDoor, States.DoorClosed)
@@ -60,26 +35,15 @@ namespace Instate.Tests.example
           .AddTransition(Events.GoDown, States.MovingDown);
 
         builder
-          .DefineState(States.Moving)
-          .AsSubsetOf(States.Healthy)
+          .DefineState(States.Moving).AsSubstateOf(States.Healthy)
           .OnEnter(CheckOverload)
           .AddTransition(Events.Stop, States.OnFloor);
 
-        builder
-          .DefineState(States.MovingUp)
-          .AsSubsetOf(States.Moving);
-        
-        builder
-          .DefineState(States.MovingDown)
-          .AsSubsetOf(States.Moving);
+        builder.DefineState(States.MovingUp).AsSubstateOf(States.Moving);
+        builder.DefineState(States.MovingDown).AsSubstateOf(States.Moving);
 
-        builder
-          .DefineState(States.DoorClosed)
-          .AsSubsetOf(States.OnFloor);
-        
-        builder
-          .DefineState(States.DoorOpen)
-          .AsSubsetOf(States.OnFloor);
+        builder.DefineState(States.DoorClosed).AsSubstateOf(States.OnFloor);
+        builder.DefineState(States.DoorOpen).AsSubstateOf(States.OnFloor);
         
         _elevator = builder.Build(States.OnFloor);
         
@@ -140,6 +104,30 @@ namespace Instate.Tests.example
       }
 
       private bool IsOverloaded() => false;
+      
+      private enum States
+      {
+        None,
+        Healthy,
+        OnFloor,
+        Moving,
+        MovingUp,
+        MovingDown,
+        DoorOpen,
+        DoorClosed,
+        Error
+      }
+
+      private enum Events
+      {
+        GoUp,
+        GoDown,
+        OpenDoor,
+        CloseDoor,
+        Stop,
+        Error,
+        Reset
+      }
     }
   }
 }

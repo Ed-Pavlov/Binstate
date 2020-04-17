@@ -1,15 +1,14 @@
 # Binstate
 
-Simple but yet powerful state machine. Thread safe. Supports async methods.
-
+Simple but yet powerful state machine. Thread safe. Supports async methods. Supports hierarchically nested states.
      
 ## Features
 
-**Thread safe**
+### Thread safe
 
 The state machine is fully thread safe and allows calling any method from any thread.
 
-**Control on what thread enter and exit actions are executed**
+### Control on what thread enter and exit actions are executed
 
 Binstate don't use it's own thread to execute transitions.
 
@@ -20,11 +19,11 @@ If enter action is blocking `Raise` will block until enter action finishes.
 
  It gives an application full control on threading model of the state machine.   
 
-**Support async methods**
+### Support async methods
 
 Supports using async methods as enter action of the state. Binstate guarantees that async enter action will finis before calling exit action of the current state and enter action of the new state. Async method should return `Task`, `async void` methods are not supported. 
 
-**Conditional transitions using C# not DSL**
+### Conditional transitions using C# not DSL
     
 Instead of introducing conditional transition into state machine DSL like
 
@@ -47,7 +46,7 @@ Binstate allows using C#
         return null; // no transition will be executed
       });
       
-**Safe checking if state machine still in the state**
+### Safe checking if state machine still in the state
 
 The current state of the state machine is not exposed. No knowledge which state to check - less errors.
 
@@ -64,7 +63,7 @@ not `TState CurrentState{ get; }` but `bool InMyState {get;}`
       });
     }    
     
-**Changing state from enter action**
+### Changing state from enter action
 
       private async Task TrackGame(IStateMachine<State> stateMachine, string opponentName)
       {
@@ -76,7 +75,7 @@ not `TState CurrentState{ get; }` but `bool InMyState {get;}`
         }
       }  
       
- **Enter actions with parameters**
+ ### Enter actions with parameters
  
          builder
           .DefineState(WaitingForGame)
@@ -88,11 +87,12 @@ not `TState CurrentState{ get; }` but `bool InMyState {get;}`
            .DefineState(TrackingGame)
            .OnEnter<string>(TrackGame)
            ...
+### Hierarchically nested states
+Supports hierarchically nested states, see "Elevator" example.
 
+## Examples
 
-### Example
-
-**Telephone call**
+#### Telephone call
 
       var builder = new Builder<State, Event>();
 
@@ -125,3 +125,140 @@ not `TState CurrentState{ get; }` but `bool InMyState {get;}`
       
       // ... 
       stateMachine.RaiseAsync(CallDialed);
+      
+#### Elevator
+      
+      public class Elevator
+      {
+        private readonly StateMachine<States, Events> _elevator;
+  
+        public Elevator()
+        {
+          var builder = new Builder<States, Events>();
+  
+          builder
+            .DefineState(States.Healthy)
+            .AddTransition(Events.Error, States.Error);
+  
+          builder
+            .DefineState(States.Error)
+            .AddTransition(Events.Reset, States.Healthy)
+            .AllowReentrancy(Events.Error);
+  
+          builder
+            .DefineState(States.OnFloor)
+            .AsSubsetOf(States.Healthy)
+            .OnEnter(AnnounceFloor)
+            .OnExit(() => Beep(2))
+            .AddTransition(Events.CloseDoor, States.DoorClosed)
+            .AddTransition(Events.OpenDoor, States.DoorOpen)
+            .AddTransition(Events.GoUp, States.MovingUp)
+            .AddTransition(Events.GoDown, States.MovingDown);
+  
+          builder
+            .DefineState(States.Moving)
+            .AsSubsetOf(States.Healthy)
+            .OnEnter(CheckOverload)
+            .AddTransition(Events.Stop, States.OnFloor);
+  
+          builder
+            .DefineState(States.MovingUp)
+            .AsSubsetOf(States.Moving);
+          
+          builder
+            .DefineState(States.MovingDown)
+            .AsSubsetOf(States.Moving);
+  
+          builder
+            .DefineState(States.DoorClosed)
+            .AsSubsetOf(States.OnFloor);
+          
+          builder
+            .DefineState(States.DoorOpen)
+            .AsSubsetOf(States.OnFloor);
+          
+          _elevator = builder.Build(States.OnFloor);
+          
+          // ready to work
+        }
+  
+        public void GoToUpperLevel()
+        {
+          _elevator.Raise(Events.CloseDoor);
+          _elevator.Raise(Events.GoUp);
+          _elevator.Raise(Events.OpenDoor);
+        }
+  
+        public void GoToLowerLevel()
+        {
+          _elevator.Raise(Events.CloseDoor);
+          _elevator.Raise(Events.GoDown);
+          _elevator.Raise(Events.OpenDoor);
+        }
+  
+        public void Error()
+        {
+          _elevator.Raise(Events.Error);
+        }
+  
+        public void Stop()
+        {
+          _elevator.Raise(Events.Stop);
+        }
+  
+        public void Reset()
+        {
+          _elevator.Raise(Events.Reset);
+        }
+  
+        private void AnnounceFloor(IStateMachine<Events> stateMachine)
+        {
+          /* announce floor number */
+        }
+  
+        private void AnnounceOverload()
+        {
+          /* announce overload */
+        }
+  
+        private void Beep(int times)
+        {
+          /* beep */
+        }
+  
+        private void CheckOverload(IStateMachine<Events> stateMachine)
+        {
+          if (IsOverloaded())
+          {
+            AnnounceOverload();
+            stateMachine.RaiseAsync(Events.Stop);
+          }
+        }
+  
+        private bool IsOverloaded() => false;
+        
+        private enum States
+        {
+          None,
+          Healthy,
+          OnFloor,
+          Moving,
+          MovingUp,
+          MovingDown,
+          DoorOpen,
+          DoorClosed,
+          Error
+        }
+    
+        private enum Events
+        {
+          GoUp,
+          GoDown,
+          OpenDoor,
+          CloseDoor,
+          Stop,
+          Error,
+          Reset
+        }
+
+      }

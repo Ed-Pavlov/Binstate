@@ -12,9 +12,9 @@
         <license type="expression">Apache-2.0</license>
         <requireLicenseAcceptance>false</requireLicenseAcceptance>
         <icon>images\logo128.png</icon>
-        <tags>.NET StateMachine state-machine</tags>
+        <tags>.NET StateMachine state-machine FSM HSM hierarchical-state-machine</tags>
 
-        <description>Binstate is a lightweight but yet powerful implementation of the state machine for .NET. Threadsafe. Supports async methods.</description>
+        <description>Binstate is a lightweight but yet powerful implementation of the state machine for .NET. Threadsafe. Supports async methods. Supports hierarchically nested states.</description>
     </metadata>
     <files>
         <file src="..\..\..\branding\logo128.png" target="images"/>

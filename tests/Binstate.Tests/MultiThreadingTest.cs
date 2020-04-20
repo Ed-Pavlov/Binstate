@@ -24,7 +24,7 @@ namespace Instate.Tests
         actual.Add(OnEnter);
       }
       
-      var builder = new Builder<string, int>();
+      var builder = new Builder<string, int>(Console.WriteLine);
       
       builder
         .DefineState(Initial)
@@ -64,7 +64,7 @@ namespace Instate.Tests
         while (stateMachine.InMyState) await Task.Delay(100);
       }
       
-      var builder = new Builder<string, int>();
+      var builder = new Builder<string, int>(Console.WriteLine);
       builder
         .DefineState(Initial)
         .AddTransition(Event1, State1);

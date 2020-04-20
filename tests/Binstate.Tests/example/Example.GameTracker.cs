@@ -23,7 +23,7 @@ namespace Instate.Tests.example
 
       public GameTracker()
       {
-        var builder = new Builder<string, string>();
+        var builder = new Builder<string, string>(OnException);
 
         builder
           .DefineState(WaitingForGame)

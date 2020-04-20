@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Binstate;
@@ -14,7 +15,7 @@ namespace Instate.Tests
       var actual = new List<string>();
 
       // --arrange
-      var builder = new Builder<string, string>();
+      var builder = new Builder<string, string>(Console.WriteLine);
 
       builder
         .DefineState(Initial)
@@ -61,7 +62,7 @@ namespace Instate.Tests
       }
 
       // --arrange
-      var builder = new Builder<string, string>();
+      var builder = new Builder<string, string>(Console.WriteLine);
 
       builder
         .DefineState(Initial)
@@ -118,7 +119,7 @@ namespace Instate.Tests
       }
 
       // --arrange
-      var builder = new Builder<string, string>();
+      var builder = new Builder<string, string>(Console.WriteLine);
 
       builder
         .DefineState(Initial)
@@ -171,7 +172,7 @@ namespace Instate.Tests
       }
 
       // --arrange
-      var builder = new Builder<string, string>();
+      var builder = new Builder<string, string>(Console.WriteLine);
 
       builder
         .DefineState(Initial)
@@ -219,7 +220,7 @@ namespace Instate.Tests
       var actual = new List<string>();
 
       // --arrange
-      var builder = new Builder<string, string>();
+      var builder = new Builder<string, string>(Console.WriteLine);
 
       builder
         .DefineState(Initial)

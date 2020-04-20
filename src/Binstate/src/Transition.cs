@@ -5,6 +5,7 @@ namespace Binstate
 {
   internal class Transition<TState, TEvent>
   {
+    private readonly Func<TState> _getTargetStateId;
     private readonly bool _allowNullArgument;
     [CanBeNull] 
     private readonly Type _argumentType;
@@ -12,7 +13,7 @@ namespace Binstate
     public Transition(TEvent @event, Func<TState> getTargetStateId, bool isStatic, Type argumentType, bool allowNullArgument)
     {
       Event = @event;
-      GetTargetStateId = getTargetStateId;
+      _getTargetStateId = getTargetStateId;
       IsStatic = isStatic;
       _argumentType = argumentType;
       _allowNullArgument = allowNullArgument;
@@ -24,8 +25,19 @@ namespace Binstate
     /// Means transition targets the predefined state in opposite to calculated dynamically runtime
     /// </summary>
     public readonly bool IsStatic;
-    
-    public Func<TState> GetTargetStateId { get; }
+
+    public TState GetTargetStateId(Action<Exception> onException)
+    {
+      try
+      {
+        return _getTargetStateId();
+      }
+      catch (Exception exception)
+      {
+        onException(exception);
+        return default;
+      }
+    }
 
     public void ValidateParameter()
     {

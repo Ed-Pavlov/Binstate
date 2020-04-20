@@ -15,15 +15,18 @@ namespace Binstate
     /// </summary>
     private readonly Dictionary<TState, State<TState, TEvent>> _states;
 
+    private readonly Action<Exception> _onException;
+
     /// <summary>
     /// Active composite (hierarchy of) state
     /// </summary>
     private readonly Stack<State<TState, TEvent>> _activeStates = new Stack<State<TState, TEvent>>();
     private readonly object _currentStateAccess = new object();
 
-    internal StateMachine(State<TState, TEvent> initialState, Dictionary<TState, State<TState, TEvent>> states)
+    internal StateMachine(State<TState, TEvent> initialState, Dictionary<TState, State<TState, TEvent>> states, Action<Exception> onException)
     {
       _states = states;
+      _onException = onException;
       _activeStates.Push(initialState);
     }
 
@@ -84,7 +87,7 @@ namespace Binstate
         var transition = activeState.FindTransitionTransitive(@event); // looks for a transition through all parent states
         transitionValidator(transition);
 
-        var stateId = transition.GetTargetStateId();
+        var stateId = transition.GetTargetStateId(_onException);
         if(stateId.IsNull()) // dynamic transition can return null, means no transition needed
           return false;
         
@@ -93,7 +96,7 @@ namespace Binstate
         // exit all active states which are not parent for the new state
         while (activeState != null && !newState.IsSubstateOf(activeState))
         {
-          activeState.Exit();
+          activeState.Exit(_onException);
           _activeStates.Pop(); // remove from active states
           activeState = _activeStates.Count == 0 ? null : _activeStates.Peek();
         }
@@ -104,7 +107,7 @@ namespace Binstate
         {
           var controller = new Controller(state, this);
           state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
-          enterActions.Add(() => state.Enter(controller, argument));
+          enterActions.Add(() => state.Enter(controller, argument, _onException));
           _activeStates.Push(state);
         }
       }

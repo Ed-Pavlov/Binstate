@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using Binstate;
 
@@ -23,7 +24,7 @@ namespace Instate.Tests.example
       const string OnHold = nameof(OnHold);
       const string PhoneDestroyed = nameof(PhoneDestroyed);
       
-      var builder = new Builder<string, string>();
+      var builder = new Builder<string, string>(OnException);
 
       builder
         .DefineState(OffHook)
@@ -63,5 +64,7 @@ namespace Instate.Tests.example
         }
       });
     }
+    
+    private static void OnException(Exception exception){}
   }
 }

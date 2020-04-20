@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics.CodeAnalysis;
 using Binstate;
 
@@ -14,7 +15,7 @@ namespace Instate.Tests.example
 
       public Elevator()
       {
-        var builder = new Builder<States, Events>();
+        var builder = new Builder<States, Events>(Console.WriteLine);
 
         builder
           .DefineState(States.Healthy)

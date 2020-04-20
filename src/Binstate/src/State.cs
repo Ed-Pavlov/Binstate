@@ -75,15 +75,15 @@ namespace Binstate
       }
     }
 
-    public void Enter<TArg>(IStateMachine<TEvent> stateMachine, TArg arg)
+    public void Enter<TArg>(IStateMachine<TEvent> stateMachine, TArg arg, Action<Exception> onException)
     {
       try
       {
         _enterFunctionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
-        _entered.Set();                 // it is safe to set the state as entered
+        _entered.Set(); // it is safe to set the state as entered
 
         if (_enter == null) return;
-        
+
         if (typeof(TArg) == typeof(Unit))
         {
           var noParameterEnter = (NoParameterEnterInvoker<TEvent>) _enter;
@@ -95,8 +95,10 @@ namespace Binstate
           _task = typedEnter.Invoke(stateMachine, arg);
         }
       }
-      finally
-      {
+      catch (Exception exception) {
+        onException(exception);
+      }
+      finally {
         _enterFunctionFinished.Set();  
       }
     }
@@ -106,20 +108,28 @@ namespace Binstate
     /// see <see cref="StateMachine{TState,TEvent}.ExecuteTransition{T}"/> implementation for details.
     /// In this case it should wait till <see cref="Enter{T}"/> will be called and exited, before call exit action
     /// </summary>
-    public void Exit()
+    /// <param name="onException"></param>
+    public void Exit(Action<Exception> onException)
     {
-      IsActive = false; // signal that current state is no more active
+      try
+      {
+        IsActive = false; // signal that current state is no more active
       
-      // if action is set as active but enter action still is not called, wait for it 
-      _entered.WaitOne();
+        // if action is set as active but enter action still is not called, wait for it 
+        _entered.WaitOne();
       
-      // wait till State.Enter function finishes
-      // if enter action is blocking or no action: _enterFunctionFinished is set means it finishes
-      _enterFunctionFinished.WaitOne(Timeout.Infinite);
-      // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till action finishes
-      _task?.Wait(Timeout.Infinite);
+        // wait till State.Enter function finishes
+        // if enter action is blocking or no action: _enterFunctionFinished is set means it finishes
+        _enterFunctionFinished.WaitOne(Timeout.Infinite);
+        // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till action finishes
+        _task?.Wait(Timeout.Infinite);
       
-      _exit?.Invoke();
+        _exit?.Invoke();
+      }
+      catch (Exception exception)
+      {
+        onException(exception);
+      }
     }
 
     public void AddParent([NotNull] State<TState, TEvent> parentState) => _parentState = parentState ?? throw new ArgumentNullException(nameof(parentState));

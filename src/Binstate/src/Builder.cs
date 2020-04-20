@@ -10,7 +10,15 @@ namespace Binstate
   /// </summary>
   public class Builder<TState, TEvent>
   {
-    private readonly List<Config<TState, TEvent>.Substate> _states = new List<Config<TState, TEvent>.Substate>();
+    private readonly Action<Exception> _onException;
+    private readonly List<Config<TState, TEvent>.Substate> _stateConfigs = new List<Config<TState, TEvent>.Substate>();
+
+    /// <summary>
+    /// Creates a builder of a state machine, use it to define state and configure transitions.
+    /// </summary>
+    /// <param name="onException">All exception thrown from actions passed to the state machine are caught in order to not break the state of the
+    /// state machine. Use this action to be notified about these exceptions.</param>
+    public Builder([NotNull] Action<Exception> onException) => _onException = onException ?? throw new ArgumentNullException(nameof(onException));
 
     /// <summary>
     /// Defines the new state in the state machine
@@ -22,7 +30,7 @@ namespace Binstate
       if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
 
       var stateConfig = new Config<TState, TEvent>.Substate(stateId);
-      _states.Add(stateConfig);
+      _stateConfigs.Add(stateConfig);
       return stateConfig;
     }
 
@@ -37,7 +45,7 @@ namespace Binstate
 
       // create all states
       var states = new Dictionary<TState, State<TState, TEvent>>();
-      foreach (var stateConfig in _states)
+      foreach (var stateConfig in _stateConfigs)
       {
         var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();
         foreach (var transition in stateConfig.TransitionList)
@@ -52,7 +60,7 @@ namespace Binstate
       }
 
       // bind states with parent states
-      foreach (var stateConfig in _states)
+      foreach (var stateConfig in _stateConfigs)
         if (stateConfig.ParentStateId.IsNotNull())
         {
           var state = states[stateConfig.StateId];
@@ -64,16 +72,18 @@ namespace Binstate
         throw new ArgumentException($"No state '{initialState}' is defined");
       ValidateStateMachine(states);
 
-      return new StateMachine<TState, TEvent>(states[initialState], states);
+      return new StateMachine<TState, TEvent>(states[initialState], states, _onException);
     }
 
-    private static void ValidateStateMachine(Dictionary<TState, State<TState, TEvent>> states)
+    private void ValidateStateMachine(Dictionary<TState, State<TState, TEvent>> states)
     {
-      foreach (var state in states.Values)
-      foreach (var transition in state.Transitions.Values.Where(_ => _.IsStatic))
+      foreach (var stateConfig in _stateConfigs)
+      foreach (var transition in stateConfig.TransitionList.Where(_ => _.IsStatic)) // do not check dynamic transitions because they are depends on the app state
       {
-        if (!states.ContainsKey(transition.GetTargetStateId()))
-          throw new InvalidOperationException($"Transition '{transition.Event}' from state '{state.Id}' references not defined state '{transition.GetTargetStateId}'");
+        var targetStateId = transition.GetTargetStateId(_ => { });
+        if (!states.ContainsKey(targetStateId)) // static transition can't throw an exception
+          throw new InvalidOperationException(
+            $"Transition '{transition.Event}' from state '{stateConfig.StateId}' references not defined state '{targetStateId}'");
       }
     }
   }

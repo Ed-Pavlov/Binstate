@@ -94,7 +94,7 @@ Supports hierarchically nested states, see "Elevator" example.
 
 #### Telephone call
 
-      var builder = new Builder<State, Event>();
+      var builder = new Builder<State, Event>(OnException);
 
       builder
         .DefineState(OffHook)
@@ -134,7 +134,7 @@ Supports hierarchically nested states, see "Elevator" example.
   
         public Elevator()
         {
-            var builder = new Builder<States, Events>();
+            var builder = new Builder<States, Events>(OnException);
             
             builder
               .DefineState(States.Healthy)

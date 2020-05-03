@@ -1,8 +1,3 @@
-<a href="https://enif.beta.teamcity.com/viewType.html?buildTypeId=Binstate_Build&guest=1">
-  <img src="https://enif.beta.teamcity.com/app/rest/builds/buildType:(id:Binstate_Build)/statusIcon" alt="Build status"/>
-</a>
-
-
 # Binstate
 
 Simple but yet powerful state machine. Thread safe. Supports async methods. Supports hierarchically nested states.

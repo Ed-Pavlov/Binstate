@@ -5,7 +5,7 @@
         <Nullable>disable</Nullable>
         <TargetFramework>netstandard2.0</TargetFramework>
         <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>binstate.public.snk</AssemblyOriginatorKeyFile>
+        <AssemblyOriginatorKeyFile>build\binstate.public.snk</AssemblyOriginatorKeyFile>
         <PublicSign>true</PublicSign>
     </PropertyGroup>
 

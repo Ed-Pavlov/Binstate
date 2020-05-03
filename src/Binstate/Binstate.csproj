@@ -5,7 +5,7 @@
         <Nullable>disable</Nullable>
         <TargetFramework>netstandard2.0</TargetFramework>
         <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>..\..\build\binstate.public.snk</AssemblyOriginatorKeyFile>
+        <AssemblyOriginatorKeyFile>binstate.public.snk</AssemblyOriginatorKeyFile>
         <PublicSign>true</PublicSign>
     </PropertyGroup>
 
@@ -18,13 +18,4 @@
       <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
       <DocumentationFile>bin\Release\Binstate.xml</DocumentationFile>
     </PropertyGroup>
-
-    <ItemGroup>
-      <None Include="..\..\build\binstate.public.snk">
-        <Link>binstate.public.snk</Link>
-      </None>
-      <None Include="..\..\build\binstate.snk">
-        <Link>binstate.snk</Link>
-      </None>
-    </ItemGroup>
 </Project>

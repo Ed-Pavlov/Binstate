@@ -4,8 +4,9 @@
         <LangVersion>8</LangVersion>
         <Nullable>disable</Nullable>
         <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>..\..\private\binstate.snk</AssemblyOriginatorKeyFile>
         <TargetFramework>netstandard2.0</TargetFramework>
+        <AssemblyOriginatorKeyFile>..\..\build\binstate.snk</AssemblyOriginatorKeyFile>
+        <PublicSign>false</PublicSign>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -19,9 +20,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <None Include="..\..\private\binstate.snk">
+      <None Include="..\..\build\binstate.snk">
         <Link>binstate.snk</Link>
       </None>
     </ItemGroup>
-
 </Project>

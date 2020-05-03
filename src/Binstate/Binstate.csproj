@@ -3,10 +3,10 @@
     <PropertyGroup>
         <LangVersion>8</LangVersion>
         <Nullable>disable</Nullable>
-        <SignAssembly>true</SignAssembly>
         <TargetFramework>netstandard2.0</TargetFramework>
-        <AssemblyOriginatorKeyFile>..\..\build\binstate.snk</AssemblyOriginatorKeyFile>
-        <PublicSign>false</PublicSign>
+        <SignAssembly>true</SignAssembly>
+        <AssemblyOriginatorKeyFile>..\..\build\binstate.public.snk</AssemblyOriginatorKeyFile>
+        <PublicSign>true</PublicSign>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -20,6 +20,9 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <None Include="..\..\build\binstate.public.snk">
+        <Link>binstate.public.snk</Link>
+      </None>
       <None Include="..\..\build\binstate.snk">
         <Link>binstate.snk</Link>
       </None>

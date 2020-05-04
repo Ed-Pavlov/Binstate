@@ -2,6 +2,7 @@
   <img src="https://enif.beta.teamcity.com/app/rest/builds/buildType:(id:Binstate_Build)/statusIcon" alt="Build status"/>
 </a>
 
+![GitHub](https://img.shields.io/github/license/Ed-ward/Binstate)
 
 # Binstate
 

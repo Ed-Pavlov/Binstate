@@ -1,32 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
-
         <IsPackable>false</IsPackable>
-
         <LangVersion>8</LangVersion>
-
         <Nullable>disable</Nullable>
-
         <RootNamespace>Instate.Tests</RootNamespace>
-
         <OutputType>Library</OutputType>
-
-        <TargetFrameworks Condition="'$(net-core-only)' == 'True'">netcoreapp2.2;netcoreapp3.1</TargetFrameworks>
-        <TargetFrameworks Condition="'$(net-core-only)' != 'True'">net472;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
-
+        <TargetFrameworks>net472;netcoreapp2.1;netcoreapp3.1</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="FluentAssertions" Version="5.10.3" />
-        <PackageReference Include="Moq" Version="4.13.1" />
-        <PackageReference Include="nunit" Version="3.12.0" />
-        <PackageReference Include="NUnit3TestAdapter" Version="3.15.1" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
+        <PackageReference Include="FluentAssertions" Version="5.10.3"/>
+        <PackageReference Include="Moq" Version="4.13.1"/>
+        <PackageReference Include="nunit" Version="3.12.0"/>
+        <PackageReference Include="NUnit3TestAdapter" Version="3.15.1"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\Binstate\Binstate.csproj" />
+        <ProjectReference Include="..\..\src\Binstate\Binstate.csproj"/>
     </ItemGroup>
 
 </Project>

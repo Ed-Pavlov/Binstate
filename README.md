@@ -1,8 +1,6 @@
-<a href="https://enif.beta.teamcity.com/viewType.html?buildTypeId=Binstate_Build&guest=1">
-  <img src="https://enif.beta.teamcity.com/app/rest/builds/buildType:(id:Binstate_Build)/statusIcon" alt="Build status"/>
-</a>
-
-![GitHub](https://img.shields.io/github/license/Ed-ward/Binstate)
+[![Nuget](https://img.shields.io/nuget/dt/Binstate)](https://www.nuget.org/packages/Binstate/)
+[![TeamCity](https://enif.beta.teamcity.com/app/rest/builds/buildType:(id:Binstate_Build)/statusIcon)](https://enif.beta.teamcity.com/viewType.html?buildTypeId=Binstate_Build&guest=1)
+___
 
 # Binstate
 

@@ -1,5 +1,5 @@
 [![Nuget](https://img.shields.io/nuget/dt/Binstate)](https://www.nuget.org/packages/Binstate/)
-[![TeamCity](https://enif.beta.teamcity.com/app/rest/builds/buildType:(id:Binstate_Build)/statusIcon)](https://enif.beta.teamcity.com/viewType.html?buildTypeId=Binstate_Build&guest=1)
+[![TeamCity](https://edpavlov.beta.teamcity.com/app/rest/builds/buildType:(id:Binstate_Build)/statusIcon)](https://edpavlov.beta.teamcity.com/viewType.html?buildTypeId=Binstate_Build&guest=1)
 ___
 
 # Binstate

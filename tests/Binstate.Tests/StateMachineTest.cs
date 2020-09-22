@@ -88,11 +88,11 @@ namespace Instate.Tests
 
       builder
         .DefineState(State1)
-        .OnEnter((_ =>
+        .OnEnter(_ =>
         {
           Thread.Sleep(299);
           actual.Add(OnEnter);
-        }))
+        })
         .OnExit(() => actual.Add(OnExit)) 
         .AddTransition(Terminate, Terminated);
       
@@ -211,38 +211,7 @@ namespace Instate.Tests
       actual.Should().BeEquivalentTo(OnEnter, Terminated);
     }
     
-    private static IEnumerable<TestCaseData> raise_terminated_with_argment_source()
-    {
-      // using blocking and Async.Wait in order test should not exit before raising an event is completely handled
-      yield return new TestCaseData(new Action<StateMachine<string, int>, int>((_, param) => _.Raise(Terminate, param))).SetName("Raise");
-      yield return new TestCaseData(new Action<StateMachine<string, int>, int>((_, param) => _.RaiseAsync(Terminate, param).Wait())).SetName("RaiseAsync");
-    }
     
-    [TestCaseSource(nameof(raise_terminated_with_argment_source))]
-    public void should_pass_argument_to_enter(Action<StateMachine<string, int>, int> raiseTerminated)
-    {
-      const int Expected = 5;
-      var actual = Expected - 139;
-      
-      // --arrange
-      var builder = new Builder<string, int>(Console.WriteLine);
-     
-      builder
-        .DefineState(State1)
-        .AddTransition<int>(Terminate, Terminated);
-
-      builder
-        .DefineState(Terminated)
-        .OnEnter<int>((_, param) => actual = param);
-
-      var stateMachine = builder.Build(State1);
-
-      // --act
-      raiseTerminated(stateMachine, Expected);
-      
-      // --assert
-      actual.Should().Be(Expected);
-    }
 
     [Test]
     public void should_call_exit_and_enter_on_reentering()
@@ -299,6 +268,5 @@ namespace Instate.Tests
       // --assert
       actual.Should().BeEquivalentTo(targetState);
     }
-    
   }
 }

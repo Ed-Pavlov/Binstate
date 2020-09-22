@@ -123,12 +123,26 @@ namespace Binstate
     /// </summary>
     public class Enter : Exit
     {
-      private const string AsyncVoidMethodNotSupported = "'async void' methods are not supported, use Task return type for async method";
+      internal const string AsyncVoidMethodNotSupported = "'async void' methods are not supported, use Task return type for async method";
 
       [CanBeNull] 
       internal EnterActionInvoker<TEvent> EnterAction;
       
       internal Enter(TState stateId) : base(stateId){}
+
+      /// <summary>
+      /// Specifies the simple action to be called on entering the currently configured state in case of controlling the current state
+      /// or transition to another one is not needed.
+      /// This overload is used to provide blocking action. To provide async action use <see cref="OnEnter(Func{IStateMachine{TEvent}, Task})"/>.
+      /// </summary>
+      /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
+      public Exit OnEnter([NotNull] Action enterAction)
+      {
+        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
+
+        return OnEnter(_ => enterAction());
+      }
 
       /// <summary>
       /// Specifies the action to be called on entering the currently configured state.
@@ -155,6 +169,23 @@ namespace Binstate
         
         EnterAction = EnterActionInvoker<TEvent>.Create(enterAction);
         return this;
+      }
+
+      /// <summary>
+      /// Specifies the simple action with parameter to be called on entering the currently configured state in case of controlling the current state
+      /// or transition to another one is not needed.
+      /// This overload is used to provide blocking action. To provide async action use
+      /// <see>
+      ///   <cref>OnEnter(Func{IStateMachine, T, Task})</cref>
+      /// </see>.
+      /// </summary>
+      /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
+      public Exit OnEnter<TArgument>([NotNull] Action<TArgument> enterAction)
+      {
+        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
+
+        return OnEnter<TArgument>((_, argument) => enterAction(argument));
       }
 
       /// <summary>

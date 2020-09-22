@@ -80,7 +80,7 @@ namespace Instate.Tests.example
         _elevator.Raise(Events.Reset);
       }
 
-      private void AnnounceFloor(IStateMachine<Events> stateMachine)
+      private void AnnounceFloor()
       {
         /* announce floor number */
       }

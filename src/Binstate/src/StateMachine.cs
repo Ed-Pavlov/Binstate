@@ -108,14 +108,10 @@ namespace Binstate
           var controller = new Controller(state, this);
           state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
 
-          enterActions.Add(() => state.Enter(controller, argument, _onException));
-          
-          // if(state is State<TState, TEvent, T> stateWithArgument)
-          //   enterActions.Add(() => stateWithArgument.Enter(controller, argument, _onException));
-          // else if(state is State<TState, TEvent, object> stateWithoutArgument)
-          //     enterActions.Add(() => stateWithoutArgument.Enter(controller, argument, _onException));
-          // else
-          //   throw new 
+          if(state is IState<TState, TEvent, T> stateWithArgument)
+            enterActions.Add(() => stateWithArgument.Enter(controller, argument, _onException));
+          else
+            enterActions.Add(() => state.Enter(controller, argument, _onException));
           
           _activeStates.Push(state);
         }

@@ -6,49 +6,44 @@ using JetBrains.Annotations;
 
 namespace Binstate
 {
-  // internal class State<TState, TEvent, TArgument> : State<TState, TEvent>
-  // {
-  //   public TArgument Argument;
-  //   
-  //   public State(
-  //     TState id, 
-  //     IEnterInvoker<TEvent> enter, 
-  //     Action exit, 
-  //     Dictionary<TEvent, Transition<TState, TEvent>> transitions) : base(id, enter, typeof(TArgument), exit, transitions)
-  //   {
-  //   }
-  //   
-  //   public void Enter(IStateMachine<TEvent> stateMachine, TArgument arg, Action<Exception> onException)
-  //   {
-  //     try
-  //     {
-  //       _enterFunctionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
-  //       _entered.Set(); // it is safe to set the state as entered
-  //
-  //       if (_enter == null) return;
-  //
-  //       if (typeof(TArgument) == typeof(Unit))
-  //       {
-  //         var noParameterEnter = (NoParameterEnterInvoker<TEvent>) _enter;
-  //         _task = noParameterEnter.Invoke(stateMachine);
-  //       }
-  //       else
-  //       {
-  //         Argument = arg;
-  //         var typedEnter = (IEnterInvoker<TEvent, TArgument>) _enter;
-  //         _task = typedEnter.Invoke(stateMachine, arg);
-  //       }
-  //     }
-  //     catch (Exception exception)
-  //     {
-  //       onException(exception);
-  //     }
-  //     finally
-  //     {
-  //       _enterFunctionFinished.Set();
-  //     }
-  //   }
-  // }
+  /// <summary>
+  /// This interface is used to make <typeparamref name="TArgument"/> contravariant.
+  /// </summary>
+  internal interface IState<TState, out TEvent, in TArgument>
+  {
+    void Enter(IStateMachine<TEvent> stateMachine, TArgument argument, Action<Exception> onException);
+  }
+
+  /// <summary>
+  /// This class describes state machine's state which requires an argument to the enter action.
+  ///
+  /// All these complex generic stuff is introduced to avoid casting to 'object' and thus avoid boxing when value type instance is used as the argument.
+  /// </summary>
+  internal class State<TState, TEvent, TArgument> : State<TState, TEvent>, IState<TState, TEvent, TArgument>
+  {
+    public TArgument Argument;
+
+    public State(
+      [NotNull] TState id,
+      [CanBeNull] IEnterInvoker<TEvent> enter,
+      [CanBeNull] Action exit,
+      [NotNull] Dictionary<TEvent, Transition<TState, TEvent>> transitions,
+      [CanBeNull] State<TState, TEvent> parentState) : base(id, enter, exit, transitions, parentState)
+    {
+    }
+
+    public override Type EnterArgumentType => typeof(TArgument);
+
+    public void Enter(IStateMachine<TEvent> stateMachine, TArgument argument, Action<Exception> onException)
+    {
+      Enter(onException, enter =>
+      {
+        Argument = argument;
+        var typedEnter = (IEnterInvoker<TEvent, TArgument>) enter;
+        return typedEnter.Invoke(stateMachine, argument);
+      });
+    }
+  }
 
   internal class State<TState, TEvent>
   {
@@ -56,54 +51,61 @@ namespace Binstate
     /// This event is used to avoid race condition when <see cref="Exit"/> method is called before <see cref="Config{TState,TEvent}.Enter"/> method.
     /// See usages for details.
     /// </summary>
-    protected readonly ManualResetEvent _entered = new ManualResetEvent(true);
+    private readonly ManualResetEvent _entered = new ManualResetEvent(true);
 
     /// <summary>
     /// This event is used to wait while state's OnEnter action is finished before call OnExit action and change the active state of the state machine.
     /// See usages for details. 
     /// </summary>
-    protected readonly ManualResetEvent _enterFunctionFinished = new ManualResetEvent(true);
+    private readonly ManualResetEvent _enterFunctionFinished = new ManualResetEvent(true);
 
     /// <summary>
     /// This task is used to wait while state's OnEnter action is finished before call OnExit action and change the active state of the state machine in
     /// case of async OnEnter action.
     /// See usages for details. 
     /// </summary>
-    [CanBeNull]
-    protected Task _task;
+    [CanBeNull] 
+    private Task _task;
 
     [CanBeNull]
-    protected readonly IEnterInvoker<TEvent> _enter;
+    private readonly IEnterInvoker<TEvent> _enter;
 
     [CanBeNull]
-    public Type EnterArgumentType;
+    public virtual Type EnterArgumentType => null;
 
-    [CanBeNull]
+    [CanBeNull] 
     private readonly Action _exit;
-    
+
     private volatile bool _isActive;
 
     public State(
-      TState id,
-      IEnterInvoker<TEvent> enter,
-      Type enterArgumentType,
-      Action exit,
-      Dictionary<TEvent, Transition<TState, TEvent>> transitions,
-      State<TState, TEvent> parentState)
+      [NotNull] TState id,
+      [CanBeNull] IEnterInvoker<TEvent> enter,
+      [CanBeNull] Action exit,
+      [NotNull] Dictionary<TEvent, Transition<TState, TEvent>> transitions,
+      [CanBeNull] State<TState, TEvent> parentState)
     {
-      Id = id;
+      Id = id ?? throw new ArgumentNullException(nameof(id));
       _enter = enter;
-      EnterArgumentType = enterArgumentType;
       _exit = exit;
-      Transitions = transitions;
+      Transitions = transitions ?? throw new ArgumentNullException(nameof(transitions));
       ParentState = parentState;
     }
 
     public readonly TState Id;
     public readonly State<TState, TEvent> ParentState;
     public readonly Dictionary<TEvent, Transition<TState, TEvent>> Transitions;
-    
+
     public void Enter<TArgument>(IStateMachine<TEvent> stateMachine, TArgument arg, Action<Exception> onException)
+    {
+      Enter(onException, enter =>
+      {
+        var noParameterEnter = (NoParameterEnterInvoker<TEvent>) enter;
+        return noParameterEnter.Invoke(stateMachine);
+      });
+    }
+
+    protected void Enter(Action<Exception> onException, Func<IEnterInvoker<TEvent>, Task> invokeEnterAction)
     {
       try
       {
@@ -111,17 +113,7 @@ namespace Binstate
         _entered.Set(); // it is safe to set the state as entered
 
         if (_enter == null) return;
-
-        if (typeof(TArgument) == typeof(Unit) || EnterArgumentType == null)
-        {
-          var noParameterEnter = (NoParameterEnterInvoker<TEvent>) _enter;
-          _task = noParameterEnter.Invoke(stateMachine);
-        }
-        else
-        {
-          var parameterizedEnter = (IEnterInvoker<TEvent, TArgument>) _enter; //use interface but not class for contravariant TArgument parameter
-          _task = parameterizedEnter.Invoke(stateMachine, arg);
-        }
+        _task = invokeEnterAction(_enter);
       }
       catch (Exception exception)
       {
@@ -132,6 +124,7 @@ namespace Binstate
         _enterFunctionFinished.Set();
       }
     }
+
 
     public Transition<TState, TEvent> FindTransitionTransitive(TEvent @event)
     {

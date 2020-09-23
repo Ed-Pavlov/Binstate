@@ -117,19 +117,18 @@ namespace Binstate
         return this;
       }
     }
-
+    
     /// <summary>
     /// This class is used to configure enter action of the currently configured state.
     /// </summary>
     public class Enter : Exit
     {
+      private IStateFactory _stateFactory = new NoArgumentStateFactory();
+      
       internal const string AsyncVoidMethodNotSupported = "'async void' methods are not supported, use Task return type for async method";
 
       [CanBeNull] 
       internal IEnterInvoker<TEvent> EnterAction;
-      
-      [CanBeNull]
-      internal Type EnterArgumentType;
       
       internal Enter(TState stateId) : base(stateId){}
 
@@ -205,7 +204,7 @@ namespace Binstate
         if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
       
         EnterAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
-        EnterArgumentType = typeof(TArgument);
+        _stateFactory = new StateFactory<TArgument>();
         return this;
       }
 
@@ -219,9 +218,11 @@ namespace Binstate
         if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
         
         EnterAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
-        EnterArgumentType = typeof(TArgument);
+        _stateFactory = new StateFactory<TArgument>();
         return this;
       }
+
+      internal State<TState, TEvent> CreateState(State<TState, TEvent> parentState) => _stateFactory.CreateState(this, parentState);
     
       private static bool IsAsyncMethod(MemberInfo method) => method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null;
     }
@@ -229,12 +230,12 @@ namespace Binstate
     /// <summary>
     /// This class is used to configure composite states. 
     /// </summary>
-    public class Substate : Enter
+    public class State : Enter
     {
-      internal TState ParentStateId; 
-      
-      internal Substate(TState stateId) : base(stateId)
+      internal State(TState stateId) : base(stateId)
       { }
+      
+      internal TState ParentStateId;
 
       /// <summary>
       /// Defines the currently configured state as a subset of a composite state 
@@ -243,6 +244,45 @@ namespace Binstate
       {
         ParentStateId = parentStateId;
         return this;
+      }
+    }
+
+    private interface IStateFactory
+    {
+      State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent> parentState);
+    }
+
+    private class NoArgumentStateFactory : IStateFactory
+    {
+      public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent> parentState)
+      {
+        var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();
+        foreach (var transition in stateConfig.TransitionList)
+        {
+          if (transitions.ContainsKey(transition.Event))
+            throw new InvalidOperationException($"Duplicated event '{transition.Event}' in state '{stateConfig.StateId}'");
+
+          transitions.Add(transition.Event, transition);
+        }
+
+        return new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterAction, stateConfig.ExitAction, transitions, parentState);
+      }
+    }
+
+    private class StateFactory<TArgument> : IStateFactory
+    {
+      public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent> parentState)
+      {
+        var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();
+        foreach (var transition in stateConfig.TransitionList)
+        {
+          if (transitions.ContainsKey(transition.Event))
+            throw new InvalidOperationException($"Duplicated event '{transition.Event}' in state '{stateConfig.StateId}'");
+
+          transitions.Add(transition.Event, transition);
+        }
+
+        return new State<TState, TEvent, TArgument>(stateConfig.StateId, stateConfig.EnterAction, stateConfig.ExitAction, transitions, parentState);
       }
     }
   }

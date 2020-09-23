@@ -9,6 +9,9 @@ namespace Instate.Tests
     protected const string Terminated = "Terminated";
     protected const int Terminate = 2;
     
+    protected const string Parent = "Parent";
+    protected const string Child = "Child";
+    
     protected const string OnEnter = "OnEnter";
     protected const string OnExit = "OnExit";
   }

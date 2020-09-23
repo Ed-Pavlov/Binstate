@@ -94,10 +94,8 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Initial = "Initial";
-      const string Working = "Working";
-      builder.DefineState(Initial).AddTransition<int>(Working, Working);
-      builder.DefineState(Working).OnEnter<string>(value => { });
+      builder.DefineState(Initial).AddTransition<int>(State1, State1);
+      builder.DefineState(State1).OnEnter<string>(value => { });
 
       // --act
       Action target = () => builder.Build(Initial);
@@ -105,8 +103,8 @@ namespace Instate.Tests
       // --assert
       target
         .Should().Throw<InvalidOperationException>()
-        .WithMessage("The enter action argument of type 'System.String' is not assignable from the transition argument of type 'System.Int32'. " +
-                     "See transition 'Working' from the state 'Initial' to the state 'Working'");
+        .WithMessage($"The enter action argument of type 'System.String' is not assignable from the transition argument of type 'System.Int32'. " +
+                     $"See transition '{State1}' from the state '{Initial}' to the state '{State1}'");
     }
     
     [Test]
@@ -115,10 +113,8 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Initial = "Initial";
-      const string Working = "Working";
-      builder.DefineState(Initial).AddTransition<int>(Working, Working);
-      builder.DefineState(Working).OnEnter(() => { });
+      builder.DefineState(Initial).AddTransition<int>(State1, State1);
+      builder.DefineState(State1).OnEnter(() => { });
 
       // --act
       Action target = () => builder.Build(Initial);
@@ -126,7 +122,7 @@ namespace Instate.Tests
       // --assert
       target
         .Should().Throw<InvalidOperationException>()
-        .WithMessage("The transition 'Working' from the state 'Initial' to the state 'Working' requires argument of type 'System.Int32' " +
+        .WithMessage($"The transition '{State1}' from the state '{Initial}' to the state '{State1}' requires argument of type 'System.Int32' " +
                      "but enter action of the target state defined without argument");
     }
     
@@ -136,10 +132,8 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Initial = "Initial";
-      const string Working = "Working";
-      builder.DefineState(Initial).AddTransition(Working, Working);
-      builder.DefineState(Working).OnEnter<int>(value => { });
+      builder.DefineState(Initial).AddTransition(State1, State1);
+      builder.DefineState(State1).OnEnter<int>(value => { });
 
       // --act
       Action target = () => builder.Build(Initial);
@@ -147,8 +141,8 @@ namespace Instate.Tests
       // --assert
       target
         .Should().Throw<InvalidOperationException>()
-        .WithMessage("The transition 'Working' from the state 'Initial' to the state 'Working' doesn't require argument but enter action of the target state" +
-                     " requires an argument of type 'System.Int32'");
+        .WithMessage($"The transition '{State1}' from the state '{Initial}' to the state '{State1}' doesn't require argument but enter action of the " +
+                     "target state requires an argument of type 'System.Int32'");
     }
     
     [Test]
@@ -160,15 +154,13 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Initial = "Initial";
-      const string Working = "Working";
-      builder.DefineState(Initial).AddTransition<Stream>(Working, Working);
-      builder.DefineState(Working).OnEnter<IDisposable>(value => actual = value);
+      builder.DefineState(Initial).AddTransition<Stream>(State1, State1);
+      builder.DefineState(State1).OnEnter<IDisposable>(value => actual = value);
       
       var target = builder.Build(Initial);
 
       // --act
-      target.Raise(Working, expected);
+      target.Raise(State1, expected);
       
       // --assert
       actual.Should().BeSameAs(expected); 
@@ -180,8 +172,6 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Parent = "Parent";
-      const string Child = "Child";
       builder.DefineState(Parent).OnEnter<int>(value => {});
       builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<string>(value => { });
 
@@ -191,8 +181,8 @@ namespace Instate.Tests
       // --assert
       target
         .Should().Throw<InvalidOperationException>()
-        .WithMessage("Parent state 'Parent' enter action requires argument of type 'System.Int32' whereas it's child state 'Child' requires argument of " +
-                     "not assignable to the parent type 'System.String'");
+        .WithMessage($"Parent state '{Parent}' enter action requires argument of type 'System.Int32' whereas it's child state '{Child}'" +
+                     $" requires argument of not assignable to the parent type 'System.String'");
     }
     
     [Test]
@@ -201,21 +191,18 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Root = "Root";
-      const string Parent = "Parent";
-      const string Child = "Child";
-      builder.DefineState(Root).OnEnter<int>(value => {});
-      builder.DefineState(Parent).AsSubstateOf(Root).OnEnter(value => {});
+      builder.DefineState(Initial).OnEnter<int>(value => {});
+      builder.DefineState(Parent).AsSubstateOf(Initial).OnEnter(value => {});
       builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<string>(value => { });
 
       // --act
-      Action target = () => builder.Build(Root);
+      Action target = () => builder.Build(Initial);
 
       // --assert
       target
         .Should().Throw<InvalidOperationException>()
-        .WithMessage("Parent state 'Root' enter action requires argument of type 'System.Int32' whereas it's child state 'Child' requires argument of " +
-                     "not assignable to the parent type 'System.String'");
+        .WithMessage($"Parent state '{Initial}' enter action requires argument of type 'System.Int32' whereas it's child state '{Child}' " +
+                     $"requires argument of not assignable to the parent type 'System.String'");
     }
     
     [Test]
@@ -228,13 +215,9 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Initial = "Initial";
-      const string Root = "Root";
-      const string Parent = "Parent";
-      const string Child = "Child";
       builder.DefineState(Initial).AddTransition<MemoryStream>(Child, Child);
-      builder.DefineState(Root).OnEnter<IDisposable>(value => actualDisposable = value);
-      builder.DefineState(Parent).AsSubstateOf(Root).OnEnter(value => {});
+      builder.DefineState(State1).OnEnter<IDisposable>(value => actualDisposable = value);
+      builder.DefineState(Parent).AsSubstateOf(State1).OnEnter(value => {});
       builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<Stream>(value => actualStream = value);
 
       var target = builder.Build(Initial);
@@ -245,6 +228,29 @@ namespace Instate.Tests
       // --assert
       actualStream.Should().BeSameAs(expected);
       actualDisposable.Should().BeSameAs(expected);
+    }
+
+    [Test]
+    public void test()
+    {
+      const int Expected = 3987;
+      var actual = Expected - 3;
+
+      // --arrange
+      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+      
+      builder.DefineState(Initial).AddTransition<int>(State1, State1);
+      builder.DefineState(State1).OnEnter<int>(_ => {}).AddTransition<int>(Terminated, Terminated);
+      builder.DefineState(Terminated).OnEnter<int>(value => actual = value);
+
+      var target = builder.Build(Initial);
+      target.Raise(State1, Expected);
+
+      // --act
+      target.Raise<int>(Terminated);
+      
+      // --assert
+      actual.Should().Be(Expected);
     }
     
     private static async void AsyncVoidMethod(IStateMachine<int> _)

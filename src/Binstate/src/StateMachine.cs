@@ -54,6 +54,12 @@ namespace Binstate
       return ExecuteTransition(@event, _ => _.ValidateParameter(parameter), parameter);
     }
 
+    public bool Raise<T>([NotNull] TEvent @event)
+    {
+      if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+      return ExecuteTransition<T>(@event, _ => _.ValidateParameter<T>(), default, true);
+    }
+
     /// <summary>
     /// Raises the event asynchronously. Finishing can be controller by returned <see cref="Task"/>, entering and exiting actions (if defined) of the current
     /// state is finished, then:
@@ -76,7 +82,7 @@ namespace Binstate
       return Task.Run(() => ExecuteTransition(@event, _ => _.ValidateParameter(parameter), parameter));
     }
 
-    private bool ExecuteTransition<T>(TEvent @event, Action<Transition<TState, TEvent>> transitionValidator, T argument)
+    private bool ExecuteTransition<T>(TEvent @event, Action<Transition<TState, TEvent>> transitionValidator, T argument, bool propagate = false)
     {
       var enterActions = new List<Action>();
 
@@ -93,6 +99,13 @@ namespace Binstate
         
         var newState = GetState(stateId);
 
+        var parameter = argument;
+        if (propagate)
+        {
+          var stateWithArgument = (State<TState, TEvent, T>)activeState;
+          parameter = stateWithArgument.Argument;
+        }
+        
         // exit all active states which are not parent for the new state
         while (activeState != null && !newState.IsSubstateOf(activeState))
         {
@@ -109,7 +122,7 @@ namespace Binstate
           state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
 
           if(state is IState<TState, TEvent, T> stateWithArgument)
-            enterActions.Add(() => stateWithArgument.Enter(controller, argument, _onException));
+            enterActions.Add(() => stateWithArgument.Enter(controller, parameter, _onException));
           else
             enterActions.Add(() => state.Enter(controller, argument, _onException));
           

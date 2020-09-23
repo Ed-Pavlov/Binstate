@@ -45,6 +45,15 @@ namespace Binstate
       if(ArgumentType != null) throw new TransitionException("Transition is configured as required an argument");
     }
     
+    public void ValidateParameter<T>() 
+    {
+      if (ArgumentType == null) throw new TransitionException("Transition is not configured as accepted an argument");
+      
+      var argumentType = typeof(T);
+      if(!ArgumentType.IsAssignableFrom(argumentType)) 
+        throw new InvalidOperationException($"Parameter type '{ArgumentType}' of transition can't accept argument of type '{argumentType}'");
+    }
+    
     public void ValidateParameter<T>([CanBeNull] T parameter) 
     {
       if (ArgumentType == null) throw new TransitionException("Transition is not configured as accepted an argument");

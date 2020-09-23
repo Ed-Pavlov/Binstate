@@ -19,4 +19,8 @@
       <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
       <DocumentationFile>bin\Release\Binstate.xml</DocumentationFile>
     </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Remove="src\EnterActionInvoker.cs" />
+    </ItemGroup>
 </Project>

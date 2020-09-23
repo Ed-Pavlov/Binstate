@@ -126,7 +126,10 @@ namespace Binstate
       internal const string AsyncVoidMethodNotSupported = "'async void' methods are not supported, use Task return type for async method";
 
       [CanBeNull] 
-      internal EnterActionInvoker<TEvent> EnterAction;
+      internal IEnterInvoker<TEvent> EnterAction;
+      
+      [CanBeNull]
+      internal Type EnterArgumentType;
       
       internal Enter(TState stateId) : base(stateId){}
 
@@ -154,7 +157,7 @@ namespace Binstate
         if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
         if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-        EnterAction = EnterActionInvoker<TEvent>.Create(enterAction);
+        EnterAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
         return this;
       }
 
@@ -167,7 +170,7 @@ namespace Binstate
       {
         if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
         
-        EnterAction = EnterActionInvoker<TEvent>.Create(enterAction);
+        EnterAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
         return this;
       }
 
@@ -201,7 +204,8 @@ namespace Binstate
         if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
         if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
       
-        EnterAction = EnterActionInvoker<TEvent>.Create(enterAction);
+        EnterAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
+        EnterArgumentType = typeof(TArgument);
         return this;
       }
 
@@ -214,7 +218,8 @@ namespace Binstate
       {
         if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
         
-        EnterAction = EnterActionInvoker<TEvent>.Create(enterAction);
+        EnterAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
+        EnterArgumentType = typeof(TArgument);
         return this;
       }
     

@@ -6,30 +6,75 @@ using JetBrains.Annotations;
 
 namespace Binstate
 {
-  internal sealed class State<TState, TEvent>
+  // internal class State<TState, TEvent, TArgument> : State<TState, TEvent>
+  // {
+  //   public State(
+  //     TState id, 
+  //     EnterActionInvoker<TEvent> enter, 
+  //     Action exit, 
+  //     Dictionary<TEvent, Transition<TState, TEvent>> transitions) : base(id, enter, exit, transitions)
+  //   {
+  //   }
+  //   
+  //   public void Enter(IStateMachine<TEvent> stateMachine, TArgument arg, Action<Exception> onException)
+  //   {
+  //     try
+  //     {
+  //       _enterFunctionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
+  //       _entered.Set(); // it is safe to set the state as entered
+  //
+  //       if (_enter == null) return;
+  //
+  //       if (typeof(TArgument) == typeof(Unit))
+  //       {
+  //         var noParameterEnter = (NoParameterEnterInvoker<TEvent>) _enter;
+  //         _task = noParameterEnter.Invoke(stateMachine);
+  //       }
+  //       else
+  //       {
+  //         var typedEnter = (EnterInvoker<TEvent, TArgument>) _enter;
+  //         _task = typedEnter.Invoke(stateMachine, arg);
+  //       }
+  //     }
+  //     catch (Exception exception)
+  //     {
+  //       onException(exception);
+  //     }
+  //     finally
+  //     {
+  //       _enterFunctionFinished.Set();
+  //     }
+  //   }
+  // }
+
+  internal class State<TState, TEvent>
   {
     /// <summary>
-    /// This event is used to avoid race condition when <see cref="Exit"/> method is called before <see cref="Enter{T}"/> method.
+    /// This event is used to avoid race condition when <see cref="Exit"/> method is called before <see cref="Config{TState,TEvent}.Enter"/> method.
     /// See usages for details.
     /// </summary>
-    private readonly ManualResetEvent _entered = new ManualResetEvent(true);
-    
+    protected readonly ManualResetEvent _entered = new ManualResetEvent(true);
+
     /// <summary>
     /// This event is used to wait while state's OnEnter action is finished before call OnExit action and change the active state of the state machine.
     /// See usages for details. 
     /// </summary>
-    private readonly ManualResetEvent _enterFunctionFinished = new ManualResetEvent(true);
-    
+    protected readonly ManualResetEvent _enterFunctionFinished = new ManualResetEvent(true);
+
     /// <summary>
     /// This task is used to wait while state's OnEnter action is finished before call OnExit action and change the active state of the state machine in
     /// case of async OnEnter action.
     /// See usages for details. 
     /// </summary>
     [CanBeNull] 
-    private Task _task;
-    
+    protected Task _task;
+
     [CanBeNull] 
-    private readonly EnterActionInvoker<TEvent> _enter;
+    protected readonly IEnterInvoker<TEvent> _enter;
+    
+    [CanBeNull]
+    public Type EnterArgumentType;
+    
     [CanBeNull] 
     private readonly Action _exit;
 
@@ -39,14 +84,45 @@ namespace Binstate
 
     private volatile bool _isActive;
 
-    public State(TState id, EnterActionInvoker<TEvent> enter, Action exit, Dictionary<TEvent, Transition<TState, TEvent>> transitions)
+    public State(TState id, IEnterInvoker<TEvent> enter, Type enterArgumentType, Action exit, Dictionary<TEvent, Transition<TState, TEvent>> transitions)
     {
       Id = id;
       _enter = enter;
+      EnterArgumentType = enterArgumentType;
       _exit = exit;
       Transitions = transitions;
     }
 
+    public void Enter<TArgument>(IStateMachine<TEvent> stateMachine, TArgument arg, Action<Exception> onException)
+    {
+      try
+      {
+        _enterFunctionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
+        _entered.Set(); // it is safe to set the state as entered
+
+        if (_enter == null) return;
+
+        if (typeof(TArgument) == typeof(Unit))
+        {
+          var noParameterEnter = (NoParameterEnterInvoker<TEvent>) _enter;
+          _task = noParameterEnter.Invoke(stateMachine);
+        }
+        else
+        {
+          var parameterizedEnter = (IEnterInvoker<TEvent, TArgument>) _enter; //use interface but not class for contravariant TArgument parameter
+          _task = parameterizedEnter.Invoke(stateMachine, arg);
+        }
+      }
+      catch (Exception exception)
+      {
+        onException(exception);
+      }
+      finally
+      {
+        _enterFunctionFinished.Set();
+      }
+    }
+    
     public Transition<TState, TEvent> FindTransitionTransitive(TEvent @event)
     {
       var state = this;
@@ -56,7 +132,7 @@ namespace Binstate
           return transition;
         state = state._parentState;
       }
-      
+
       // no transition found through all parents
       throw new TransitionException($"No transition defined by raising the event '{@event}' in the state '{Id}'");
     }
@@ -75,38 +151,12 @@ namespace Binstate
       }
     }
 
-    public void Enter<TArg>(IStateMachine<TEvent> stateMachine, TArg arg, Action<Exception> onException)
-    {
-      try
-      {
-        _enterFunctionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
-        _entered.Set(); // it is safe to set the state as entered
-
-        if (_enter == null) return;
-
-        if (typeof(TArg) == typeof(Unit))
-        {
-          var noParameterEnter = (NoParameterEnterInvoker<TEvent>) _enter;
-          _task = noParameterEnter.Invoke(stateMachine);
-        }
-        else
-        {
-          var typedEnter = (EnterInvoker<TEvent, TArg>) _enter;
-          _task = typedEnter.Invoke(stateMachine, arg);
-        }
-      }
-      catch (Exception exception) {
-        onException(exception);
-      }
-      finally {
-        _enterFunctionFinished.Set();  
-      }
-    }
+    
 
     /// <summary>
-    /// <see cref="Exit"/> can be called earlier then <see cref="Enter{T}"/> of the activated state,
+    /// <see cref="Exit"/> can be called earlier then <see cref="Config{TState,TEvent}.Enter"/> of the activated state,
     /// see <see cref="StateMachine{TState,TEvent}.ExecuteTransition{T}"/> implementation for details.
-    /// In this case it should wait till <see cref="Enter{T}"/> will be called and exited, before call exit action
+    /// In this case it should wait till <see cref="Config{TState,TEvent}.Enter"/> will be called and exited, before call exit action
     /// </summary>
     /// <param name="onException"></param>
     public void Exit(Action<Exception> onException)
@@ -114,16 +164,16 @@ namespace Binstate
       try
       {
         IsActive = false; // signal that current state is no more active
-      
+
         // if action is set as active but enter action still is not called, wait for it 
         _entered.WaitOne();
-      
+
         // wait till State.Enter function finishes
         // if enter action is blocking or no action: _enterFunctionFinished is set means it finishes
         _enterFunctionFinished.WaitOne(Timeout.Infinite);
         // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till action finishes
         _task?.Wait(Timeout.Infinite);
-      
+
         _exit?.Invoke();
       }
       catch (Exception exception)
@@ -133,7 +183,7 @@ namespace Binstate
     }
 
     public void AddParent([NotNull] State<TState, TEvent> parentState) => _parentState = parentState ?? throw new ArgumentNullException(nameof(parentState));
-    
+
     public bool IsSubstateOf(State<TState, TEvent> state) => _parentState != null && (ReferenceEquals(state, _parentState) || _parentState.IsSubstateOf(state));
 
     public IReadOnlyCollection<State<TState, TEvent>> GetAllStatesForActivationFrom(State<TState, TEvent> tillState)
@@ -145,6 +195,7 @@ namespace Binstate
         states.Add(parent);
         parent = parent._parentState;
       }
+
       states.Reverse();
       states.Add(this);
       return states;

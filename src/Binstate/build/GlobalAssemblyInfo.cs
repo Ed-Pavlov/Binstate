@@ -21,5 +21,3 @@ using System.Runtime.InteropServices;using System.Security.Cryptography.X509Cert
                               "a3c3371890dcfe870ef104e82e08eb6cc668ca0a3ec2f07a2c5d2db1c0e882fd" +
                               "4c0e9aea1f04f40e55bbe0ab2620884b8245101162911b4c61b196ce7657bfa95" +
                               "e56be84f3fc3dbac1fcfd04ac")]
-                              
-// [assembly: InternalsVisibleTo("Binstate.Tests")]

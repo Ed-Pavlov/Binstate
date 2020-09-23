@@ -82,10 +82,40 @@ namespace Binstate
         throw new ArgumentException($"No state '{initialState}' is defined");
 
       ValidateTransitions(states);
+      ValidateSubstateEnterArgument(states);
 
       return new StateMachine<TState, TEvent>(states[initialState], states, _onException);
     }
 
+    private static void ValidateSubstateEnterArgument(Dictionary<TState, State<TState, TEvent>> states)
+    {
+      foreach (var value in states.Values)
+      {
+        var state = value;
+        if (state.EnterArgumentType != null)
+        {
+          var parentState = state.ParentState;
+          while (parentState != null) // it will check the same states several times, may be I'll optimize it later
+          {
+            if (parentState.EnterArgumentType == null)
+              parentState = parentState.ParentState;
+            else
+            {
+              if (parentState.EnterArgumentType.IsAssignableFrom(state.EnterArgumentType))
+              {
+                state = parentState;
+                parentState = parentState.ParentState;
+              }
+              else
+                throw new InvalidOperationException(
+                  $"Parent state '{parentState.Id}' enter action requires argument of type '{parentState.EnterArgumentType}' whereas it's child state '{state.Id}' requires "
+                  + $"argument of not assignable to the parent type '{state.EnterArgumentType}'");
+            }
+          }
+        }
+      }
+    }
+    
     private void ValidateTransitions(Dictionary<TState, State<TState, TEvent>> states)
     {
       foreach (var stateConfig in _stateConfigs.Values)

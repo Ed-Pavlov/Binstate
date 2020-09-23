@@ -15,7 +15,7 @@ namespace Instate.Tests
       var actual = new List<string>();
 
       // --arrange
-      var builder = new Builder<string, string>(Console.WriteLine);
+      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
       builder
         .DefineState(Initial)
@@ -62,7 +62,7 @@ namespace Instate.Tests
       }
 
       // --arrange
-      var builder = new Builder<string, string>(Console.WriteLine);
+      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
       builder
         .DefineState(Initial)
@@ -119,7 +119,7 @@ namespace Instate.Tests
       }
 
       // --arrange
-      var builder = new Builder<string, string>(Console.WriteLine);
+      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
       builder
         .DefineState(Initial)
@@ -172,7 +172,7 @@ namespace Instate.Tests
       }
 
       // --arrange
-      var builder = new Builder<string, string>(Console.WriteLine);
+      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
       builder
         .DefineState(Initial)
@@ -220,7 +220,7 @@ namespace Instate.Tests
       var actual = new List<string>();
 
       // --arrange
-      var builder = new Builder<string, string>(Console.WriteLine);
+      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
       builder
         .DefineState(Initial)

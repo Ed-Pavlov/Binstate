@@ -80,11 +80,7 @@ namespace Binstate
 
     [CanBeNull]
     private readonly Action _exit;
-
-    public readonly TState Id;
-    private readonly State<TState, TEvent> _parentState; // building can be optimized (using topology sorting) and parent state could be passed into ctor
-    public readonly Dictionary<TEvent, Transition<TState, TEvent>> Transitions;
-
+    
     private volatile bool _isActive;
 
     public State(
@@ -100,9 +96,13 @@ namespace Binstate
       EnterArgumentType = enterArgumentType;
       _exit = exit;
       Transitions = transitions;
-      _parentState = parentState;
+      ParentState = parentState;
     }
 
+    public readonly TState Id;
+    public readonly State<TState, TEvent> ParentState;
+    public readonly Dictionary<TEvent, Transition<TState, TEvent>> Transitions;
+    
     public void Enter<TArgument>(IStateMachine<TEvent> stateMachine, TArgument arg, Action<Exception> onException)
     {
       try
@@ -112,7 +112,7 @@ namespace Binstate
 
         if (_enter == null) return;
 
-        if (typeof(TArgument) == typeof(Unit))
+        if (typeof(TArgument) == typeof(Unit) || EnterArgumentType == null)
         {
           var noParameterEnter = (NoParameterEnterInvoker<TEvent>) _enter;
           _task = noParameterEnter.Invoke(stateMachine);
@@ -141,7 +141,7 @@ namespace Binstate
         if (state.Transitions.TryGetValue(@event, out var transition))
           return transition;
 
-        state = state._parentState;
+        state = state.ParentState;
       }
 
       // no transition found through all parents
@@ -191,16 +191,16 @@ namespace Binstate
       }
     }
 
-    public bool IsSubstateOf(State<TState, TEvent> state) => _parentState != null && (ReferenceEquals(state, _parentState) || _parentState.IsSubstateOf(state));
+    public bool IsSubstateOf(State<TState, TEvent> state) => ParentState != null && (ReferenceEquals(state, ParentState) || ParentState.IsSubstateOf(state));
 
     public IReadOnlyCollection<State<TState, TEvent>> GetAllStatesForActivationFrom(State<TState, TEvent> tillState)
     {
       var states = new List<State<TState, TEvent>>();
-      var parent = _parentState;
+      var parent = ParentState;
       while (parent != null && !ReferenceEquals(parent, tillState))
       {
         states.Add(parent);
-        parent = parent._parentState;
+        parent = parent.ParentState;
       }
 
       states.Reverse();

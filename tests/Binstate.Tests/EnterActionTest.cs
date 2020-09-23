@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace Instate.Tests
 {
-  public class OnEnterTest : StateMachineTestBase
+  public class EnterActionTest : StateMachineTestBase
   {
     private static IEnumerable<TestCaseData> raise_terminated_with_argument_source()
     {
@@ -23,7 +23,7 @@ namespace Instate.Tests
       var actual = Expected - 139;
 
       // --arrange
-      var builder = new Builder<string, int>(Console.WriteLine);
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
 
       builder
         .DefineState(State1)
@@ -49,7 +49,7 @@ namespace Instate.Tests
       var actual = Expected - 139;
 
       // --arrange
-      var builder = new Builder<string, int>(Console.WriteLine);
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
 
       builder
         .DefineState(State1)
@@ -71,7 +71,7 @@ namespace Instate.Tests
     [Test]
     public void should_not_accept_async_void_enter_action()
     {
-      var builder = new Builder<string, int>(Console.WriteLine);
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
 
       var state = builder.DefineState(State1);
       Action action = () => state.OnEnter(AsyncVoidMethod);
@@ -81,7 +81,7 @@ namespace Instate.Tests
     [Test]
     public void should_not_accept_async_void_simple_enter_action()
     {
-      var builder = new Builder<string, int>(Console.WriteLine);
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
 
       var state = builder.DefineState(State1);
       Action action = () => state.OnEnter(SimpleAsyncVoidMethod);
@@ -92,7 +92,7 @@ namespace Instate.Tests
     public void should_throw_exception_if_transition_argument_is_not_assignable_to_enter_action_argument()
     {
       // --arrange
-      var builder = new Builder<string, string>(Console.WriteLine);
+      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
       const string Initial = "Initial";
       const string Working = "Working";
@@ -113,7 +113,7 @@ namespace Instate.Tests
     public void should_throw_exception_if_transition_has_argument_but_enter_action_has_not()
     {
       // --arrange
-      var builder = new Builder<string, string>(Console.WriteLine);
+      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
       const string Initial = "Initial";
       const string Working = "Working";
@@ -134,7 +134,7 @@ namespace Instate.Tests
     public void should_throw_exception_if_transition_has_not_argument_but_enter_action_has()
     {
       // --arrange
-      var builder = new Builder<string, string>(Console.WriteLine);
+      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
       const string Initial = "Initial";
       const string Working = "Working";
@@ -158,7 +158,7 @@ namespace Instate.Tests
       var expected = new MemoryStream();
       
       // --arrange
-      var builder = new Builder<string, string>(Console.WriteLine);
+      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
       const string Initial = "Initial";
       const string Working = "Working";
@@ -174,6 +174,79 @@ namespace Instate.Tests
       actual.Should().BeSameAs(expected); 
     }
 
+    [Test]
+    public void should_fail_build_if_parent_and_child_states_have_not_compatible_enter_arguments()
+    {
+      // --arrange
+      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+
+      const string Parent = "Parent";
+      const string Child = "Child";
+      builder.DefineState(Parent).OnEnter<int>(value => {});
+      builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<string>(value => { });
+
+      // --act
+      Action target = () => builder.Build(Parent);
+
+      // --assert
+      target
+        .Should().Throw<InvalidOperationException>()
+        .WithMessage("Parent state 'Parent' enter action requires argument of type 'System.Int32' whereas it's child state 'Child' requires argument of " +
+                     "not assignable to the parent type 'System.String'");
+    }
+    
+    [Test]
+    public void should_fail_build_if_parent_and_child_states_have_not_compatible_enter_arguments2()
+    {
+      // --arrange
+      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+
+      const string Root = "Root";
+      const string Parent = "Parent";
+      const string Child = "Child";
+      builder.DefineState(Root).OnEnter<int>(value => {});
+      builder.DefineState(Parent).AsSubstateOf(Root).OnEnter(value => {});
+      builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<string>(value => { });
+
+      // --act
+      Action target = () => builder.Build(Root);
+
+      // --assert
+      target
+        .Should().Throw<InvalidOperationException>()
+        .WithMessage("Parent state 'Root' enter action requires argument of type 'System.Int32' whereas it's child state 'Child' requires argument of " +
+                     "not assignable to the parent type 'System.String'");
+    }
+    
+    [Test]
+    public void should_pass_argument_if_parent_argument_is_differ_but_assignable_from_child_argument()
+    {
+      IDisposable actualDisposable = null;
+      Stream actualStream = null;
+      var expected = new MemoryStream();
+      
+      // --arrange
+      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+
+      const string Initial = "Initial";
+      const string Root = "Root";
+      const string Parent = "Parent";
+      const string Child = "Child";
+      builder.DefineState(Initial).AddTransition<MemoryStream>(Child, Child);
+      builder.DefineState(Root).OnEnter<IDisposable>(value => actualDisposable = value);
+      builder.DefineState(Parent).AsSubstateOf(Root).OnEnter(value => {});
+      builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<Stream>(value => actualStream = value);
+
+      var target = builder.Build(Initial);
+      
+      // --act
+      target.Raise(Child, expected);
+
+      // --assert
+      actualStream.Should().BeSameAs(expected);
+      actualDisposable.Should().BeSameAs(expected);
+    }
+    
     private static async void AsyncVoidMethod(IStateMachine<int> _)
     {
     }

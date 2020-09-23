@@ -13,7 +13,7 @@ namespace Instate.Tests
     [Test]
     public void should_fail_if_transition_to_unknown_state()
     {
-      var builder = new Builder<string, int>(Console.WriteLine);
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
 
       builder
         .DefineState(Initial)
@@ -29,7 +29,7 @@ namespace Instate.Tests
     [Test]
     public void should_fail_if_transitions_reference_one_state()
     {
-      var builder = new Builder<string, int>(Console.WriteLine);
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
 
       builder
         .DefineState(Initial)
@@ -49,7 +49,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(Console.WriteLine);
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
 
       builder
         .DefineState(Initial)
@@ -81,7 +81,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(Console.WriteLine);
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
       builder
         .DefineState(Initial)
         .AddTransition(Event1, State1);
@@ -114,7 +114,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(Console.WriteLine);
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
       builder.DefineState(Initial).AddTransition(Event1, State1);
 
       builder
@@ -149,7 +149,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(Console.WriteLine);
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
       builder.DefineState(Initial).AddTransition(Event1, State1);
 
       builder
@@ -181,7 +181,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(Console.WriteLine);
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
       builder.DefineState(Initial).AddTransition(Event1, State1);
 
       builder
@@ -219,7 +219,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(Console.WriteLine);
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
       
       builder.DefineState(Initial).AddTransition(Event1, State1);
       builder
@@ -244,7 +244,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(Console.WriteLine);
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
 
       string DynamicTransition() => targetState;
 

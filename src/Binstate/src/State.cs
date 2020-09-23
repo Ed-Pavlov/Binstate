@@ -8,11 +8,13 @@ namespace Binstate
 {
   // internal class State<TState, TEvent, TArgument> : State<TState, TEvent>
   // {
+  //   public TArgument Argument;
+  //   
   //   public State(
   //     TState id, 
-  //     EnterActionInvoker<TEvent> enter, 
+  //     IEnterInvoker<TEvent> enter, 
   //     Action exit, 
-  //     Dictionary<TEvent, Transition<TState, TEvent>> transitions) : base(id, enter, exit, transitions)
+  //     Dictionary<TEvent, Transition<TState, TEvent>> transitions) : base(id, enter, typeof(TArgument), exit, transitions)
   //   {
   //   }
   //   
@@ -32,7 +34,8 @@ namespace Binstate
   //       }
   //       else
   //       {
-  //         var typedEnter = (EnterInvoker<TEvent, TArgument>) _enter;
+  //         Argument = arg;
+  //         var typedEnter = (IEnterInvoker<TEvent, TArgument>) _enter;
   //         _task = typedEnter.Invoke(stateMachine, arg);
   //       }
   //     }
@@ -66,31 +69,38 @@ namespace Binstate
     /// case of async OnEnter action.
     /// See usages for details. 
     /// </summary>
-    [CanBeNull] 
+    [CanBeNull]
     protected Task _task;
 
-    [CanBeNull] 
+    [CanBeNull]
     protected readonly IEnterInvoker<TEvent> _enter;
-    
+
     [CanBeNull]
     public Type EnterArgumentType;
-    
-    [CanBeNull] 
+
+    [CanBeNull]
     private readonly Action _exit;
 
     public readonly TState Id;
-    private /*readonly*/ State<TState, TEvent> _parentState; // building can be optimized (using topology sorting) and parent state could be passed into ctor
+    private readonly State<TState, TEvent> _parentState; // building can be optimized (using topology sorting) and parent state could be passed into ctor
     public readonly Dictionary<TEvent, Transition<TState, TEvent>> Transitions;
 
     private volatile bool _isActive;
 
-    public State(TState id, IEnterInvoker<TEvent> enter, Type enterArgumentType, Action exit, Dictionary<TEvent, Transition<TState, TEvent>> transitions)
+    public State(
+      TState id,
+      IEnterInvoker<TEvent> enter,
+      Type enterArgumentType,
+      Action exit,
+      Dictionary<TEvent, Transition<TState, TEvent>> transitions,
+      State<TState, TEvent> parentState)
     {
       Id = id;
       _enter = enter;
       EnterArgumentType = enterArgumentType;
       _exit = exit;
       Transitions = transitions;
+      _parentState = parentState;
     }
 
     public void Enter<TArgument>(IStateMachine<TEvent> stateMachine, TArgument arg, Action<Exception> onException)
@@ -122,7 +132,7 @@ namespace Binstate
         _enterFunctionFinished.Set();
       }
     }
-    
+
     public Transition<TState, TEvent> FindTransitionTransitive(TEvent @event)
     {
       var state = this;
@@ -130,6 +140,7 @@ namespace Binstate
       {
         if (state.Transitions.TryGetValue(@event, out var transition))
           return transition;
+
         state = state._parentState;
       }
 
@@ -150,8 +161,6 @@ namespace Binstate
         _isActive = value;
       }
     }
-
-    
 
     /// <summary>
     /// <see cref="Exit"/> can be called earlier then <see cref="Config{TState,TEvent}.Enter"/> of the activated state,
@@ -181,8 +190,6 @@ namespace Binstate
         onException(exception);
       }
     }
-
-    public void AddParent([NotNull] State<TState, TEvent> parentState) => _parentState = parentState ?? throw new ArgumentNullException(nameof(parentState));
 
     public bool IsSubstateOf(State<TState, TEvent> state) => _parentState != null && (ReferenceEquals(state, _parentState) || _parentState.IsSubstateOf(state));
 

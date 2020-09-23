@@ -11,7 +11,7 @@ namespace Binstate
   public class Builder<TState, TEvent>
   {
     private readonly Action<Exception> _onException;
-    private readonly List<Config<TState, TEvent>.Substate> _stateConfigs = new List<Config<TState, TEvent>.Substate>();
+    private readonly Dictionary<TState, Config<TState, TEvent>.Substate> _stateConfigs = new Dictionary<TState, Config<TState, TEvent>.Substate>();
 
     /// <summary>
     /// Creates a builder of a state machine, use it to define state and configure transitions.
@@ -30,8 +30,38 @@ namespace Binstate
       if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
 
       var stateConfig = new Config<TState, TEvent>.Substate(stateId);
-      _stateConfigs.Add(stateConfig);
+      _stateConfigs.Add(stateId, stateConfig);
       return stateConfig;
+    }
+
+    private State<TState, TEvent> CreateStateAndAddToMap([NotNull] Config<TState, TEvent>.Substate stateConfig, Dictionary<TState, State<TState, TEvent>> states)
+    {
+      if (!states.TryGetValue(stateConfig.StateId, out var state)) // state could be already created during creating parent states
+      {
+        state = CreateState(
+          stateConfig,
+          stateConfig.ParentStateId.IsNotNull()
+            ? CreateStateAndAddToMap(_stateConfigs[stateConfig.ParentStateId], states) // recursive call to create the parent state;
+            : null);
+        states.Add(state.Id, state);
+      }
+      return state;
+    }
+
+    private static State<TState, TEvent> CreateState(
+      [NotNull] Config<TState, TEvent>.Substate stateConfig,
+      [CanBeNull] State<TState, TEvent> parentState)
+    {
+      var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();
+      foreach (var transition in stateConfig.TransitionList)
+      {
+        if (transitions.ContainsKey(transition.Event))
+          throw new InvalidOperationException($"Duplicated event '{transition.Event}' in state '{stateConfig.StateId}'");
+
+        transitions.Add(transition.Event, transition);
+      }
+
+      return new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterAction, stateConfig.EnterArgumentType, stateConfig.ExitAction, transitions, parentState);
     }
 
     /// <summary>
@@ -45,66 +75,47 @@ namespace Binstate
 
       // create all states
       var states = new Dictionary<TState, State<TState, TEvent>>();
-      foreach (var stateConfig in _stateConfigs)
-      {
-        var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();
-        foreach (var transition in stateConfig.TransitionList)
-        {
-          if (transitions.ContainsKey(transition.Event))
-            throw new InvalidOperationException($"Duplicated event '{transition.Event}' in state '{stateConfig.StateId}'");
-          transitions.Add(transition.Event, transition);
-        }
-
-        var state = new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterAction, stateConfig.EnterArgumentType, stateConfig.ExitAction, transitions);
-        states.Add(stateConfig.StateId, state);
-      }
-
-      // bind states with parent states
-      foreach (var stateConfig in _stateConfigs)
-        if (stateConfig.ParentStateId.IsNotNull())
-        {
-          var state = states[stateConfig.StateId];
-          var parentState = states[stateConfig.ParentStateId];
-          state.AddParent(parentState);
-        }
+      foreach (var stateConfig in _stateConfigs.Values) 
+        CreateStateAndAddToMap(stateConfig, states);
 
       if (!states.ContainsKey(initialState))
         throw new ArgumentException($"No state '{initialState}' is defined");
-      ValidateStateMachine(states);
+
+      ValidateTransitions(states);
 
       return new StateMachine<TState, TEvent>(states[initialState], states, _onException);
     }
 
-    private void ValidateStateMachine(Dictionary<TState, State<TState, TEvent>> states)
+    private void ValidateTransitions(Dictionary<TState, State<TState, TEvent>> states)
     {
-      foreach (var stateConfig in _stateConfigs)
-      foreach (var transition in stateConfig.TransitionList.Where(_ => _.IsStatic)) // do not check dynamic transitions because they are depends on the app state
-      {
-        var targetStateId = transition.GetTargetStateId(_ => { });
-        
-        if (!states.TryGetValue(targetStateId, out var state)) // static transition can't throw an exception
-          throw new InvalidOperationException($"The transition '{transition.Event}' from the state '{stateConfig.StateId}' references not defined state '{targetStateId}'");
-
-        if (transition.ArgumentType == null)
+      foreach (var stateConfig in _stateConfigs.Values)
+        foreach (var transition in stateConfig.TransitionList.Where(_ => _.IsStatic)) // do not check dynamic transitions because they are depends on the app state
         {
-          if (state.EnterArgumentType != null)
-            throw new InvalidOperationException(
-              $"The transition '{transition.Event}' from the state '{stateConfig.StateId}' to the state '{targetStateId}' doesn't require argument " +
-              $"but enter action of the target state requires an argument of type '{state.EnterArgumentType}'");
-        }
-        else
-        {
-          if (state.EnterArgumentType == null)
-            throw new InvalidOperationException(
-              $"The transition '{transition.Event}' from the state '{stateConfig.StateId}' to the state '{targetStateId}' requires argument " +
-              $"of type '{transition.ArgumentType}' but enter action of the target state defined without argument");
+          var targetStateId = transition.GetTargetStateId(_ => { });
 
-          if (!state.EnterArgumentType.IsAssignableFrom(transition.ArgumentType))
-            throw new InvalidOperationException(
-              $"The enter action argument of type '{state.EnterArgumentType}' is not assignable from the transition argument of type '{transition.ArgumentType}'. " +
-              $"See transition '{transition.Event}' from the state '{stateConfig.StateId}' to the state '{targetStateId}'");
+          if (!states.TryGetValue(targetStateId, out var state)) // static transition can't throw an exception
+            throw new InvalidOperationException($"The transition '{transition.Event}' from the state '{stateConfig.StateId}' references not defined state '{targetStateId}'");
+
+          if (transition.ArgumentType == null)
+          {
+            if (state.EnterArgumentType != null)
+              throw new InvalidOperationException(
+                $"The transition '{transition.Event}' from the state '{stateConfig.StateId}' to the state '{targetStateId}' doesn't require argument " +
+                $"but enter action of the target state requires an argument of type '{state.EnterArgumentType}'");
+          }
+          else
+          {
+            if (state.EnterArgumentType == null)
+              throw new InvalidOperationException(
+                $"The transition '{transition.Event}' from the state '{stateConfig.StateId}' to the state '{targetStateId}' requires argument " +
+                $"of type '{transition.ArgumentType}' but enter action of the target state defined without argument");
+
+            if (!state.EnterArgumentType.IsAssignableFrom(transition.ArgumentType))
+              throw new InvalidOperationException(
+                $"The enter action argument of type '{state.EnterArgumentType}' is not assignable from the transition argument of type '{transition.ArgumentType}'. " +
+                $"See transition '{transition.Event}' from the state '{stateConfig.StateId}' to the state '{targetStateId}'");
+          }
         }
-      }
     }
   }
 }

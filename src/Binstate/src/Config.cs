@@ -162,6 +162,20 @@ namespace Binstate
       }
 
       /// <summary>
+      /// Specifies the simple action to be called on entering the currently configured state in case of controlling the current state
+      /// or transition to another one is not needed.
+      /// This overload is used to provide non-blocking async action.
+      /// </summary>
+      /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
+      public Exit OnEnter([NotNull] Func<Task> enterAction)
+      {
+        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        
+        EnterAction = EnterActionInvokerFactory<TEvent>.Create(_ => enterAction());
+        return this;
+      }
+      
+      /// <summary>
       /// Specifies the action to be called on entering the currently configured state.
       /// This overload is used to provide non-blocking async action.
       /// </summary>
@@ -209,6 +223,21 @@ namespace Binstate
         return this;
       }
 
+      /// <summary>
+      /// Specifies the simple action with parameter to be called on entering the currently configured state in case of controlling the current state
+      /// or transition to another one is not needed.
+      /// This overload is used to provide non-blocking async action.
+      /// </summary>
+      /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
+      public Exit OnEnter<TArgument>([NotNull] Func<TArgument, Task> enterAction)
+      {
+        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        
+        EnterAction = EnterActionInvokerFactory<TEvent>.Create<TArgument>((_, arg) => enterAction(arg));
+        EnterArgumentType = typeof(TArgument);
+        return this;
+      }
+      
       /// <summary>
       /// Specifies the action with parameter to be called on entering the currently configured state.
       /// This overload is used to provide non-blocking async action.

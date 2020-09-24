@@ -26,6 +26,6 @@ namespace Binstate
     /// <see cref="Config{TState, TEvent}.Transitions.AddTransition{TParameter}(TEvent, TState, bool)"/>, and
     /// <see cref="Config{TState, TEvent}.Transitions.AddTransition{TParameter}(TEvent, Func{TState}, bool)"/> for details. 
     /// </summary>
-    void RaiseAsync<T>([NotNull] TEvent @event, [NotNull] T parameter);
+    void RaiseAsync<T>([NotNull] TEvent @event, [NotNull] T argument);
   }
 }

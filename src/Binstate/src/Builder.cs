@@ -16,7 +16,7 @@ namespace Binstate
     /// <summary>
     /// Creates a builder of a state machine, use it to define state and configure transitions.
     /// </summary>
-    /// <param name="onException">All exception thrown from actions passed to the state machine are caught in order to not break the state of the
+    /// <param name="onException">All exception thrown from enter and exit actions passed to the state machine are caught in order to not break the state of the
     /// state machine. Use this action to be notified about these exceptions.</param>
     public Builder([NotNull] Action<Exception> onException) => _onException = onException ?? throw new ArgumentNullException(nameof(onException));
 

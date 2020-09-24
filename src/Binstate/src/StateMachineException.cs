@@ -6,7 +6,7 @@ namespace Binstate
   public class StateMachineException : Exception
   {
     /// <inheritdoc />
-    public StateMachineException(string message) : base(message)
+    protected StateMachineException(string message) : base(message)
     {
     }
   }

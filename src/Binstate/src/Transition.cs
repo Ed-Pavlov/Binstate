@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 
 namespace Binstate
@@ -23,7 +24,7 @@ namespace Binstate
     public readonly Type ArgumentType;
     
     /// <summary>
-    /// Means transition targets the predefined state in opposite to calculated dynamically runtime
+    /// Means a transition targets the predefined state in opposite to the calculated dynamically runtime
     /// </summary>
     public readonly bool IsStatic;
 
@@ -36,19 +37,20 @@ namespace Binstate
       catch (Exception exception)
       {
         onException(exception);
-        return default;
+        throw;
       }
     }
 
-    public void ValidateParameter()
+    public void ValidateArgument()
     {
       if(ArgumentType != null) throw new TransitionException("Transition is configured as required an argument");
     }
     
-    public void ValidateParameter<T>([CanBeNull] T parameter) 
+    [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Global")]
+    public void ValidateArgument<T>([CanBeNull] T argument) 
     {
       if (ArgumentType == null) throw new TransitionException("Transition is not configured as accepted an argument");
-      if(!_allowNullArgument && ReferenceEquals(null, parameter)) throw new TransitionException("Transition can't accept null value");
+      if(!_allowNullArgument && ReferenceEquals(null, argument)) throw new TransitionException("Transition can't accept null value");
       
       var argumentType = typeof(T);
       if(!ArgumentType.IsAssignableFrom(argumentType)) 

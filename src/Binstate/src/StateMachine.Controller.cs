@@ -24,10 +24,10 @@ namespace Binstate
         _owner.RaiseAsync(@event);
       }
 
-      public void RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T parameter)
+      public void RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument)
       {
         if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-        _owner.RaiseAsync(@event, parameter);
+        _owner.RaiseAsync(@event, argument);
       }
     }
   }

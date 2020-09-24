@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
@@ -8,6 +9,7 @@ namespace Binstate
   /// <summary>
   /// The state machine. Use <see cref="Builder{TState, TEvent}"/> to configure and build a state machine.
   /// </summary>
+  [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
   public partial class StateMachine<TState, TEvent>
   {
     /// <summary>
@@ -39,19 +41,19 @@ namespace Binstate
     public bool Raise([NotNull] TEvent @event)
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-      return ExecuteTransition<Unit>(@event, _ => _.ValidateParameter(), null);
+      return PerformTransition<Unit>(@event, _ => _.ValidateArgument(), null);
     }
 
     /// <summary>
-    /// Raises the event with parameter in the blocking way. It waits while on entering and exiting actions (if defined) of the current state is finished, then:
+    /// Raises the event with an argument in the blocking way. It waits while on entering and exiting actions (if defined) of the current state is finished, then:
     /// if the entering action of the target state is blocking, it will block till on entering method of the new state will finish.
     /// if the entering action of the target state is async, it will return after the state is changed.
     /// </summary>
     /// <returns>Returns true if state was changed, false if not</returns>
-    public bool Raise<T>([NotNull] TEvent @event, [CanBeNull] T parameter)
+    public bool Raise<T>([NotNull] TEvent @event, [CanBeNull] T argument)
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-      return ExecuteTransition(@event, _ => _.ValidateParameter(parameter), parameter);
+      return PerformTransition(@event, _ => _.ValidateArgument(argument), argument);
     }
 
     /// <summary>
@@ -63,20 +65,20 @@ namespace Binstate
     public Task<bool> RaiseAsync([NotNull] TEvent @event)
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-      return Task.Run(() => ExecuteTransition<Unit>(@event, _ => _.ValidateParameter(), null));
+      return Task.Run(() => PerformTransition<Unit>(@event, _ => _.ValidateArgument(), null));
     }
 
-    /// Raises the event with parameter asynchronously. Finishing can be controller by returned <see cref="Task"/>, entering and exiting actions (if defined)
+    /// Raises the event with an argument asynchronously. Finishing can be controller by returned <see cref="Task"/>, entering and exiting actions (if defined)
     /// of the current state is finished, then:
     /// if the entering action of the target state is blocking, Task finishes when entering action of the new state is finished;
     /// if the entering action of the target state is async, Task finishes right after the state is changed.
-    public Task<bool> RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T parameter)
+    public Task<bool> RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument)
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-      return Task.Run(() => ExecuteTransition(@event, _ => _.ValidateParameter(parameter), parameter));
+      return Task.Run(() => PerformTransition(@event, _ => _.ValidateArgument(argument), argument));
     }
 
-    private bool ExecuteTransition<T>(TEvent @event, Action<Transition<TState, TEvent>> transitionValidator, T argument)
+    private bool PerformTransition<T>(TEvent @event, Action<Transition<TState, TEvent>> transitionValidator, T argument)
     {
       var enterActions = new List<Action>();
 
@@ -102,20 +104,13 @@ namespace Binstate
         }
 
         // if new state has parent states enter all parent states from the top
-        var states = newState.GetAllStatesForActivationFrom(activeState); // get all states to activate starting from activeState till newState itself
+        var states = newState.GetAllStatesForActivationTillParent(activeState); // get all states to activate starting from activeState till newState itself
         foreach (var state in states)
         {
           var controller = new Controller(state, this);
           state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
 
           enterActions.Add(() => state.Enter(controller, argument, _onException));
-          
-          // if(state is State<TState, TEvent, T> stateWithArgument)
-          //   enterActions.Add(() => stateWithArgument.Enter(controller, argument, _onException));
-          // else if(state is State<TState, TEvent, object> stateWithoutArgument)
-          //     enterActions.Add(() => stateWithoutArgument.Enter(controller, argument, _onException));
-          // else
-          //   throw new 
           
           _activeStates.Push(state);
         }

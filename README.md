@@ -4,11 +4,11 @@ ___
 
 # Binstate
 
-Simple but yet powerful state machine. Thread safe. Supports async methods. Supports hierarchically nested states.
-     
+Binstate *(pronounced as "Be in state")* is a simple but yet powerful state machine for .NET. Thread safe. Supports async methods. Supports hierarchically nested states.
+
 ## Features
 
-### Thread safe
+### Thread safety
 
 The state machine is fully thread safe and allows calling any method from any thread.
 
@@ -17,19 +17,20 @@ The state machine is fully thread safe and allows calling any method from any th
 Binstate don't use it's own thread to execute transitions.
 
 `Raise(event)` 
-will execute exit action of the current state and enter action of the new state on the current thread. 
-If enter action is blocking `Raise` will block until enter action finishes.
-`RaiseAsync(event)` uses `Task.Run` to execute transition.
+executes an 'exit' action of the current state and an 'enter' action of the new state on the current thread. 
+If an 'enter' action is blocking `Raise` will block until enter action finishes.
+`RaiseAsync(event)` uses `Task.Run` to execute a transition.
 
- It gives an application full control on threading model of the state machine.   
+It gives an application a full control on the threading model of the state machine.   
 
 ### Support async methods
 
-Supports using async methods as enter action of the state. Binstate guarantees that async enter action will finis before calling exit action of the current state and enter action of the new state. Async method should return `Task`, `async void` methods are not supported. 
+Supports async methods as an 'enter' action of the state. Binstate guarantees that an async 'enter' action will finish before calling an 'exit'
+ action of the current state and an 'enter' action of the new state. An async method should return `Task`, `async void` methods are not supported. 
 
 ### Conditional transitions using C# not DSL
     
-Instead of introducing conditional transition into state machine DSL like
+Instead of introducing conditional transition into state machine's DSL like
 
     .If(CallDialled, Ringing, () => IsValidNumber)
     .If(CallDialled, Beeping, () => !IsValidNumber);
@@ -52,7 +53,7 @@ Binstate allows using C#
       
 ### Safe checking if state machine still in the state
 
-The current state of the state machine is not exposed. No knowledge which state to check - less errors.
+The current state of the state machine is not exposed publicly. No knowledge which state to check - less errors.
 
 not `TState CurrentState{ get; }` but `bool InMyState {get;}`
     
@@ -67,7 +68,7 @@ not `TState CurrentState{ get; }` but `bool InMyState {get;}`
       });
     }    
     
-### Changing state from enter action
+### Changing a state from an 'enter' action
 
       private async Task TrackGame(IStateMachine<State> stateMachine, string opponentName)
       {

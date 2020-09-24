@@ -21,7 +21,7 @@ namespace Binstate
     public Builder([NotNull] Action<Exception> onException) => _onException = onException ?? throw new ArgumentNullException(nameof(onException));
 
     /// <summary>
-    /// Defines the new state in the state machine
+    /// Defines the new state in the state machine, if it is already defined, returns the configurator.
     /// </summary>
     /// <param name="stateId">Id of the state, is used to reference it from other elements of the state machine.</param>
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
@@ -29,8 +29,11 @@ namespace Binstate
     {
       if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
 
-      var stateConfig = new Config<TState, TEvent>.Substate(stateId);
-      _stateConfigs.Add(stateId, stateConfig);
+      if(!_stateConfigs.TryGetValue(stateId, out var stateConfig))
+      {
+        stateConfig = new Config<TState, TEvent>.Substate(stateId);
+        _stateConfigs.Add(stateId, stateConfig);
+      }
       return stateConfig;
     }
 

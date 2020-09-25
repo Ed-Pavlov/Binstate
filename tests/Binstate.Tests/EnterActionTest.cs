@@ -27,7 +27,7 @@ namespace Instate.Tests
 
       builder
         .DefineState(State1)
-        .AddTransition<int>(Terminate, Terminated);
+        .AddTransition(Terminate, Terminated);
 
       builder
         .DefineState(Terminated)
@@ -53,7 +53,7 @@ namespace Instate.Tests
 
       builder
         .DefineState(State1)
-        .AddTransition<int>(Terminate, Terminated);
+        .AddTransition(Terminate, Terminated);
 
       builder
         .DefineState(Terminated)
@@ -89,67 +89,62 @@ namespace Instate.Tests
     }
 
     [Test]
-    public void should_throw_exception_if_transition_argument_is_not_assignable_to_enter_action_argument()
+    public void should_throw_exception_if_argument_is_not_assignable_to_enter_action()
     {
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
-
-      const string Working = "Working";
-      builder.DefineState(Initial).AddTransition<int>(Working, Working);
-      builder.DefineState(Working).OnEnter<string>(value => { });
-
+      
+      builder.DefineState(Initial).AddTransition(State1, State1);
+      builder.DefineState(State1).OnEnter<int>(value => { });
+      var stateMachine = builder.Build(Initial);
+      
       // --act
-      Action target = () => builder.Build(Initial);
+      Action target = () => stateMachine.Raise(State1, "argument");
 
       // --assert
-      target
-        .Should().Throw<InvalidOperationException>()
-        .WithMessage("The enter action argument of type 'System.String' is not assignable from the transition argument of type 'System.Int32'. " +
-                     "See transition 'Working' from the state 'Initial' to the state 'Working'");
+      target.Should().ThrowExactly<TransitionException>()
+        .WithMessage($"Cannot convert from 'System.String' to 'System.Int32' invoking the enter action of the state '{State1}'");
     }
     
     [Test]
-    public void should_throw_exception_if_transition_has_argument_but_enter_action_has_not()
+    public void should_throw_exception_if_no_argument_specified_for_to_enter_action_with_argument()
     {
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
-
-      const string Working = "Working";
-      builder.DefineState(Initial).AddTransition<int>(Working, Working);
-      builder.DefineState(Working).OnEnter(() => { });
-
+      
+      builder.DefineState(Initial).AddTransition(State1, State1);
+      builder.DefineState(State1).OnEnter<int>(value => { });
+      var stateMachine = builder.Build(Initial);
+      
       // --act
-      Action target = () => builder.Build(Initial);
+      Action target = () => stateMachine.Raise(State1);
 
       // --assert
-      target
-        .Should().Throw<InvalidOperationException>()
-        .WithMessage("The transition 'Working' from the state 'Initial' to the state 'Working' requires argument of type 'System.Int32' " +
-                     "but enter action of the target state defined without argument");
+      target.Should().ThrowExactly<TransitionException>()
+        .WithMessage($"The enter action of the state '{State1}' is configured as required an argument but no argument was specified.");
     }
     
     [Test]
-    public void should_throw_exception_if_transition_has_not_argument_but_enter_action_has()
+    public void should_throw_exception_if_argument_specified_for_to_enter_action_wo_argument()
     {
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
-
-      const string Working = "Working";
-      builder.DefineState(Initial).AddTransition(Working, Working);
-      builder.DefineState(Working).OnEnter<int>(value => { });
-
+      
+      builder.DefineState(Initial).AddTransition(State1, State1);
+      builder.DefineState(State1).OnEnter(() => { });
+      var stateMachine = builder.Build(Initial);
+      
       // --act
-      Action target = () => builder.Build(Initial);
+      Action target = () => stateMachine.Raise(State1, "argument");
 
       // --assert
-      target
-        .Should().Throw<InvalidOperationException>()
-        .WithMessage("The transition 'Working' from the state 'Initial' to the state 'Working' doesn't require argument but enter action of the target state" +
-                     " requires an argument of type 'System.Int32'");
+      target.Should().ThrowExactly<TransitionException>()
+        .WithMessage($"Transition from the state '{Initial}' by the event '{State1}' will activate following states [*]. No one of them are defined " +
+                     "with the enter action accepting an argument, but argument 'argument' was passed to the Raise call");
     }
     
     [Test]
-    public void should_pass_argument_if_transition_argument_is_differ_but_assignable_to_enter_action_argument()
+    public void should_pass_argument_if_argument_is_differ_but_assignable_to_enter_action_argument()
     {
       IDisposable actual = null;
       var expected = new MemoryStream();
@@ -157,14 +152,13 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Working = "Working";
-      builder.DefineState(Initial).AddTransition<Stream>(Working, Working);
-      builder.DefineState(Working).OnEnter<IDisposable>(value => actual = value);
+      builder.DefineState(Initial).AddTransition(State1, State1);
+      builder.DefineState(State1).OnEnter<IDisposable>(value => actual = value);
       
       var target = builder.Build(Initial);
 
       // --act
-      target.Raise(Working, expected);
+      target.Raise(State1, expected);
       
       // --assert
       actual.Should().BeSameAs(expected); 
@@ -176,8 +170,7 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Parent = "Parent";
-      const string Child = "Child";
+      
       builder.DefineState(Parent).OnEnter<int>(value => {});
       builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<string>(value => { });
 
@@ -197,20 +190,17 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Root = "Root";
-      const string Parent = "Parent";
-      const string Child = "Child";
-      builder.DefineState(Root).OnEnter<int>(value => {});
-      builder.DefineState(Parent).AsSubstateOf(Root).OnEnter(value => {});
+      builder.DefineState(Initial).OnEnter<int>(value => {});
+      builder.DefineState(Parent).AsSubstateOf(Initial).OnEnter(value => {});
       builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<string>(value => { });
 
       // --act
-      Action target = () => builder.Build(Root);
+      Action target = () => builder.Build(Initial);
 
       // --assert
       target
         .Should().Throw<InvalidOperationException>()
-        .WithMessage("Parent state 'Root' enter action requires argument of type 'System.Int32' whereas it's child state 'Child' requires argument of " +
+        .WithMessage($"Parent state '{Initial}' enter action requires argument of type 'System.Int32' whereas it's child state '{Child}' requires argument of " +
                      "not assignable to the parent type 'System.String'");
     }
     
@@ -224,10 +214,7 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Root = "Root";
-      const string Parent = "Parent";
-      const string Child = "Child";
-      builder.DefineState(Initial).AddTransition<MemoryStream>(Child, Child);
+      builder.DefineState(Initial).AddTransition(Child, Child);
       builder.DefineState(Root).OnEnter<IDisposable>(value => actualDisposable = value);
       builder.DefineState(Parent).AsSubstateOf(Root).OnEnter(value => {});
       builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<Stream>(value => actualStream = value);

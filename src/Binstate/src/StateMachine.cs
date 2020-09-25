@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
@@ -41,7 +42,7 @@ namespace Binstate
     public bool Raise([NotNull] TEvent @event)
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-      return PerformTransition<Unit>(@event, _ => _.ValidateArgument(), null);
+      return PerformTransition<Unit>(@event, null);
     }
 
     /// <summary>
@@ -53,7 +54,7 @@ namespace Binstate
     public bool Raise<T>([NotNull] TEvent @event, [CanBeNull] T argument)
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-      return PerformTransition(@event, _ => _.ValidateArgument(argument), argument);
+      return PerformTransition(@event, argument);
     }
 
     /// <summary>
@@ -65,7 +66,7 @@ namespace Binstate
     public Task<bool> RaiseAsync([NotNull] TEvent @event)
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-      return Task.Run(() => PerformTransition<Unit>(@event, _ => _.ValidateArgument(), null));
+      return Task.Run(() => PerformTransition<Unit>(@event, null));
     }
 
     /// Raises the event with an argument asynchronously. Finishing can be controller by returned <see cref="Task"/>, entering and exiting actions (if defined)
@@ -75,10 +76,10 @@ namespace Binstate
     public Task<bool> RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument)
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-      return Task.Run(() => PerformTransition(@event, _ => _.ValidateArgument(argument), argument));
+      return Task.Run(() => PerformTransition(@event, argument));
     }
 
-    private bool PerformTransition<T>(TEvent @event, Action<Transition<TState, TEvent>> transitionValidator, T argument)
+    private bool PerformTransition<T>(TEvent @event, T argument)
     {
       var enterActions = new List<Action>();
 
@@ -87,14 +88,19 @@ namespace Binstate
         var activeState = _activeStates.Peek(); // there should be at least one active state, don't need to check count
         
         var transition = activeState.FindTransitionTransitive(@event); // looks for a transition through all parent states
-        transitionValidator(transition);
-
         var stateId = transition.GetTargetStateId(_onException);
         if(stateId.IsNull()) // dynamic transition can return null, means no transition needed
           return false;
-        
         var newState = GetState(stateId);
 
+        var commonAncestor = FindLeastCommonAncestor(newState, activeState);
+        var statesToEnter = newState.GetAllStatesForActivationTillParent(commonAncestor); // get states from activeState with all parents till newState itself to activate 
+        ValidateStates(statesToEnter, argument, activeState, @event); // validate before changing any state of the state machine
+        
+        // ---------------------------------------------------------------------------------------------------
+        // till this point we can throw an exception (TransitionException) because no real changes were performed
+        // ---------------------------------------------------------------------------------------------------
+        
         // exit all active states which are not parent for the new state
         while (activeState != null && !newState.IsSubstateOf(activeState))
         {
@@ -102,10 +108,9 @@ namespace Binstate
           _activeStates.Pop(); // remove from active states
           activeState = _activeStates.Count == 0 ? null : _activeStates.Peek();
         }
-
-        // if new state has parent states enter all parent states from the top
-        var states = newState.GetAllStatesForActivationTillParent(activeState); // get all states to activate starting from activeState till newState itself
-        foreach (var state in states)
+       
+        // activate new active states
+        foreach (var state in statesToEnter)
         {
           var controller = new Controller(state, this);
           state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
@@ -122,12 +127,70 @@ namespace Binstate
       
       return true;
     }
-    
+
     private State<TState, TEvent> GetState([NotNull] TState state)
     {
       if (!_states.TryGetValue(state, out var result))
         throw new InvalidOperationException($"State '{state}' is not defined");
       return result;
+    }
+
+    [CanBeNull]
+    private static State<TState, TEvent> FindLeastCommonAncestor(State<TState, TEvent> l, State<TState, TEvent> r)
+    {
+      var lDepth = l.DepthInTree;
+      var rDepth = r.DepthInTree;
+      while (lDepth != rDepth)
+      {
+        if (lDepth > rDepth)
+        {
+          lDepth--;
+          l = l.ParentState;
+        }
+        else
+        {
+          rDepth--;
+          r = r.ParentState;
+        }
+      }
+
+      while (!ReferenceEquals(l, r))
+      {
+        l = l.ParentState;
+        r = r.ParentState;
+      }
+
+      return l;
+    }
+    
+    private static void ValidateStates<T>(IReadOnlyCollection<State<TState,TEvent>> states, T argument, State<TState,TEvent> activeState, TEvent @event)
+    {
+      var argumentType = typeof(T);
+      var argumentSpecified = argumentType != typeof(Unit);
+      
+      var enterWithArgumentCount = 0;
+      foreach (var state in states)
+      {
+        if (state.EnterArgumentType != null)
+        {
+          if(!argumentSpecified)
+            throw new TransitionException($"The enter action of the state '{state.Id}' is configured as required an argument but no argument was specified.");
+          
+          if(!state.EnterArgumentType.IsAssignableFrom(argumentType))
+            throw new TransitionException($"Cannot convert from '{argumentType}' to '{state.EnterArgumentType}' invoking the enter action of the state '{state.Id}'");
+
+          enterWithArgumentCount++;
+        }
+      }
+
+      if (argumentSpecified && enterWithArgumentCount == 0)
+      {
+        var statesToActivate = string.Join("->", states.Select(_ => _.Id.ToString()));
+        
+        throw new TransitionException(
+          $"Transition from the state '{activeState.Id}' by the event '{@event}' will activate following states [{statesToActivate}]. No one of them are defined with "
+          + $"the enter action accepting an argument, but argument '{argument}' was passed to the Raise call");
+      }
     }
   }
 }

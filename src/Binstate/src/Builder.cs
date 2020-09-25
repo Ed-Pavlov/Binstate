@@ -128,26 +128,6 @@ namespace Binstate
 
           if (!states.TryGetValue(targetStateId, out var state)) // static transition can't throw an exception
             throw new InvalidOperationException($"The transition '{transition.Event}' from the state '{stateConfig.StateId}' references not defined state '{targetStateId}'");
-
-          if (transition.ArgumentType == null)
-          {
-            if (state.EnterArgumentType != null)
-              throw new InvalidOperationException(
-                $"The transition '{transition.Event}' from the state '{stateConfig.StateId}' to the state '{targetStateId}' doesn't require argument " +
-                $"but enter action of the target state requires an argument of type '{state.EnterArgumentType}'");
-          }
-          else
-          {
-            if (state.EnterArgumentType == null)
-              throw new InvalidOperationException(
-                $"The transition '{transition.Event}' from the state '{stateConfig.StateId}' to the state '{targetStateId}' requires argument " +
-                $"of type '{transition.ArgumentType}' but enter action of the target state defined without argument");
-
-            if (!state.EnterArgumentType.IsAssignableFrom(transition.ArgumentType))
-              throw new InvalidOperationException(
-                $"The enter action argument of type '{state.EnterArgumentType}' is not assignable from the transition argument of type '{transition.ArgumentType}'. " +
-                $"See transition '{transition.Event}' from the state '{stateConfig.StateId}' to the state '{targetStateId}'");
-          }
         }
     }
   }

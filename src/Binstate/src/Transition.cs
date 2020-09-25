@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 
 namespace Binstate
@@ -7,15 +6,12 @@ namespace Binstate
   internal class Transition<TState, TEvent>
   {
     private readonly Func<TState> _getTargetStateId;
-    private readonly bool _allowNullArgument;
     
-    public Transition(TEvent @event, Func<TState> getTargetStateId, bool isStatic, Type argumentType, bool allowNullArgument)
+    public Transition(TEvent @event, Func<TState> getTargetStateId, bool isStatic)
     {
       Event = @event;
       _getTargetStateId = getTargetStateId;
       IsStatic = isStatic;
-      ArgumentType = argumentType;
-      _allowNullArgument = allowNullArgument;
     }
 
     public TEvent Event { get; }
@@ -39,22 +35,6 @@ namespace Binstate
         onException(exception);
         throw;
       }
-    }
-
-    public void ValidateArgument()
-    {
-      if(ArgumentType != null) throw new TransitionException("Transition is configured as required an argument");
-    }
-    
-    [SuppressMessage("ReSharper", "ParameterOnlyUsedForPreconditionCheck.Global")]
-    public void ValidateArgument<T>([CanBeNull] T argument) 
-    {
-      if (ArgumentType == null) throw new TransitionException("Transition is not configured as accepted an argument");
-      if(!_allowNullArgument && ReferenceEquals(null, argument)) throw new TransitionException("Transition can't accept null value");
-      
-      var argumentType = typeof(T);
-      if(!ArgumentType.IsAssignableFrom(argumentType)) 
-        throw new InvalidOperationException($"Parameter type '{ArgumentType}' of transition can't accept argument of type '{argumentType}'");
     }
   }
 }

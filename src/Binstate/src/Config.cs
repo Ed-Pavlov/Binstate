@@ -34,7 +34,7 @@ namespace Binstate
         if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
         if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
 
-        return AddTransition(@event, () => stateId, true, null, false);
+        return AddTransition(@event, () => stateId, true);
       }
 
       /// <summary>
@@ -47,52 +47,17 @@ namespace Binstate
         if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
         if (getState.IsNull()) throw new ArgumentNullException(nameof(getState));
         
-        return AddTransition(@event, getState, false, null, false);
-      }
-
-      /// <summary>
-      /// Defines transition from the currently configured state to the <paramref name="stateId"> specified state</paramref> when
-      /// <paramref name="event"> event is raised</paramref>
-      /// Use this overload if target state enter action requires an input argument.
-      /// </summary>
-      public Transitions AddTransition<TArgument>([NotNull] TEvent @event, [NotNull] TState stateId, bool argumentCanBeNull = false)
-      {
-        if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-        if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
-        
-        return AddTransition(@event, () => stateId, true, typeof(TArgument), argumentCanBeNull);
-      }
-
-      /// <summary>
-      /// Defines transition from the currently configured state to the state calculated dynamically depending on other application state. 
-      /// </summary>
-      /// <param name="event"></param>
-      /// <param name="getState">If getState returns default(TState) no transition executed</param>
-      /// <param name="argumentCanBeNull">True if argument passed to enter action can be null</param>
-      public Transitions AddTransition<TArgument>([NotNull] TEvent @event, [NotNull] Func<TState> getState, bool argumentCanBeNull = false)
-      {
-        if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-        if (getState.IsNull()) throw new ArgumentNullException(nameof(getState));
-        
-        return AddTransition(@event, getState, false, typeof(TArgument), argumentCanBeNull);
+        return AddTransition(@event, getState, false);
       }
 
       /// <summary>
       /// Defines transition from the state to itself when <param name="event"> is raised. Exit and enter actions are called in case of such transition.</param>
       /// </summary>
-      public void AllowReentrancy(TEvent @event) => AddTransition(@event, () => StateId, true, null, false);
+      public void AllowReentrancy(TEvent @event) => AddTransition(@event, () => StateId, true);
       
-      /// <summary>
-      /// Defines transition from the state to itself when <paramref name="event"> is raised. Exit and enter actions are called in case of such transition.</paramref>
-      /// Use this overload if the state enter action requires an input argument.
-      /// </summary>
-      /// <param name="event"></param>
-      /// <param name="argumentCanBeNull">True if argument passed to enter action can be null</param>
-      public void AllowReentrancy<TArgument>(TEvent @event, bool argumentCanBeNull = false) => AddTransition(@event, () => StateId, true, typeof(TArgument), argumentCanBeNull);
-      
-      private Transitions AddTransition(TEvent @event, Func<TState> getState, bool isStatic, Type parameterType, bool argumentCanBeNull)
+      private Transitions AddTransition(TEvent @event, Func<TState> getState, bool isStatic)
       {
-        TransitionList.Add(new Transition<TState, TEvent>(@event, getState, isStatic, parameterType, argumentCanBeNull));
+        TransitionList.Add(new Transition<TState, TEvent>(@event, getState, isStatic));
         return this;
       }
     }

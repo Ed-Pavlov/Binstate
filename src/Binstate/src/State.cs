@@ -51,13 +51,17 @@ namespace Binstate
       _exit = exit;
       _transitions = transitions;
       ParentState = parentState;
+      DepthInTree = parentState?.DepthInTree + 1 ?? 0;
     }
 
     public readonly TState Id;
-    public readonly State<TState, TEvent> ParentState;
     [CanBeNull]
     public readonly Type EnterArgumentType;
 
+    public readonly int DepthInTree;
+    public readonly State<TState, TEvent> ParentState;
+    
+    
     public void Enter<TArgument>(IStateMachine<TEvent> stateMachine, TArgument arg, Action<Exception> onException)
     {
       try
@@ -147,7 +151,7 @@ namespace Binstate
 
     public bool IsSubstateOf(State<TState, TEvent> state) => ParentState != null && (ReferenceEquals(state, ParentState) || ParentState.IsSubstateOf(state));
 
-    public IReadOnlyCollection<State<TState, TEvent>> GetAllStatesForActivationTillParent(State<TState, TEvent> tillState)
+    public IReadOnlyCollection<State<TState, TEvent>> GetAllStatesForActivationTillParent([CanBeNull] State<TState, TEvent> tillState)
     {
       var states = new List<State<TState, TEvent>>();
       var parent = ParentState;

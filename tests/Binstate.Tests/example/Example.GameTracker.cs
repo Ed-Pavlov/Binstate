@@ -28,7 +28,7 @@ namespace Instate.Tests.example
         builder
           .DefineState(WaitingForGame)
           .OnEnter(WaitForGame)
-          .AddTransition<string>(GameStarted, TrackingGame)
+          .AddTransition(GameStarted, TrackingGame)
           .AddTransition(Terminate, Terminated);
 
         builder

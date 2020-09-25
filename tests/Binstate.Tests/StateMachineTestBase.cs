@@ -6,6 +6,9 @@ namespace Instate.Tests
     protected const int Event1 = 1;
     protected const string State1 = "state1";
     protected const string State2 = "state2";
+    protected const string Root = "Root";
+    protected const string Parent = "Parent";
+    protected const string Child = "Child";
     protected const string Terminated = "Terminated";
     protected const int Terminate = 2;
     

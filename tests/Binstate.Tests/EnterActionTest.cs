@@ -94,7 +94,6 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Initial = "Initial";
       const string Working = "Working";
       builder.DefineState(Initial).AddTransition<int>(Working, Working);
       builder.DefineState(Working).OnEnter<string>(value => { });
@@ -115,7 +114,6 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Initial = "Initial";
       const string Working = "Working";
       builder.DefineState(Initial).AddTransition<int>(Working, Working);
       builder.DefineState(Working).OnEnter(() => { });
@@ -136,7 +134,6 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Initial = "Initial";
       const string Working = "Working";
       builder.DefineState(Initial).AddTransition(Working, Working);
       builder.DefineState(Working).OnEnter<int>(value => { });
@@ -160,7 +157,6 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Initial = "Initial";
       const string Working = "Working";
       builder.DefineState(Initial).AddTransition<Stream>(Working, Working);
       builder.DefineState(Working).OnEnter<IDisposable>(value => actual = value);
@@ -228,7 +224,6 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
 
-      const string Initial = "Initial";
       const string Root = "Root";
       const string Parent = "Parent";
       const string Child = "Child";
@@ -247,6 +242,7 @@ namespace Instate.Tests
       actualDisposable.Should().BeSameAs(expected);
     }
     
+#pragma warning disable CS1998
     private static async void AsyncVoidMethod(IStateMachine<int> _)
     {
     }
@@ -254,5 +250,6 @@ namespace Instate.Tests
     private static async void SimpleAsyncVoidMethod()
     {
     }
+#pragma warning restore
   }
 }

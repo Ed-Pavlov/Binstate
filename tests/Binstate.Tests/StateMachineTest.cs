@@ -13,7 +13,7 @@ namespace Instate.Tests
     [Test]
     public void should_fail_if_transition_to_unknown_state()
     {
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
 
       builder
         .DefineState(Initial)
@@ -29,7 +29,7 @@ namespace Instate.Tests
     [Test]
     public void should_fail_if_transitions_reference_one_state()
     {
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
 
       builder
         .DefineState(Initial)
@@ -49,7 +49,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
 
       builder
         .DefineState(Initial)
@@ -81,7 +81,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
       builder
         .DefineState(Initial)
         .AddTransition(Event1, State1);
@@ -114,7 +114,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
       builder.DefineState(Initial).AddTransition(Event1, State1);
 
       builder
@@ -149,7 +149,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
       builder.DefineState(Initial).AddTransition(Event1, State1);
 
       builder
@@ -181,7 +181,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
       builder.DefineState(Initial).AddTransition(Event1, State1);
 
       builder
@@ -210,22 +210,24 @@ namespace Instate.Tests
       // --assert
       actual.Should().BeEquivalentTo(OnEnter, Terminated);
     }
-    
-    
 
     [Test]
     public void should_call_exit_and_enter_on_reentering()
     {
+      const string Enter = "Enter";
+      const string Exit = "Exit";
+      
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
       
       builder.DefineState(Initial).AddTransition(Event1, State1);
+      
       builder
         .DefineState(State1)
-        .OnEnter(_ => actual.Add("Enter"))
-        .OnExit(() => actual.Add("Exit"))
+        .OnEnter(_ => actual.Add(Enter))
+        .OnExit(() => actual.Add(Exit))
         .AllowReentrancy(Event1);
 
       var target = builder.Build(Initial);
@@ -235,7 +237,7 @@ namespace Instate.Tests
       target.Raise(Event1);
       
       // --assert
-      actual.Should().BeEquivalentTo("Enter", "Exit", "Enter");
+      actual.Should().BeEquivalentTo(Enter, Exit, Enter);
     }
 
     [Test]
@@ -244,7 +246,7 @@ namespace Instate.Tests
       var actual = new List<string>();
       
       // --arrange
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
 
       string DynamicTransition() => targetState;
 
@@ -267,6 +269,31 @@ namespace Instate.Tests
       
       // --assert
       actual.Should().BeEquivalentTo(targetState);
+    }
+    
+    [Test]
+    public void should_not_transit_if_dynamic_transition_returns_null()
+    {
+      var actual = new List<string>();
+      
+      // --arrange
+      var builder = new Builder<string, int>(OnException);
+
+      builder
+        .DefineState(Initial)
+        .AddTransition(Event1, () => null);
+      
+      builder
+        .DefineState(State1)
+        .OnEnter(_ => actual.Add(State1));
+      
+      var target = builder.Build(Initial);
+      
+      // --act
+      target.Raise(Event1);
+      
+      // --assert
+      actual.Should().BeEmpty();
     }
   }
 }

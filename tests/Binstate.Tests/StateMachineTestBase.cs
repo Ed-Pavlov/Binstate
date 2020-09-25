@@ -1,3 +1,6 @@
+using System;
+using NUnit.Framework;
+
 namespace Instate.Tests
 {
   public abstract class StateMachineTestBase
@@ -14,5 +17,7 @@ namespace Instate.Tests
     
     protected const string OnEnter = "OnEnter";
     protected const string OnExit = "OnExit";
+
+    protected void OnException(Exception exception) => Assert.Fail(exception.Message);
   }
 }

@@ -6,19 +6,32 @@ namespace Binstate
   internal class Transition<TState, TEvent>
   {
     private readonly Func<TState> _getTargetStateId;
-    
-    public Transition(TEvent @event, Func<TState> getTargetStateId, bool isStatic)
+    [CanBeNull]
+    public readonly Action _action;
+
+    public Transition(TEvent @event, Func<TState> getTargetStateId, bool isStatic, [CanBeNull] Action action)
     {
       Event = @event;
       _getTargetStateId = getTargetStateId;
       IsStatic = isStatic;
+      _action = action;
     }
 
     public TEvent Event { get; }
-    
-    [CanBeNull] 
-    public readonly Type ArgumentType;
-    
+
+    public void InvokeAction(Action<Exception> onException)
+    {
+      try
+      {
+        _action?.Invoke();
+      }
+      catch (Exception exc)
+      {
+        onException(exc);
+        throw;
+      }
+    }
+
     /// <summary>
     /// Means a transition targets the predefined state in opposite to the calculated dynamically runtime
     /// </summary>

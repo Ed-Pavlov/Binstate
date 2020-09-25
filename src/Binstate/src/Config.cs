@@ -27,14 +27,14 @@ namespace Binstate
       internal readonly List<Transition<TState, TEvent>> TransitionList = new List<Transition<TState, TEvent>>();
 
       /// <summary>
-      /// Defines transition from the currently configured state to the <param name="stateId"> specified state</param> when <param name="event"> event is raised</param> 
+      /// Defines transition from the currently configured state to the <paramref name="stateId"> specified state</paramref> when <paramref name="event"> event is raised</paramref> 
       /// </summary>
-      public Transitions AddTransition([NotNull] TEvent @event, [NotNull] TState stateId)
+      public Transitions AddTransition([NotNull] TEvent @event, [NotNull] TState stateId, Action action = null)
       {
         if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
         if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
 
-        return AddTransition(@event, () => stateId, true);
+        return AddTransition(@event, () => stateId, true, action);
       }
 
       /// <summary>
@@ -47,17 +47,17 @@ namespace Binstate
         if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
         if (getState.IsNull()) throw new ArgumentNullException(nameof(getState));
         
-        return AddTransition(@event, getState, false);
+        return AddTransition(@event, getState, false, null);
       }
 
       /// <summary>
       /// Defines transition from the state to itself when <param name="event"> is raised. Exit and enter actions are called in case of such transition.</param>
       /// </summary>
-      public void AllowReentrancy(TEvent @event) => AddTransition(@event, () => StateId, true);
+      public void AllowReentrancy(TEvent @event) => AddTransition(@event, () => StateId, true, null);
       
-      private Transitions AddTransition(TEvent @event, Func<TState> getState, bool isStatic)
+      private Transitions AddTransition(TEvent @event, Func<TState> getState, bool isStatic, [CanBeNull] Action action)
       {
-        TransitionList.Add(new Transition<TState, TEvent>(@event, getState, isStatic));
+        TransitionList.Add(new Transition<TState, TEvent>(@event, getState, isStatic, action));
         return this;
       }
     }

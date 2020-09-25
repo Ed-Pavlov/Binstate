@@ -24,7 +24,7 @@ namespace Instate.Tests
         actual.Add(OnEnter);
       }
       
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
       
       builder
         .DefineState(Initial)
@@ -64,7 +64,7 @@ namespace Instate.Tests
         while (stateMachine.InMyState) await Task.Delay(100);
       }
       
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
       builder
         .DefineState(Initial)
         .AddTransition(Event1, State1);

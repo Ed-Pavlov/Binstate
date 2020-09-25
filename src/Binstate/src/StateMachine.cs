@@ -109,7 +109,10 @@ namespace Binstate
           activeState = _activeStates.Count == 0 ? null : _activeStates.Peek();
         }
        
-        // activate new active states
+        // invoke action attached to the transition itself
+        transition.InvokeAction(_onException);
+        
+        // and then activate new active states
         foreach (var state in statesToEnter)
         {
           var controller = new Controller(state, this);

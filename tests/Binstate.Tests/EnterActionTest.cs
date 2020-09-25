@@ -23,7 +23,7 @@ namespace Instate.Tests
       var actual = Expected - 139;
 
       // --arrange
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
 
       builder
         .DefineState(State1)
@@ -49,7 +49,7 @@ namespace Instate.Tests
       var actual = Expected - 139;
 
       // --arrange
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
 
       builder
         .DefineState(State1)
@@ -71,7 +71,7 @@ namespace Instate.Tests
     [Test]
     public void should_not_accept_async_void_enter_action()
     {
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
 
       var state = builder.DefineState(State1);
       Action action = () => state.OnEnter(AsyncVoidMethod);
@@ -81,7 +81,7 @@ namespace Instate.Tests
     [Test]
     public void should_not_accept_async_void_simple_enter_action()
     {
-      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, int>(OnException);
 
       var state = builder.DefineState(State1);
       Action action = () => state.OnEnter(SimpleAsyncVoidMethod);
@@ -92,7 +92,7 @@ namespace Instate.Tests
     public void should_throw_exception_if_argument_is_not_assignable_to_enter_action()
     {
       // --arrange
-      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, string>(OnException);
       
       builder.DefineState(Initial).AddTransition(State1, State1);
       builder.DefineState(State1).OnEnter<int>(value => { });
@@ -110,7 +110,7 @@ namespace Instate.Tests
     public void should_throw_exception_if_no_argument_specified_for_to_enter_action_with_argument()
     {
       // --arrange
-      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, string>(OnException);
       
       builder.DefineState(Initial).AddTransition(State1, State1);
       builder.DefineState(State1).OnEnter<int>(value => { });
@@ -128,7 +128,7 @@ namespace Instate.Tests
     public void should_throw_exception_if_argument_specified_for_to_enter_action_wo_argument()
     {
       // --arrange
-      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, string>(OnException);
       
       builder.DefineState(Initial).AddTransition(State1, State1);
       builder.DefineState(State1).OnEnter(() => { });
@@ -150,7 +150,7 @@ namespace Instate.Tests
       var expected = new MemoryStream();
       
       // --arrange
-      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, string>(OnException);
 
       builder.DefineState(Initial).AddTransition(State1, State1);
       builder.DefineState(State1).OnEnter<IDisposable>(value => actual = value);
@@ -168,7 +168,7 @@ namespace Instate.Tests
     public void should_fail_build_if_parent_and_child_states_have_not_compatible_enter_arguments()
     {
       // --arrange
-      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, string>(OnException);
 
       
       builder.DefineState(Parent).OnEnter<int>(value => {});
@@ -188,7 +188,7 @@ namespace Instate.Tests
     public void should_fail_build_if_parent_and_child_states_have_not_compatible_enter_arguments2()
     {
       // --arrange
-      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, string>(OnException);
 
       builder.DefineState(Initial).OnEnter<int>(value => {});
       builder.DefineState(Parent).AsSubstateOf(Initial).OnEnter(value => {});
@@ -212,7 +212,7 @@ namespace Instate.Tests
       var expected = new MemoryStream();
       
       // --arrange
-      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, string>(OnException);
 
       builder.DefineState(Initial).AddTransition(Child, Child);
       builder.DefineState(Root).OnEnter<IDisposable>(value => actualDisposable = value);

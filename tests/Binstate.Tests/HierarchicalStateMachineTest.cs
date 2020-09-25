@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace Instate.Tests
 {
-  public class HierarchicalStateMachineTest
+  public class HierarchicalStateMachineTest : StateMachineTestBase
   {
     [Test]
     public void should_enter_all_parent_states()
@@ -15,7 +15,7 @@ namespace Instate.Tests
       var actual = new List<string>();
 
       // --arrange
-      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, string>(OnException);
 
       builder
         .DefineState(Initial)
@@ -62,7 +62,7 @@ namespace Instate.Tests
       }
 
       // --arrange
-      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, string>(OnException);
 
       builder
         .DefineState(Initial)
@@ -119,7 +119,7 @@ namespace Instate.Tests
       }
 
       // --arrange
-      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, string>(OnException);
 
       builder
         .DefineState(Initial)
@@ -172,7 +172,7 @@ namespace Instate.Tests
       }
 
       // --arrange
-      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, string>(OnException);
 
       builder
         .DefineState(Initial)
@@ -220,7 +220,7 @@ namespace Instate.Tests
       var actual = new List<string>();
 
       // --arrange
-      var builder = new Builder<string, string>(_ => Assert.Fail(_.Message));
+      var builder = new Builder<string, string>(OnException);
 
       builder
         .DefineState(Initial)
@@ -253,8 +253,6 @@ namespace Instate.Tests
       actual.Should().Equal(Branch1Level2, Free1);      
     }
     
-    private const string Initial = nameof(Initial);
-    private const string Root = nameof(Root);
     private const string Branch1Level1 = nameof(Branch1Level1);
     private const string Branch1Level2 = nameof(Branch1Level2);
     private const string Branch1Level3 = nameof(Branch1Level3);

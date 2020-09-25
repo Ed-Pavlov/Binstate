@@ -22,9 +22,6 @@ namespace Binstate
     /// <summary>
     /// Passing the event with argument to the state machine asynchronously. Parameter is needed if the Enter action of the target state requires one.
     /// See <see cref="Config{TState, TEvent}.Enter.OnEnter{T}(System.Action{IStateMachine{TEvent}, T})"/>,
-    /// <see cref="Config{TState, TEvent}.Enter.OnEnter{T}(System.Func{IStateMachine{TEvent}, T, Task})"/>,
-    /// <see cref="Config{TState, TEvent}.Transitions.AddTransition{TParameter}(TEvent, TState, bool)"/>, and
-    /// <see cref="Config{TState, TEvent}.Transitions.AddTransition{TParameter}(TEvent, Func{TState}, bool)"/> for details. 
     /// </summary>
     void RaiseAsync<T>([NotNull] TEvent @event, [NotNull] T argument);
   }

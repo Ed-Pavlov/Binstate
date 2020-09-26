@@ -29,5 +29,12 @@ namespace Instate.Tests
       yield return new TestCaseData(new Func<StateMachine<string, int>, int, bool>((_, e) => _.Raise(e))).SetName("Raise");
       yield return new TestCaseData(new Func<StateMachine<string, int>, int, bool>((_, e) => _.RaiseAsync(e).Result)).SetName("RaiseAsync");
     }
+    
+    protected static IEnumerable<TestCaseData> raise_and_raise_async_with_argument_source()
+    {
+      // using blocking and Async.Wait in order test should not exit before raising an event is completely handled
+      yield return new TestCaseData(new Func<StateMachine<string, int>, int, object, bool>((_, e, arg) => _.Raise(e, arg))).SetName("Raise");
+      yield return new TestCaseData(new Func<StateMachine<string, int>, int, object, bool>((_, e, arg) => _.RaiseAsync(e, arg).Result)).SetName("RaiseAsync");
+    }
   }
 }

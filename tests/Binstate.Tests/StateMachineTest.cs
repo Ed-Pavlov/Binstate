@@ -11,7 +11,7 @@ namespace Instate.Tests
   public class StateMachineTest : StateMachineTestBase
   {
     [Test]
-    public void should_fail_if_transition_to_unknown_state()
+    public void should_fail_if_transition_to_undefined_state()
     {
       var builder = new Builder<string, int>(OnException);
 
@@ -26,23 +26,6 @@ namespace Instate.Tests
       action.Should().ThrowExactly<InvalidOperationException>().Where(_ => _.Message.Contains("references not defined state"));
     }
 
-    [Test]
-    public void should_fail_if_transitions_reference_one_state()
-    {
-      var builder = new Builder<string, int>(OnException);
-
-      builder
-        .DefineState(Initial)
-        .AddTransition(Event1, State1)
-        .AddTransition(Event1, Terminated);
-
-      // --act
-      Action action = () => builder.Build(Initial);
-      
-      // --assert
-      action.Should().ThrowExactly<InvalidOperationException>().Where(_ => _.Message.Contains("Duplicated event"));
-    }
-    
     [Test]
     public void should_change_state_on_event()
     {

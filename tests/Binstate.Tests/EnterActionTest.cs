@@ -16,6 +16,37 @@ namespace Instate.Tests
       yield return new TestCaseData(new Action<StateMachine<string, int>, int>((_, param) => _.RaiseAsync(Terminate, param).Wait())).SetName("RaiseAsync");
     }
 
+    [Test]
+    public void should_call_enter_of_initial_state()
+    {
+      var entered = false;
+      // --arrange
+      var builder = new Builder<string, int>(OnException);
+
+      builder.DefineState(Initial).OnEnter(() => entered = true).AddTransition(Event1, () => null);
+      
+      // --act
+      builder.Build(Initial);
+      
+      // --assert
+      entered.Should().BeTrue();
+    }
+
+    [Test]
+    public void should_throw_exception_if_initial_state_enter_requires_argument()
+    {
+      // --arrange
+      var builder = new Builder<string, int>(OnException);
+
+      builder.DefineState(Initial).OnEnter<int>(_ => throw new InvalidOperationException()).AddTransition(Event1, () => null);
+      
+      // --act
+      Action target = () => builder.Build(Initial);
+      
+      // --assert
+      target.Should().ThrowExactly<TransitionException>().WithMessage("The enter action of the initial state must not require argument.");
+    }
+
     [TestCaseSource(nameof(raise_terminated_with_argument_source))]
     public void should_pass_argument_to_enter(Action<StateMachine<string, int>, int> raiseTerminated)
     {
@@ -125,7 +156,7 @@ namespace Instate.Tests
     }
     
     [Test]
-    public void should_throw_exception_if_argument_specified_for_to_enter_action_wo_argument()
+    public void should_throw_exception_if_argument_specified_for_enter_action_wo_argument()
     {
       // --arrange
       var builder = new Builder<string, string>(OnException);
@@ -171,7 +202,7 @@ namespace Instate.Tests
       var builder = new Builder<string, string>(OnException);
 
       
-      builder.DefineState(Parent).OnEnter<int>(value => {});
+      builder.DefineState(Parent).OnEnter<int>(value => {}).AddTransition(Child, () => null);
       builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<string>(value => { });
 
       // --act
@@ -190,7 +221,7 @@ namespace Instate.Tests
       // --arrange
       var builder = new Builder<string, string>(OnException);
 
-      builder.DefineState(Initial).OnEnter<int>(value => {});
+      builder.DefineState(Initial).OnEnter<int>(value => {}).AddTransition(Parent, () => null);
       builder.DefineState(Parent).AsSubstateOf(Initial).OnEnter(value => {});
       builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<string>(value => { });
 

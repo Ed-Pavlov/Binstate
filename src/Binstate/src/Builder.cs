@@ -21,7 +21,7 @@ namespace Binstate
     public Builder([NotNull] Action<Exception> onException) => _onException = onException ?? throw new ArgumentNullException(nameof(onException));
 
     /// <summary>
-    /// Defines the new state in the state machine, if it is already defined, returns the configurator.
+    /// Defines the new state in the state machine, if it is already defined throws an exception
     /// </summary>
     /// <param name="stateId">Id of the state, is used to reference it from other elements of the state machine.</param>
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
@@ -29,13 +29,24 @@ namespace Binstate
     {
       if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
 
-      if(!_stateConfigs.TryGetValue(stateId, out var stateConfig))
-      {
-        stateConfig = new Config<TState, TEvent>.Substate(stateId);
-        _stateConfigs.Add(stateId, stateConfig);
-      }
+      var stateConfig = new Config<TState, TEvent>.Substate(stateId);
+      _stateConfigs.Add(stateId, stateConfig);
       return stateConfig;
     }
+    
+    /// <summary>
+    /// Defines the new state in the state machine, if it is already defined, returns the configurator.
+    /// </summary>
+    /// <param name="stateId">Id of the state, is used to reference it from other elements of the state machine.</param>
+    /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
+    public Config<TState, TEvent>.Substate GetOrDefineState([NotNull] TState stateId)
+    {
+      if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
+
+      if(!_stateConfigs.TryGetValue(stateId, out var stateConfig)) 
+        stateConfig = DefineState(stateId);
+      return stateConfig;
+    } 
 
     private State<TState, TEvent> CreateStateAndAddToMap([NotNull] Config<TState, TEvent>.Substate stateConfig, Dictionary<TState, State<TState, TEvent>> states)
     {
@@ -76,17 +87,21 @@ namespace Binstate
     {
       if (initialState.IsNull()) throw new ArgumentNullException(nameof(initialState));
 
+      if (!_stateConfigs.ContainsKey(initialState))
+        throw new ArgumentException($"No state '{initialState}' is defined");
+      
+      var initialStateConfig = _stateConfigs[initialState];
+      if(initialStateConfig.TransitionList.Count == 0)
+        throw new ArgumentException("No transitions defined from the initial state");
+      
       // create all states
       var states = new Dictionary<TState, State<TState, TEvent>>();
       foreach (var stateConfig in _stateConfigs.Values) 
         CreateStateAndAddToMap(stateConfig, states);
 
-      if (!states.ContainsKey(initialState))
-        throw new ArgumentException($"No state '{initialState}' is defined");
-
       ValidateTransitions(states);
       ValidateSubstateEnterArgument(states);
-
+      
       return new StateMachine<TState, TEvent>(states[initialState], states, _onException);
     }
 

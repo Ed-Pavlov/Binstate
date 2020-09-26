@@ -7,7 +7,7 @@ namespace Binstate
   {
     private readonly Func<TState> _getTargetStateId;
     [CanBeNull]
-    public readonly Action _action;
+    private readonly Action _action;
 
     public Transition(TEvent @event, Func<TState> getTargetStateId, bool isStatic, [CanBeNull] Action action)
     {
@@ -19,16 +19,15 @@ namespace Binstate
 
     public TEvent Event { get; }
 
-    public void InvokeAction(Action<Exception> onException)
+    public void InvokeActionSafe(Action<Exception> onException)
     {
       try
       {
         _action?.Invoke();
       }
-      catch (Exception exc)
+      catch (Exception exc) // transition action can throw "user" exception
       {
         onException(exc);
-        throw;
       }
     }
 
@@ -37,17 +36,12 @@ namespace Binstate
     /// </summary>
     public readonly bool IsStatic;
 
-    public TState GetTargetStateId(Action<Exception> onException)
+    public bool GetTargetStateId(out TState state)
     {
-      try
-      {
-        return _getTargetStateId();
-      }
-      catch (Exception exception)
-      {
-        onException(exception);
-        throw;
-      }
+      state = _getTargetStateId();
+      return state.IsNotNull();
     }
+
+    public override string ToString() => $"[{Event} -> {(IsStatic ? _getTargetStateId().ToString() : "dynamic")}]";
   }
 }

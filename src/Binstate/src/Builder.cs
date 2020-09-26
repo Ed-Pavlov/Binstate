@@ -124,9 +124,9 @@ namespace Binstate
       foreach (var stateConfig in _stateConfigs.Values)
         foreach (var transition in stateConfig.TransitionList.Where(_ => _.IsStatic)) // do not check dynamic transitions because they are depends on the app state
         {
-          var targetStateId = transition.GetTargetStateId(_ => { });
+          transition.GetTargetStateId(out var targetStateId);
 
-          if (!states.TryGetValue(targetStateId, out var state)) // static transition can't throw an exception
+          if (!states.ContainsKey(targetStateId))
             throw new InvalidOperationException($"The transition '{transition.Event}' from the state '{stateConfig.StateId}' references not defined state '{targetStateId}'");
         }
     }

@@ -57,7 +57,7 @@ namespace Instate.Tests
 
       builder
         .DefineState(Terminated)
-        .OnEnter<int>((param) => actual = param);
+        .OnEnter<int>(param => actual = param);
 
       var stateMachine = builder.Build(State1);
 

@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace Binstate
@@ -17,12 +16,23 @@ namespace Binstate
     /// <summary>
     /// Passing the event to the state machine asynchronously.
     /// </summary>
-    void RaiseAsync([NotNull] TEvent @event);
+    /// <returns>Synchronously returns false if a transition was not found and true if the transition will be performed.</returns>
+    /// <exception cref="TransitionException">Throws if the 'enter' action of the target state requires argument.
+    /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
+    /// </exception>
+    bool RaiseAsync([NotNull] TEvent @event);
     
     /// <summary>
-    /// Passing the event with argument to the state machine asynchronously. Parameter is needed if the Enter action of the target state requires one.
+    /// Passing the event with an argument to the state machine asynchronously. The arguments is needed if the 'enter' action of the
+    /// target state requires one.
     /// See <see cref="Config{TState, TEvent}.Enter.OnEnter{T}(System.Action{IStateMachine{TEvent}, T})"/>,
     /// </summary>
-    void RaiseAsync<T>([NotNull] TEvent @event, [NotNull] T argument);
+    /// <returns>Synchronously returns false if a transition was not found and true if the transition will be performed.</returns>
+    /// <exception cref="TransitionException">Throws if the 'enter' action of the target state requires argument.
+    /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
+    /// </exception>
+    bool RaiseAsync<T>([NotNull] TEvent @event, [NotNull] T argument);
   }
 }

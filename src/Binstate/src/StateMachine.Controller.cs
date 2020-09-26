@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 namespace Binstate
@@ -18,16 +19,21 @@ namespace Binstate
 
       public bool InMyState => _state.IsActive;
 
-      public void RaiseAsync([NotNull] TEvent @event)
+      public bool RaiseAsync([NotNull] TEvent @event)
       {
         if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-        _owner.RaiseAsync(@event);
+        return RaiseAsync<Unit>(@event, default);
       }
 
-      public void RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument)
+      public bool RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument)
       {
         if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-        _owner.RaiseAsync(@event, argument);
+        var data = _owner.PrepareTransition<T>(@event, default);
+        if (data == null)
+          return false;
+        
+        Task.Run(() => _owner.PerformTransition(data.Value));
+        return true;
       }
     }
   }

@@ -16,7 +16,7 @@ namespace Binstate
     private readonly Dictionary<TEvent, Transition<TState, TEvent>> _transitions;
 
     /// <summary>
-    /// This event is used to avoid race condition when <see cref="Exit"/> method is called before <see cref="Config{TState,TEvent}.Enter"/> method.
+    /// This event is used to avoid race condition when <see cref="ExitSafe"/> method is called before <see cref="Config{TState,TEvent}.Enter"/> method.
     /// See usages for details.
     /// </summary>
     private readonly ManualResetEvent _entered = new ManualResetEvent(true);
@@ -62,7 +62,7 @@ namespace Binstate
     public readonly State<TState, TEvent> ParentState;
     
     
-    public void Enter<TArgument>(IStateMachine<TEvent> stateMachine, TArgument arg, Action<Exception> onException)
+    public void EnterSafe<TArgument>(IStateMachine<TEvent> stateMachine, TArgument arg, Action<Exception> onException)
     {
       try
       {
@@ -92,19 +92,20 @@ namespace Binstate
       }
     }
 
-    public Transition<TState, TEvent> FindTransitionTransitive(TEvent @event)
+    public bool FindTransitionTransitive(TEvent @event, out Transition<TState, TEvent> transition)
     {
       var state = this;
       while (state != null)
       {
-        if (state._transitions.TryGetValue(@event, out var transition))
-          return transition;
+        if (state._transitions.TryGetValue(@event, out transition))
+          return true;
 
         state = state.ParentState;
       }
 
       // no transition found through all parents
-      throw new TransitionException($"No transition defined by raising the event '{@event}' in the state '{Id}'");
+      transition = default;
+      return false;
     }
 
     /// <summary>
@@ -122,11 +123,11 @@ namespace Binstate
     }
 
     /// <summary>
-    /// <see cref="Exit"/> can be called earlier then <see cref="Config{TState,TEvent}.Enter"/> of the activated state,
+    /// <see cref="ExitSafe"/> can be called earlier then <see cref="Config{TState,TEvent}.Enter"/> of the activated state,
     /// see <see cref="StateMachine{TState,TEvent}.PerformTransition{T}"/> implementation for details.
     /// In this case it should wait till <see cref="Config{TState,TEvent}.Enter"/> will be called and exited, before call exit action
     /// </summary>
-    public void Exit(Action<Exception> onException)
+    public void ExitSafe(Action<Exception> onException)
     {
       try
       {
@@ -149,8 +150,6 @@ namespace Binstate
       }
     }
 
-    public bool IsSubstateOf(State<TState, TEvent> state) => ParentState != null && (ReferenceEquals(state, ParentState) || ParentState.IsSubstateOf(state));
-
     public IReadOnlyCollection<State<TState, TEvent>> GetAllStatesForActivationTillParent([CanBeNull] State<TState, TEvent> tillState)
     {
       var states = new List<State<TState, TEvent>>();
@@ -165,5 +164,7 @@ namespace Binstate
       states.Add(this);
       return states;
     }
+
+    public override string ToString() => Id.ToString();
   }
 }

@@ -68,15 +68,8 @@ namespace Instate.Tests
       actual.Should().BeEquivalentTo(State1);
     }
     
-    private static IEnumerable<TestCaseData> raise_terminate_source()
-    {
-      // using blocking and Async.Wait in order test should not exit before raising an event is completely handled
-      yield return new TestCaseData(new Action<StateMachine<string, int>>(_ => _.Raise(Terminate))).SetName("Raise");
-      yield return new TestCaseData(new Action<StateMachine<string, int>>(_ => _.RaiseAsync(Terminate).Wait())).SetName("RaiseAsync");
-    }
-    
-    [TestCaseSource(nameof(raise_terminate_source))]
-    public void should_finish_enter_before_call_exit(Action<StateMachine<string, int>> raiseTerminated)
+    [TestCaseSource(nameof(raise_and_raise_async_source))]
+    public void should_finish_enter_before_call_exit(Func<StateMachine<string, int>, int, bool> raise)
     {
       var actual = new List<string>();
       
@@ -102,14 +95,14 @@ namespace Instate.Tests
       target.Raise(Event1);
       
       // --act
-      raiseTerminated(target);
+      raise(target, Terminate);
       
       // --assert
       actual.Should().BeEquivalentTo(OnEnter, OnExit);
     }
 
-    [TestCaseSource(nameof(raise_terminate_source))]
-    public void should_finish_async_enter_before_call_exit(Action<StateMachine<string, int>> raiseTerminated)
+    [TestCaseSource(nameof(raise_and_raise_async_source))]
+    public void should_finish_async_enter_before_call_exit(Func<StateMachine<string, int>, int, bool> raise)
     {
       var actual = new List<string>();
       
@@ -137,14 +130,14 @@ namespace Instate.Tests
       target.Raise(Event1);
       
       // --act
-      raiseTerminated(target);
+      raise(target, Terminate);
       
       // --assert
       actual.Should().BeEquivalentTo(OnEnter, OnExit);
     }
 
-    [TestCaseSource(nameof(raise_terminate_source))]
-    public void should_finish_enter_before_call_next_enter(Action<StateMachine<string, int>> raiseTerminated)
+    [TestCaseSource(nameof(raise_and_raise_async_source))]
+    public void should_finish_enter_before_call_next_enter(Func<StateMachine<string, int>, int, bool> raise)
     {
       var actual = new List<string>();
       
@@ -169,14 +162,14 @@ namespace Instate.Tests
       target.Raise(Event1);
       
       // --act
-      raiseTerminated(target);
+      raise(target, Terminate);
       
       // --assert
       actual.Should().BeEquivalentTo(OnEnter, Terminated);
     }
 
-    [TestCaseSource(nameof(raise_terminate_source))]
-    public void should_finish_async_enter_before_call_next_enter(Action<StateMachine<string, int>> raiseTerminated)
+    [TestCaseSource(nameof(raise_and_raise_async_source))]
+    public void should_finish_async_enter_before_call_next_enter(Func<StateMachine<string, int>, int, bool> raise)
     {
       var actual = new List<string>();
       
@@ -205,7 +198,7 @@ namespace Instate.Tests
       target.Raise(Event1);
       
       // --act
-      raiseTerminated(target);
+      raise(target, Terminate);
       
       // --assert
       actual.Should().BeEquivalentTo(OnEnter, Terminated);

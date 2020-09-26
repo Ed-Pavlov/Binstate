@@ -6,6 +6,43 @@ using JetBrains.Annotations;
 
 namespace Binstate
 {
+  /// <summary>
+  /// This interface is used to make <typeparamref name="TArgument"/> contravariant.
+  /// </summary>
+  internal interface IState<TState, out TEvent, in TArgument>
+  {
+    void EnterSafe(IStateMachine<TEvent> stateMachine, TArgument argument, Action<Exception> onException);
+  }
+
+  /// <summary>
+  /// This class describes state machine's state which requires an argument to the enter action.
+  ///
+  /// All these complex generic stuff is introduced to avoid casting to 'object' and thus avoid boxing when value type instance is used as the argument.
+  /// </summary>
+  internal class State<TState, TEvent, TArgument> : State<TState, TEvent>, IState<TState, TEvent, TArgument>
+  {
+    public TArgument Argument;
+
+    public State(
+      [NotNull] TState id,
+      [CanBeNull] IEnterInvoker<TEvent> enter,
+      [CanBeNull] Action exit,
+      [NotNull] Dictionary<TEvent, Transition<TState, TEvent>> transitions,
+      [CanBeNull] State<TState, TEvent> parentState) : base(id, enter, typeof(TArgument), exit, transitions, parentState)
+    {
+    }
+
+    public void EnterSafe(IStateMachine<TEvent> stateMachine, TArgument argument, Action<Exception> onException)
+    {
+      Enter(onException, enter =>
+        {
+          Argument = argument;
+          var typedEnter = (IEnterActionInvoker<TEvent, TArgument>) enter;
+          return typedEnter.Invoke(stateMachine, argument);
+        });
+    }
+  }
+  
   internal class State<TState, TEvent>
   {
     [CanBeNull]
@@ -60,9 +97,17 @@ namespace Binstate
 
     public readonly int DepthInTree;
     public readonly State<TState, TEvent> ParentState;
-    
-    
-    public void EnterSafe<TArgument>(IStateMachine<TEvent> stateMachine, TArgument arg, Action<Exception> onException)
+
+    public void EnterSafe(IStateMachine<TEvent> stateMachine, Action<Exception> onException)
+    {
+      Enter(onException, enter =>
+        {
+          var noParameterEnter = (NoParameterEnterActionInvoker<TEvent>) enter;
+          return noParameterEnter.Invoke(stateMachine);
+        });
+    }
+
+    protected void Enter(Action<Exception> onException, Func<IEnterInvoker<TEvent>, Task> invokeEnterAction)
     {
       try
       {
@@ -70,17 +115,7 @@ namespace Binstate
         _entered.Set(); // it is safe to set the state as entered
 
         if (_enter == null) return;
-
-        if (typeof(TArgument) == typeof(Unit) || EnterArgumentType == null)
-        {
-          var noParameterEnter = (NoParameterEnterActionInvoker<TEvent>) _enter;
-          _task = noParameterEnter.Invoke(stateMachine);
-        }
-        else
-        {
-          var parameterizedEnter = (IEnterActionInvoker<TEvent, TArgument>) _enter; //use interface but not class for contravariant TArgument parameter
-          _task = parameterizedEnter.Invoke(stateMachine, arg);
-        }
+        _task = invokeEnterAction(_enter);
       }
       catch (Exception exception)
       {

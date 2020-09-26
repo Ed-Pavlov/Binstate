@@ -38,4 +38,19 @@
         <None Include="build\icon.png" Pack="true" PackagePath="">
         </None>
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="src\Config.Transition.cs">
+        <DependentUpon>Config.cs</DependentUpon>
+      </Compile>
+      <Compile Update="src\Config.Enter.cs">
+        <DependentUpon>Config.cs</DependentUpon>
+      </Compile>
+      <Compile Update="src\Config.Exit.cs">
+        <DependentUpon>Config.cs</DependentUpon>
+      </Compile>
+      <Compile Update="src\Config.State.cs">
+        <DependentUpon>Config.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
 </Project>

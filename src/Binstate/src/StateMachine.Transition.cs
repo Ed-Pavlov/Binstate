@@ -103,9 +103,12 @@ namespace Binstate
     /// </summary>
     private Action ActivateStateNotGuarded<T>(State<TState, TEvent> state, T argument)
     {
-      var controller = new Controller(state, this);
       state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
-      return () => state.EnterSafe(controller, argument, _onException);
+      var controller = new Controller(state, this);
+
+      return state is IState<TState, TEvent, T> stateWithArgument
+        ? (Action) (() => stateWithArgument.EnterSafe(controller, argument, _onException))
+        : () => state.EnterSafe(controller, _onException);
     }
 
     private readonly struct TransitionData<T>

@@ -75,7 +75,8 @@ namespace Binstate
         transitions.Add(transition.Event, transition);
       }
 
-      return new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterAction, stateConfig.EnterArgumentType, stateConfig.ExitAction, transitions, parentState);
+      
+      return stateConfig.CreateState(parentState);
     }
 
     /// <summary>

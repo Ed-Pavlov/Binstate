@@ -20,18 +20,15 @@ namespace Binstate
     /// </summary>
     private readonly Dictionary<TState, State<TState, TEvent>> _states;
 
-    /// <summary>
-    /// Active composite (hierarchy of) states
-    /// </summary>
-    private readonly Stack<State<TState, TEvent>> _activeStates = new Stack<State<TState, TEvent>>();
+    private State<TState, TEvent> _activeState;
 
     internal StateMachine(State<TState, TEvent> initialState, Dictionary<TState, State<TState, TEvent>> states, Action<Exception> onException)
     {
       _states = states;
       _onException = onException;
 
-      var enterAction = ActivateStateNotGuarded<Unit>(initialState, default);
-      enterAction();
+      _activeState = initialState;
+      ActivateInitialState(initialState, onException);
     }
 
     /// <summary>
@@ -117,6 +114,17 @@ namespace Binstate
         : Task.Run(() => PerformTransition(data.Value));
     }
 
+    private void ActivateInitialState(State<TState, TEvent> initialState, Action<Exception> onException)
+    {
+      var enterAction = ActivateStateNotGuarded<Unit>(initialState, default);
+      try {
+        enterAction();
+      }
+      catch (Exception exception) {
+        onException(exception);
+      }
+    }
+    
     private State<TState, TEvent> GetStateById([NotNull] TState state) => 
       _states.TryGetValue(state, out var result) ? result : throw new TransitionException($"State '{state}' is not defined");
 
@@ -154,8 +162,9 @@ namespace Binstate
     /// Validates that all 'enter' actions match (not)passed argument. Throws the exception if not, because it is not runtime problem, but the problem
     /// of configuration.
     /// </summary>
+    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     private static void ValidateStates<T>(
-      IReadOnlyCollection<State<TState, TEvent>> states,
+      IEnumerable<State<TState, TEvent>> states,
       State<TState, TEvent> activeState,
       TEvent @event,
       T argument)

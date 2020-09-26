@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-
 namespace Binstate
 {
   public static partial class Config<TState, TEvent>
@@ -12,11 +5,11 @@ namespace Binstate
     /// <summary>
     /// This class is used to configure composite states. 
     /// </summary>
-    public class Substate : Enter
+    public class State : Enter
     {
       internal TState ParentStateId; 
       
-      internal Substate(TState stateId) : base(stateId)
+      internal State(TState stateId) : base(stateId)
       { }
 
       /// <summary>

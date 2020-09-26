@@ -106,7 +106,7 @@ namespace Instate.Tests
 
       var state = builder.DefineState(State1);
       Action action = () => state.OnEnter(AsyncVoidMethod);
-      action.Should().ThrowExactly<ArgumentException>().Which.Message.Should().Be(Config<string, int>.Enter.AsyncVoidMethodNotSupported);
+      action.Should().ThrowExactly<ArgumentException>().Which.Message.Should().Be("'async void' methods are not supported, use Task return type for async method");
     }
 
     [Test]
@@ -116,7 +116,7 @@ namespace Instate.Tests
 
       var state = builder.DefineState(State1);
       Action action = () => state.OnEnter(SimpleAsyncVoidMethod);
-      action.Should().ThrowExactly<ArgumentException>().Which.Message.Should().Be(Config<string, int>.Enter.AsyncVoidMethodNotSupported);
+      action.Should().ThrowExactly<ArgumentException>().Which.Message.Should().Be("'async void' methods are not supported, use Task return type for async method");
     }
 
     [Test]

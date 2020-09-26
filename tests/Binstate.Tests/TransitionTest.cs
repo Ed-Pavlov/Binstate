@@ -9,7 +9,7 @@ namespace Instate.Tests
   public class TransitionTest : StateMachineTestBase
   {
     [TestCaseSource(nameof(raise_and_raise_async_source))]
-    public void should_call_action_on_transition(Func<StateMachine<string, int>, int, bool> raise)
+    public void should_call_action_on_transition(Raise<string, int> raise)
     {
       const string Exit = "Exit";
       const string Transition = "Transition";
@@ -30,7 +30,7 @@ namespace Instate.Tests
     }
     
     [TestCaseSource(nameof(raise_and_raise_async_source))]
-    public void raise_should_return_false_if_no_transition_found(Func<StateMachine<string, int>, int, bool> raise)
+    public void raise_should_return_false_if_no_transition_found(Raise<string, int> raise)
     {
       // --arrange
       var builder = new Builder<string, int>(OnException);
@@ -47,7 +47,7 @@ namespace Instate.Tests
     }
 
     [TestCaseSource(nameof(raise_and_raise_async_source))]
-    public void raise_should_return_false_if_dynamic_transition_returns_null(Func<StateMachine<string, int>, int, bool> raise)
+    public void raise_should_return_false_if_dynamic_transition_returns_null(Raise<string, int> raise)
     {
       // --arrange
       var builder = new Builder<string, int>(OnException);

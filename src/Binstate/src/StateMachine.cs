@@ -99,15 +99,29 @@ namespace Binstate
       return PerformTransitionAsync(@event, argument);
     }
 
-    private bool PerformTransitionSync<T>(TEvent @event, T argument)
+    public bool RaisePropagate<T>(TEvent @event)
     {
-      var data = PrepareTransition(@event, argument);
+      if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+
+      return PerformTransitionSync<T>(@event, default, true);
+    }
+    
+    public Task<bool> RaisePropagateAsync<T>(TEvent @event)
+    {
+      if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+
+      return PerformTransitionAsync<T>(@event, default, true);
+    }
+    
+    private bool PerformTransitionSync<T>(TEvent @event, T argument, bool propagateStateArgument = false)
+    {
+      var data = PrepareTransition(@event, argument, propagateStateArgument);
       return data != null && PerformTransition(data.Value);
     }
 
-    private Task<bool> PerformTransitionAsync<T>(TEvent @event, T argument)
+    private Task<bool> PerformTransitionAsync<T>(TEvent @event, T argument, bool propagateStateArgument = false)
     {
-      var data = PrepareTransition(@event, argument);
+      var data = PrepareTransition(@event, argument, propagateStateArgument);
 
       return data == null
         ? Task.FromResult(false)
@@ -170,7 +184,8 @@ namespace Binstate
       IEnumerable<State<TState, TEvent>> states,
       State<TState, TEvent> activeState,
       TEvent @event,
-      T argument)
+      T argument,
+      bool propagateStateArgument)
     {
       var argumentType = typeof(T);
       var argumentSpecified = argumentType != typeof(Unit);
@@ -195,9 +210,11 @@ namespace Binstate
       {
         var statesToActivate = string.Join("->", states.Select(_ => _.Id.ToString()));
 
+        var argumentMessage = propagateStateArgument ? "was propagated" : $"'{argument}' was passed to the Raise call";
+        
         throw new TransitionException(
           $"Transition from the state '{activeState.Id}' by the event '{@event}' will activate following states [{statesToActivate}]. No one of them are defined with "
-          + $"the enter action accepting an argument, but argument '{argument}' was passed to the Raise call");
+          + $"the enter action accepting an argument, but argument {argumentMessage}");
       }
     }
   }

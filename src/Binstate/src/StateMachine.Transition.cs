@@ -17,7 +17,7 @@ namespace Binstate
     /// dynamic transition returns 'null'
     /// </returns>
     /// <exception cref="TransitionException">Throws if passed argument doesn't match the 'enter' action of the target state.</exception>
-    private TransitionData<T>? PrepareTransition<T>(TEvent @event, T argument)
+    private TransitionData<T>? PrepareTransition<T>(TEvent @event, T argument, bool propagateStateArgument = false)
     {
       try
       {
@@ -30,12 +30,14 @@ namespace Binstate
           return null;
         }
 
-        var newState = GetStateById(stateId);
-
-        var commonAncestor = FindLeastCommonAncestor(newState, _activeState);
-        var statesToEnter = newState.GetAllStatesForActivationTillParent(commonAncestor); // get states from activeState with all parents till newState itself to activate 
-        ValidateStates(statesToEnter, _activeState, @event, argument); // validate before changing any state of the state machine
-        return new TransitionData<T>(_activeState, transition, newState, statesToEnter, commonAncestor, argument);
+        var targetState = GetStateById(stateId);
+        
+        var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);
+        var statesToEnter = targetState.GetAllStatesForActivationTillParent(commonAncestor); // get states from activeState with all parents till newState itself to activate 
+        ValidateStates(statesToEnter, _activeState, @event, argument, propagateStateArgument); // validate before changing any state of the state machine
+        
+        var parameter = propagateStateArgument && _activeState is State<TState, TEvent, T> stateWithArgument ? stateWithArgument.Argument : argument;
+        return new TransitionData<T>(_activeState, transition, targetState, statesToEnter, commonAncestor, parameter);
       }
       catch (TransitionException)
       {

@@ -11,7 +11,7 @@ namespace Binstate
   public class Builder<TState, TEvent>
   {
     private readonly Action<Exception> _onException;
-    private readonly Dictionary<TState, Config<TState, TEvent>.Substate> _stateConfigs = new Dictionary<TState, Config<TState, TEvent>.Substate>();
+    private readonly Dictionary<TState, Config<TState, TEvent>.State> _stateConfigs = new Dictionary<TState, Config<TState, TEvent>.State>();
 
     /// <summary>
     /// Creates a builder of a state machine, use it to define state and configure transitions.
@@ -25,11 +25,11 @@ namespace Binstate
     /// </summary>
     /// <param name="stateId">Id of the state, is used to reference it from other elements of the state machine.</param>
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
-    public Config<TState, TEvent>.Substate DefineState([NotNull] TState stateId)
+    public Config<TState, TEvent>.State DefineState([NotNull] TState stateId)
     {
       if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
 
-      var stateConfig = new Config<TState, TEvent>.Substate(stateId);
+      var stateConfig = new Config<TState, TEvent>.State(stateId);
       _stateConfigs.Add(stateId, stateConfig);
       return stateConfig;
     }
@@ -39,7 +39,7 @@ namespace Binstate
     /// </summary>
     /// <param name="stateId">Id of the state, is used to reference it from other elements of the state machine.</param>
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
-    public Config<TState, TEvent>.Substate GetOrDefineState([NotNull] TState stateId)
+    public Config<TState, TEvent>.State GetOrDefineState([NotNull] TState stateId)
     {
       if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
 
@@ -48,7 +48,7 @@ namespace Binstate
       return stateConfig;
     } 
 
-    private State<TState, TEvent> CreateStateAndAddToMap([NotNull] Config<TState, TEvent>.Substate stateConfig, Dictionary<TState, State<TState, TEvent>> states)
+    private State<TState, TEvent> CreateStateAndAddToMap([NotNull] Config<TState, TEvent>.State stateConfig, Dictionary<TState, State<TState, TEvent>> states)
     {
       if (!states.TryGetValue(stateConfig.StateId, out var state)) // state could be already created during creating parent states
       {
@@ -63,7 +63,7 @@ namespace Binstate
     }
 
     private static State<TState, TEvent> CreateState(
-      [NotNull] Config<TState, TEvent>.Substate stateConfig,
+      [NotNull] Config<TState, TEvent>.State stateConfig,
       [CanBeNull] State<TState, TEvent> parentState)
     {
       var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();

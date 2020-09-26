@@ -52,5 +52,11 @@
       <Compile Update="src\Config.State.cs">
         <DependentUpon>Config.cs</DependentUpon>
       </Compile>
+      <Compile Update="src\StateMachine.Controller.cs">
+        <DependentUpon>StateMachine.cs</DependentUpon>
+      </Compile>
+      <Compile Update="src\StateMachine.Transition.cs">
+        <DependentUpon>StateMachine.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

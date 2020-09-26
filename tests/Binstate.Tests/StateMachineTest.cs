@@ -52,7 +52,7 @@ namespace Instate.Tests
     }
     
     [TestCaseSource(nameof(raise_and_raise_async_source))]
-    public void should_finish_enter_before_call_exit(Func<StateMachine<string, int>, int, bool> raise)
+    public void should_finish_enter_before_call_exit(Raise<string, int> raise)
     {
       var actual = new List<string>();
       
@@ -85,7 +85,7 @@ namespace Instate.Tests
     }
 
     [TestCaseSource(nameof(raise_and_raise_async_source))]
-    public void should_finish_async_enter_before_call_exit(Func<StateMachine<string, int>, int, bool> raise)
+    public void should_finish_async_enter_before_call_exit(Raise<string, int> raise)
     {
       var actual = new List<string>();
       
@@ -120,7 +120,7 @@ namespace Instate.Tests
     }
 
     [TestCaseSource(nameof(raise_and_raise_async_source))]
-    public void should_finish_enter_before_call_next_enter(Func<StateMachine<string, int>, int, bool> raise)
+    public void should_finish_enter_before_call_next_enter(Raise<string, int> raise)
     {
       var actual = new List<string>();
       
@@ -152,7 +152,7 @@ namespace Instate.Tests
     }
 
     [TestCaseSource(nameof(raise_and_raise_async_source))]
-    public void should_finish_async_enter_before_call_next_enter(Func<StateMachine<string, int>, int, bool> raise)
+    public void should_finish_async_enter_before_call_next_enter(Raise<string, int> raise)
     {
       var actual = new List<string>();
       

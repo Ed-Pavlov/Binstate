@@ -83,17 +83,77 @@ not `TState CurrentState{ get; }` but `bool InMyState {get;}`
  ### Enter actions with parameters
  
          builder
-          .DefineState(WaitingForGame)
-          .OnEnter(WaitForGame)
-          .AddTransition<string>(GameStarted, TrackingGame)
-          ...
+           .DefineState(WaitingForGame)
+           .OnEnter(WaitForGame)
+           .AddTransition(GameStarted, TrackingGame)
+           ...
  
          builder
            .DefineState(TrackingGame)
            .OnEnter<string>(TrackGame)
            ...
+
 ### Hierarchically nested states
 Supports hierarchically nested states, see "Elevator" example.
+
+
+
+### Relaying arguments
+#### Relaying arguments attached to a state through states upon activation
+
+         builder
+           .DefineState(SomeState)
+           .OnEnter<string>(...) // argument passed to the 'enter' action is 'attached' to the state
+           .AddTransition(SomeEvent, AnotherState)
+
+         builder
+           .DefineState(AnotherState)
+           .OnEnter<string>(...) // this state also requires an argument
+           ...
+
+         stateMachine
+           .Relaying<string>() // specify that argument for AnotherState should be gotten from SomeState rather then passing argument into Raise method
+           .Raise(SomeEvent);
+
+#### Mixing relaying and passing arguments
+          builder
+           .DefineState(SomeState)
+           .OnEnter<string>(...) // argument passed to the 'enter' action is 'attached' to the state
+           .AddTransition(SomeEvent, AnotherState)
+
+         builder
+           .DefineState(AnotherState)
+           .OnEnter<ITuple<object, string>>(...) // this state requires two arguments; OnEnter<object, string>(...) overload can be used to simplify code 
+           ...
+
+         stateMachine
+           .Relaying<string>() // specify that argument one argument for AnotherState should be gotten from SomeState rather then passing argument into Raise method
+           .Raise(SomeEvent, new object()); // and the second one passed using Raise method
+
+#### Relay argument to one of activated state and pass to another
+          builder
+            .DefineState(SomeState)
+            .OnEnter<string>(...) // argument passed to the 'enter' action is 'attached' to the state
+            .AddTransition(SomeEvent, Child)
+
+         builder
+           .DefineState(Parent)
+           .OnEnter<object>(...)
+           ...
+
+         builder
+           .DefineState(Childe).AsSubstateOf(Parent)
+           .OnEnter<string>(...)
+           ...
+
+         stateMachine
+           .Relaying<string>() // will be relayed to Parent
+           .Raise(SomeEvent, new object()) // will be passed to Child
+
+* Argument for relaying can be gotten from one of the parent of the active state if the active state itself has no argument.
+* Argument will be relayed to all parent states of the newly activated state if their 'enter' action is suitable
+* If a state already has 'tuple' argument, it can be split by two when relaying to the newly activated state (and its parents) depending on their 'enter' actions argument 
+
 
 ## Examples
 

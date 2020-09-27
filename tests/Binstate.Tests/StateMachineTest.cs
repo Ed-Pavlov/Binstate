@@ -190,8 +190,8 @@ namespace Instate.Tests
     [Test]
     public void should_call_exit_and_enter_on_reentering()
     {
-      const string Enter = "Enter";
-      const string Exit = "Exit";
+      const string enter = "Enter";
+      const string exit = "Exit";
       
       var actual = new List<string>();
       
@@ -202,8 +202,8 @@ namespace Instate.Tests
       
       builder
         .DefineState(State1)
-        .OnEnter(_ => actual.Add(Enter))
-        .OnExit(() => actual.Add(Exit))
+        .OnEnter(_ => actual.Add(enter))
+        .OnExit(() => actual.Add(exit))
         .AllowReentrancy(Event1);
 
       var target = builder.Build(Initial);
@@ -213,7 +213,7 @@ namespace Instate.Tests
       target.Raise(Event1);
       
       // --assert
-      actual.Should().BeEquivalentTo(Enter, Exit, Enter);
+      actual.Should().BeEquivalentTo(enter, exit, enter);
     }
 
     [Test]

@@ -17,7 +17,7 @@ namespace Binstate
     /// dynamic transition returns 'null'
     /// </returns>
     /// <exception cref="TransitionException">Throws if passed argument doesn't match the 'enter' action of the target state.</exception>
-    private TransitionData<T>? PrepareTransition<T>(TEvent @event, T argument, bool propagateStateArgument = false)
+    private TransitionData<MixOf<TA, TP>>? PrepareTransition<TA, TP>(TEvent @event, TA argument)
     {
       try
       {
@@ -31,13 +31,13 @@ namespace Binstate
         }
 
         var targetState = GetStateById(stateId);
-        
+
         var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);
-        var statesToEnter = targetState.GetAllStatesForActivationTillParent(commonAncestor); // get states from activeState with all parents till newState itself to activate 
-        ValidateStates(statesToEnter, _activeState, @event, argument, propagateStateArgument); // validate before changing any state of the state machine
-        
-        var parameter = propagateStateArgument && _activeState is State<TState, TEvent, T> stateWithArgument ? stateWithArgument.Argument : argument;
-        return new TransitionData<T>(_activeState, transition, targetState, statesToEnter, commonAncestor, parameter);
+        var statesToEnter = targetState.GetAllStatesForActivationTillParent(commonAncestor); // get states from activeState with all parents till newState itself to activate
+        var mixedArgument = PrepareRealArgument<TA, TP>(argument, _activeState);
+        ValidateStates(statesToEnter, _activeState, @event, mixedArgument); // validate before changing any state of the state machine
+
+        return new TransitionData<MixOf<TA, TP>>(_activeState, transition, targetState, statesToEnter, commonAncestor, mixedArgument);
       }
       catch (TransitionException)
       {
@@ -52,12 +52,28 @@ namespace Binstate
       }
     }
 
+    private static MixOf<TA, TP> PrepareRealArgument<TA, TP>(TA argument, State<TState, TEvent> sourceState)
+    {
+      MixOf<TA, TP> mix;
+      if (typeof(TP) == typeof(Unit))
+        mix = typeof(TA) == typeof(Unit) ? MixOf<TA, TP>.Empty : new MixOf<TA, TP>(argument.ToMaybe(), Maybe<TP>.Nothing);
+      else
+      {
+        if (!(sourceState is State<TState, TEvent, TP> stateWithArgument)) // trying to relay an argument but active state has not an argument of passed type
+          throw new TransitionException("propagating from the state w/o a state");
+
+        mix = typeof(TA) == typeof(Unit) ? new MixOf<TA, TP>(Maybe<TA>.Nothing, stateWithArgument.Argument.ToMaybe()) : stateWithArgument.CreateTuple(argument);
+      }
+
+      return mix;
+    }
+
     /// <summary>
     /// Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
     /// into the delegate passed to <see cref="Builder{TState,TEvent}(Action{Exception})"/> 
     /// </summary>
     [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery", Justification = "foreach is more readable here")]
-    private bool PerformTransition<T>(TransitionData<T> transitionData)
+    private bool PerformTransition<TA, TP>(TransitionData<MixOf<TA, TP>> transitionData)
     {
       var currentActiveState = transitionData.CurrentActiveState;
       var transition = transitionData.Transition;
@@ -103,14 +119,18 @@ namespace Binstate
     /// <summary>
     /// Doesn't acquire lock itself, caller should care about safe context 
     /// </summary>
-    private Action ActivateStateNotGuarded<T>(State<TState, TEvent> state, T argument)
+    private Action ActivateStateNotGuarded<TA, TP>(State<TState, TEvent> state, MixOf<TA, TP> argument)
     {
       state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
       var controller = new Controller(state, this);
 
-      return state is IState<TState, TEvent, T> stateWithArgument
-        ? (Action) (() => stateWithArgument.EnterSafe(controller, argument, _onException))
-        : () => state.EnterSafe(controller, _onException);
+      return state switch
+      {
+        IState<TState, TEvent, TA> passedArgumentState => () => passedArgumentState.EnterSafe(controller, argument.PassedArgument.Value, _onException),
+        IState<TState, TEvent, TP> relayedArgumentState => () => relayedArgumentState.EnterSafe(controller, argument.RelayedArgument.Value, _onException),
+        IState<TState, TEvent, ITuple<TA, TP>> bothArgumentsState => () => bothArgumentsState.EnterSafe(controller, argument.ToTuple(), _onException),
+        _ => () => state.EnterSafe(controller, _onException) // no arguments state
+      };
     }
 
     private readonly struct TransitionData<T>

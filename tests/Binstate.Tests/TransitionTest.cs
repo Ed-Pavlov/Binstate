@@ -11,13 +11,13 @@ namespace Instate.Tests
     [TestCaseSource(nameof(raise_and_raise_async_source))]
     public void should_call_action_on_transition(Raise<string, int> raise)
     {
-      const string Exit = "Exit";
-      const string Transition = "Transition";
+      const string exit = "Exit";
+      const string transition = "Transition";
       var actual = new List<string>();
       
       // --arrange
       var builder = new Builder<string, int>(OnException);
-      builder.DefineState(Initial).OnExit(() => actual.Add(Exit)).AddTransition(Event1, State1, () => actual.Add(Transition));
+      builder.DefineState(Initial).OnExit(() => actual.Add(exit)).AddTransition(Event1, State1, () => actual.Add(transition));
       builder.DefineState(State1).OnEnter(() => actual.Add(State1));
       
       var target = builder.Build(Initial);
@@ -26,7 +26,7 @@ namespace Instate.Tests
       raise(target, Event1);
       
       // --assert
-      actual.Should().BeEquivalentTo(Exit, Transition, State1);
+      actual.Should().BeEquivalentTo(exit, transition, State1);
     }
     
     [TestCaseSource(nameof(raise_and_raise_async_source))]

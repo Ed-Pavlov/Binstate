@@ -30,7 +30,7 @@ namespace Binstate
           transitions.Add(transition.Event, transition);
         }
 
-        return new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterAction, null, stateConfig.ExitAction, transitions, parentState);
+        return new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterActionAction, null, stateConfig.ExitAction, transitions, parentState);
       }
     }
 
@@ -47,7 +47,7 @@ namespace Binstate
           transitions.Add(transition.Event, transition);
         }
 
-        return new State<TState, TEvent, TArgument>(stateConfig.StateId, stateConfig.EnterAction, stateConfig.ExitAction, transitions, parentState);
+        return new State<TState, TEvent, TArgument>(stateConfig.StateId, stateConfig.EnterActionAction, stateConfig.ExitAction, transitions, parentState);
       }
     }
   }

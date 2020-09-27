@@ -50,8 +50,8 @@ namespace Instate.Tests
     [TestCaseSource(nameof(raise_terminated_with_argument_source))]
     public void should_pass_argument_to_enter(Action<StateMachine<string, int>, int> raiseTerminated)
     {
-      const int Expected = 5;
-      var actual = Expected - 139;
+      const int expected = 5;
+      var actual = expected - 139;
 
       // --arrange
       var builder = new Builder<string, int>(OnException);
@@ -67,17 +67,17 @@ namespace Instate.Tests
       var stateMachine = builder.Build(State1);
 
       // --act
-      raiseTerminated(stateMachine, Expected);
+      raiseTerminated(stateMachine, expected);
 
       // --assert
-      actual.Should().Be(Expected);
+      actual.Should().Be(expected);
     }
 
     [TestCaseSource(nameof(raise_terminated_with_argument_source))]
     public void should_pass_argument_to_simple_enter(Action<StateMachine<string, int>, int> raiseTerminated)
     {
-      const int Expected = 5;
-      var actual = Expected - 139;
+      const int expected = 5;
+      var actual = expected - 139;
 
       // --arrange
       var builder = new Builder<string, int>(OnException);
@@ -93,10 +93,10 @@ namespace Instate.Tests
       var stateMachine = builder.Build(State1);
 
       // --act
-      raiseTerminated(stateMachine, Expected);
+      raiseTerminated(stateMachine, expected);
 
       // --assert
-      actual.Should().Be(Expected);
+      actual.Should().Be(expected);
     }
 
     [Test]
@@ -134,7 +134,7 @@ namespace Instate.Tests
 
       // --assert
       target.Should().ThrowExactly<TransitionException>()
-        .WithMessage($"Cannot convert from 'System.String' to 'System.Int32' invoking the enter action of the state '{State1}'");
+        .WithMessage($"The state '{State1}' requires argument of type '{typeof(int)}' but no argument of compatible type has passed nor relayed");
     }
     
     [Test]
@@ -171,7 +171,7 @@ namespace Instate.Tests
       // --assert
       target.Should().ThrowExactly<TransitionException>()
         .WithMessage($"Transition from the state '{Initial}' by the event '{State1}' will activate following states [*]. No one of them are defined " +
-                     "with the enter action accepting an argument, but argument 'argument' was passed to the Raise call");
+                     "with the enter action accepting an argument, but argument was passed or relayed");
     }
     
     [Test]

@@ -11,6 +11,7 @@ namespace Binstate
   public class Builder<TState, TEvent>
   {
     private readonly Action<Exception> _onException;
+    private readonly bool _enableLooseRelaying;
     private readonly Dictionary<TState, Config<TState, TEvent>.State> _stateConfigs = new Dictionary<TState, Config<TState, TEvent>.State>();
 
     /// <summary>
@@ -18,7 +19,11 @@ namespace Binstate
     /// </summary>
     /// <param name="onException">All exception thrown from enter and exit actions passed to the state machine are caught in order to not break the state of the
     /// state machine. Use this action to be notified about these exceptions.</param>
-    public Builder([NotNull] Action<Exception> onException) => _onException = onException ?? throw new ArgumentNullException(nameof(onException));
+    public Builder([NotNull] Action<Exception> onException, bool enableLooseRelaying = false)
+    {
+      _onException = onException ?? throw new ArgumentNullException(nameof(onException));
+      _enableLooseRelaying = enableLooseRelaying;
+    }
 
     /// <summary>
     /// Defines the new state in the state machine, if it is already defined throws an exception
@@ -101,7 +106,8 @@ namespace Binstate
         CreateStateAndAddToMap(stateConfig, states);
 
       ValidateTransitions(states);
-      ValidateSubstateEnterArgument(states);
+      if(!_enableLooseRelaying)
+        ValidateSubstateEnterArgument(states);
       
       return new StateMachine<TState, TEvent>(states[initialState], states, _onException);
     }

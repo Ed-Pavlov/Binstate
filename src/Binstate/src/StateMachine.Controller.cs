@@ -28,7 +28,7 @@ namespace Binstate
       public bool RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument)
       {
         if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-        var data = _owner.PrepareTransition<T>(@event, default);
+        var data = _owner.PrepareTransition<T, Unit>(@event, default);
         if (data == null)
           return false;
         

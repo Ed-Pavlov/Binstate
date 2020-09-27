@@ -9,49 +9,49 @@ namespace Instate.Tests.example
     public void TelephoneCall()
     {
       // events
-      const string CallDialed = nameof(CallDialed);
-      const string HungUp = nameof(HungUp);
-      const string CallConnected = nameof(CallConnected);
-      const string LeftMessage = nameof(LeftMessage);
-      const string PlacedOnHold = nameof(PlacedOnHold);
-      const string TakenOffHold = nameof(TakenOffHold);
-      const string PhoneHurledAgainstWall = nameof(PhoneHurledAgainstWall);
+      const string callDialed = nameof(callDialed);
+      const string hungUp = nameof(hungUp);
+      const string callConnected = nameof(callConnected);
+      const string leftMessage = nameof(leftMessage);
+      const string placedOnHold = nameof(placedOnHold);
+      const string takenOffHold = nameof(takenOffHold);
+      const string phoneHurledAgainstWall = nameof(phoneHurledAgainstWall);
       
       // states
-      const string OffHook = nameof(OffHook);
-      const string Ringing = nameof(Ringing);
-      const string Connected = nameof(Connected);
-      const string OnHold = nameof(OnHold);
-      const string PhoneDestroyed = nameof(PhoneDestroyed);
+      const string offHook = nameof(offHook);
+      const string ringing = nameof(ringing);
+      const string connected = nameof(connected);
+      const string onHold = nameof(onHold);
+      const string phoneDestroyed = nameof(phoneDestroyed);
       
       var builder = new Builder<string, string>(OnException);
 
       builder
-        .DefineState(OffHook)
-        .AddTransition(CallDialed, Ringing);
+        .DefineState(offHook)
+        .AddTransition(callDialed, ringing);
       
       builder
-        .DefineState(Ringing)
-        .AddTransition(HungUp, OffHook)
-        .AddTransition(CallConnected, Connected);
+        .DefineState(ringing)
+        .AddTransition(hungUp, offHook)
+        .AddTransition(callConnected, connected);
       
       builder
-        .DefineState(Connected)
-        .AddTransition(LeftMessage, OffHook)
-        .AddTransition(HungUp, OffHook)
-        .AddTransition(PlacedOnHold, OnHold);
+        .DefineState(connected)
+        .AddTransition(leftMessage, offHook)
+        .AddTransition(hungUp, offHook)
+        .AddTransition(placedOnHold, onHold);
       
       builder
-        .DefineState(OnHold)
+        .DefineState(onHold)
         .OnEnter(PlayMusic)
-        .AddTransition(TakenOffHold, Connected)
-        .AddTransition(HungUp, OffHook)
-        .AddTransition(PhoneHurledAgainstWall, PhoneDestroyed);
+        .AddTransition(takenOffHold, connected)
+        .AddTransition(hungUp, offHook)
+        .AddTransition(phoneHurledAgainstWall, phoneDestroyed);
 
       builder
-        .DefineState(PhoneDestroyed);
+        .DefineState(phoneDestroyed);
 
-      var stateMachine = builder.Build(OffHook);
+      var stateMachine = builder.Build(offHook);
     }
 
     private static Task PlayMusic(IStateMachine<string> stateMachine)

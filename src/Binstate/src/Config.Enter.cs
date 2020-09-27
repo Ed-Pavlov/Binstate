@@ -18,7 +18,7 @@ namespace Binstate
       private IStateFactory _stateFactory = new NoArgumentStateFactory();
 
       [CanBeNull]
-      internal IEnterInvoker<TEvent> EnterAction;
+      internal IEnterActionInvoker<TEvent> EnterActionAction;
 
       internal Enter(TState stateId) : base(stateId)
       {
@@ -48,7 +48,7 @@ namespace Binstate
         if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-        EnterAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
+        EnterActionAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
         return this;
       }
 
@@ -62,7 +62,7 @@ namespace Binstate
       {
         if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
 
-        EnterAction = EnterActionInvokerFactory<TEvent>.Create(_ => enterAction());
+        EnterActionAction = EnterActionInvokerFactory<TEvent>.Create(_ => enterAction());
         return this;
       }
 
@@ -75,7 +75,7 @@ namespace Binstate
       {
         if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
 
-        EnterAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
+        EnterActionAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
         return this;
       }
 
@@ -109,7 +109,7 @@ namespace Binstate
         if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-        EnterAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
+        EnterActionAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
         _stateFactory = new StateFactory<TArgument>();
         return this;
       }
@@ -124,7 +124,7 @@ namespace Binstate
       {
         if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
 
-        EnterAction = EnterActionInvokerFactory<TEvent>.Create<TArgument>((_, arg) => enterAction(arg));
+        EnterActionAction = EnterActionInvokerFactory<TEvent>.Create<TArgument>((_, arg) => enterAction(arg));
         _stateFactory = new StateFactory<TArgument>();
         return this;
       }
@@ -138,7 +138,7 @@ namespace Binstate
       {
         if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
 
-        EnterAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
+        EnterActionAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
         _stateFactory = new StateFactory<TArgument>();
         return this;
       }

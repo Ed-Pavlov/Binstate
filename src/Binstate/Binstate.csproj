@@ -58,5 +58,20 @@
       <Compile Update="src\StateMachine.Transition.cs">
         <DependentUpon>StateMachine.cs</DependentUpon>
       </Compile>
+      <Compile Update="src\State'3.cs">
+        <DependentUpon>State.cs</DependentUpon>
+      </Compile>
+      <Compile Update="src\StateMachine.RelayArgument.cs">
+        <DependentUpon>StateMachine.cs</DependentUpon>
+      </Compile>
+      <Compile Update="src\IState.cs">
+        <DependentUpon>State.cs</DependentUpon>
+      </Compile>
+      <Compile Update="src\EnterActionInvoker.Factory.cs">
+        <DependentUpon>EnterActionInvoker.cs</DependentUpon>
+      </Compile>
+      <Compile Update="src\IEnterActionInvoker.cs">
+        <DependentUpon>EnterActionInvoker.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 </Project>

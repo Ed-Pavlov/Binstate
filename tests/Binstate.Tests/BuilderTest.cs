@@ -10,7 +10,7 @@ namespace Instate.Tests
     [Test]
     public void should_throw_exception_if_initial_state_is_not_defined()
     {
-      const string WrongState = "Wrong";
+      const string wrongState = "Wrong";
       
       // --arrange
       var builder = new Builder<string, int>(OnException);
@@ -18,10 +18,10 @@ namespace Instate.Tests
       builder.DefineState(Initial);
       
       // --act
-      Action target = () => builder.Build(WrongState);
+      Action target = () => builder.Build(wrongState);
       
       // --assert
-      target.Should().ThrowExactly<ArgumentException>().WithMessage($"No state '{WrongState}' is defined");
+      target.Should().ThrowExactly<ArgumentException>().WithMessage($"No state '{wrongState}' is defined");
     }
     
     [Test]

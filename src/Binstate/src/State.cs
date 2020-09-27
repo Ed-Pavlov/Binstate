@@ -6,47 +6,10 @@ using JetBrains.Annotations;
 
 namespace Binstate
 {
-  /// <summary>
-  /// This interface is used to make <typeparamref name="TArgument"/> contravariant.
-  /// </summary>
-  internal interface IState<TState, out TEvent, in TArgument>
-  {
-    void EnterSafe(IStateMachine<TEvent> stateMachine, TArgument argument, Action<Exception> onException);
-  }
-
-  /// <summary>
-  /// This class describes state machine's state which requires an argument to the enter action.
-  ///
-  /// All these complex generic stuff is introduced to avoid casting to 'object' and thus avoid boxing when value type instance is used as the argument.
-  /// </summary>
-  internal class State<TState, TEvent, TArgument> : State<TState, TEvent>, IState<TState, TEvent, TArgument>
-  {
-    public TArgument Argument;
-
-    public State(
-      [NotNull] TState id,
-      [CanBeNull] IEnterInvoker<TEvent> enter,
-      [CanBeNull] Action exit,
-      [NotNull] Dictionary<TEvent, Transition<TState, TEvent>> transitions,
-      [CanBeNull] State<TState, TEvent> parentState) : base(id, enter, typeof(TArgument), exit, transitions, parentState)
-    {
-    }
-
-    public void EnterSafe(IStateMachine<TEvent> stateMachine, TArgument argument, Action<Exception> onException)
-    {
-      Enter(onException, enter =>
-        {
-          Argument = argument;
-          var typedEnter = (IEnterActionInvoker<TEvent, TArgument>) enter;
-          return typedEnter.Invoke(stateMachine, argument);
-        });
-    }
-  }
-  
   internal class State<TState, TEvent>
   {
     [CanBeNull]
-    private readonly IEnterInvoker<TEvent> _enter;
+    private readonly IEnterActionInvoker<TEvent> _enterAction;
     [CanBeNull]
     private readonly Action _exit;
 
@@ -76,14 +39,14 @@ namespace Binstate
 
     public State(
       TState id,
-      IEnterInvoker<TEvent> enter,
+      IEnterActionInvoker<TEvent> enterAction,
       Type enterArgumentType,
       Action exit,
       Dictionary<TEvent, Transition<TState, TEvent>> transitions,
       State<TState, TEvent> parentState)
     {
       Id = id;
-      _enter = enter;
+      _enterAction = enterAction;
       EnterArgumentType = enterArgumentType;
       _exit = exit;
       _transitions = transitions;
@@ -102,20 +65,20 @@ namespace Binstate
     {
       Enter(onException, enter =>
         {
-          var noParameterEnter = (NoParameterEnterActionInvoker<TEvent>) enter;
+          var noParameterEnter = (NoParameterEnterActionActionInvoker<TEvent>) enter;
           return noParameterEnter.Invoke(stateMachine);
         });
     }
 
-    protected void Enter(Action<Exception> onException, Func<IEnterInvoker<TEvent>, Task> invokeEnterAction)
+    protected void Enter(Action<Exception> onException, Func<IEnterActionInvoker<TEvent>, Task> invokeEnterAction)
     {
       try
       {
         _enterFunctionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
         _entered.Set(); // it is safe to set the state as entered
 
-        if (_enter == null) return;
-        _task = invokeEnterAction(_enter);
+        if (_enterAction == null) return;
+        _task = invokeEnterAction(_enterAction);
       }
       catch (Exception exception)
       {

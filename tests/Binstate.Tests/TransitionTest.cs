@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Binstate;
 using FluentAssertions;
 using NUnit.Framework;

@@ -15,7 +15,7 @@ namespace Binstate
   public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent>
   {
     private readonly Action<Exception> _onException;
-    
+
     /// <summary>
     /// The map of all defined states
     /// </summary>
@@ -37,6 +37,7 @@ namespace Binstate
     public bool Raise([NotNull] TEvent @event)
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+
       return PerformTransitionSync<Unit, Unit>(@event, null);
     }
 
@@ -44,6 +45,7 @@ namespace Binstate
     public bool Raise<T>([NotNull] TEvent @event, [CanBeNull] T argument)
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+
       return PerformTransitionSync<T, Unit>(@event, argument);
     }
 
@@ -51,6 +53,7 @@ namespace Binstate
     public Task<bool> RaiseAsync([NotNull] TEvent @event)
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+
       return PerformTransitionAsync<Unit, Unit>(@event, default);
     }
 
@@ -58,6 +61,7 @@ namespace Binstate
     public Task<bool> RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument)
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+
       return PerformTransitionAsync<T, Unit>(@event, argument);
     }
 
@@ -86,19 +90,21 @@ namespace Binstate
 
     private void ActivateInitialState(State<TState, TEvent> initialState, Action<Exception> onException)
     {
-      if(initialState.EnterArgumentType != null)
+      if (initialState.EnterArgumentType != null)
         throw new TransitionException("The enter action of the initial state must not require argument.");
-      
+
       var enterAction = ActivateStateNotGuarded<Unit, Unit>(initialState, default);
-      try {
+      try
+      {
         enterAction();
       }
-      catch (Exception exception) {
+      catch (Exception exception)
+      {
         onException(exception);
       }
     }
-    
-    private State<TState, TEvent> GetStateById([NotNull] TState state) => 
+
+    private State<TState, TEvent> GetStateById([NotNull] TState state) =>
       _states.TryGetValue(state, out var result) ? result : throw new TransitionException($"State '{state}' is not defined");
 
     [CanBeNull]
@@ -140,7 +146,7 @@ namespace Binstate
       IEnumerable<State<TState, TEvent>> states,
       State<TState, TEvent> activeState,
       TEvent @event,
-      MixOf<TA,TP> argument)
+      MixOf<TA, TP> argument)
     {
       var enterWithArgumentCount = 0;
 
@@ -150,9 +156,10 @@ namespace Binstate
         {
           if (!argument.HasAnyArgument)
             throw new TransitionException($"The enter action of the state '{state.Id}' is configured as required an argument but no argument was specified.");
-            
+
           if (!argument.IsMatch(state.EnterArgumentType))
-            throw new TransitionException($"The state '{state.Id}' requires argument of type '{state.EnterArgumentType}' but no argument of compatible type has passed nor relayed");
+            throw new TransitionException(
+              $"The state '{state.Id}' requires argument of type '{state.EnterArgumentType}' but no argument of compatible type has passed nor relayed");
 
           enterWithArgumentCount++;
         }

@@ -22,7 +22,7 @@ namespace Binstate
           return null;
         });
 
-    public static EnterActionInvoker<TEvent, TArg> Create<TArg>(Func<IStateMachine<TEvent>, TArg, Task> action) =>
-      new EnterActionInvoker<TEvent, TArg>(action);
+    public static EnterActionInvoker<TEvent, TArgument> Create<TArgument>(Func<IStateMachine<TEvent>, TArgument, Task> action) =>
+      new EnterActionInvoker<TEvent, TArgument>(action);
   }
 }

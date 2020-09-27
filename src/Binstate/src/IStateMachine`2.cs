@@ -4,7 +4,12 @@ using JetBrains.Annotations;
 
 namespace Binstate
 {
-  public interface IStateMachine<TState, TEvent>
+  /// <summary>
+  /// Interface implemented by <see cref="StateMachine{TState,TEvent}"/> itself and by object returned from
+  /// <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}"/> method to introduce a little more flexibility for the client.
+  /// </summary>
+  // ReSharper disable once UnusedTypeParameter
+  public interface IStateMachine<TState, in TEvent>
   {
     /// <summary>
     /// Raises the event in the blocking way. It waits while on entering and exiting actions (if defined) of the current state is finished, then:
@@ -14,7 +19,7 @@ namespace Binstate
     /// <returns>Returns true if state was changed, false if not</returns>
     /// <exception cref="TransitionException">Throws if the 'enter' action of the target state requires argument.
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-    /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{System.Exception}(System.Exception))"/>
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{System.Exception}, bool)"/>
     /// </exception>
     bool Raise([NotNull] TEvent @event);
 
@@ -26,7 +31,7 @@ namespace Binstate
     /// <returns>Returns true if state was changed, false if not</returns>
     /// <exception cref="TransitionException">Throws if the 'enter' action of the target state doesn't requires argument or requires argument of not compatible type.
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception}, bool)"/>
     /// </exception>
     bool Raise<T>([NotNull] TEvent @event, [CanBeNull] T argument);
 
@@ -39,7 +44,7 @@ namespace Binstate
     /// <returns>Synchronously returns false if the transition was not found.</returns>
     /// <exception cref="TransitionException">Throws if the 'enter' action of the target state requires argument.
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception}, bool)"/>
     /// </exception>
     Task<bool> RaiseAsync([NotNull] TEvent @event);
 
@@ -50,7 +55,7 @@ namespace Binstate
     /// <returns>Synchronously returns false if the transition was not found.</returns>
     /// <exception cref="TransitionException">Throws if the 'enter' action of the target state doesn't requires argument or requires argument of not compatible type.
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception}, bool)"/>
     /// </exception>
     Task<bool> RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument);
   }

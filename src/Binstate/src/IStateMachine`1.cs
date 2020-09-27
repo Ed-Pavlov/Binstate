@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 namespace Binstate
 {
   /// <summary>
-  /// This interface is used in enter actions to control execution and to execute auto transitions 
+  /// This interface is used in 'enter' actions to control execution and to execute auto transitions 
   /// </summary>
   public interface IStateMachine<in TEvent>
   {
@@ -19,7 +19,7 @@ namespace Binstate
     /// <returns>Synchronously returns false if a transition was not found and true if the transition will be performed.</returns>
     /// <exception cref="TransitionException">Throws if the 'enter' action of the target state requires argument.
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception}, bool)"/>
     /// </exception>
     bool RaiseAsync([NotNull] TEvent @event);
     
@@ -31,7 +31,7 @@ namespace Binstate
     /// <returns>Synchronously returns false if a transition was not found and true if the transition will be performed.</returns>
     /// <exception cref="TransitionException">Throws if the 'enter' action of the target state requires argument.
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception}, bool)"/>
     /// </exception>
     bool RaiseAsync<T>([NotNull] TEvent @event, [NotNull] T argument);
   }

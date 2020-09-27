@@ -57,6 +57,20 @@ namespace Binstate
         TransitionList.Add(new Transition<TState, TEvent>(@event, getState, isStatic, action));
         return this;
       }
+      
+      internal Dictionary<TEvent, Transition<TState, TEvent>> CreateTransitions()
+      {
+        var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();
+        foreach (var transition in TransitionList)
+        {
+          if (transitions.ContainsKey(transition.Event))
+            throw new InvalidOperationException($"Duplicated event '{transition.Event}' in state '{StateId}'");
+
+          transitions.Add(transition.Event, transition);
+        }
+
+        return transitions;
+      }
     }
     
   }

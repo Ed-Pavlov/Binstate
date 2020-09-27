@@ -16,30 +16,28 @@ namespace Binstate
       IsStatic = isStatic;
       _action = action;
     }
-
-    public TEvent Event { get; }
-
-    public void InvokeActionSafe(Action<Exception> onException)
-    {
-      try
-      {
-        _action?.Invoke();
-      }
-      catch (Exception exc) // transition action can throw "user" exception
-      {
-        onException(exc);
-      }
-    }
-
+    
     /// <summary>
     /// Means a transition targets the predefined state in opposite to the calculated dynamically runtime
     /// </summary>
     public readonly bool IsStatic;
+    
+    public TEvent Event { get; }
 
     public bool GetTargetStateId(out TState state)
     {
       state = _getTargetStateId();
       return state.IsNotNull();
+    }
+
+    public void InvokeActionSafe(Action<Exception> onException)
+    {
+      try {
+        _action?.Invoke();
+      }
+      catch (Exception exc) {  // transition action can throw "user" exception
+        onException(exc);
+      }
     }
 
     public override string ToString() => $"[{Event} -> {(IsStatic ? _getTargetStateId().ToString() : "dynamic")}]";

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
@@ -20,7 +21,8 @@ namespace Binstate
     /// </summary>
     private readonly Dictionary<TState, State<TState, TEvent>> _states;
 
-    private State<TState, TEvent> _activeState;
+    private readonly AutoResetEvent _lock = new AutoResetEvent(true);
+    private volatile State<TState, TEvent> _activeState;
 
     internal StateMachine(State<TState, TEvent> initialState, Dictionary<TState, State<TState, TEvent>> states, Action<Exception> onException)
     {
@@ -59,6 +61,12 @@ namespace Binstate
       return PerformTransitionAsync<T, Unit>(@event, argument);
     }
 
+    /// <summary>
+    /// Tell the state machine that it should get an argument attached to the currently active state (or any of parents) and pass it to the newly activated state
+    /// </summary>
+    /// <typeparam name="TRelay">The type of the argument. Should be exactly the same as the generic type passed into 
+    /// <see cref="Config{TState,TEvent}.Enter.OnEnter{T}(Action{T})"/> or one of it's overload when configured currently active state (of one of it's parent).
+    /// </typeparam>
     public IStateMachine<TState, TEvent> Relaying<TRelay>() => new Relayer<TRelay>(this);
 
     private bool PerformTransitionSync<TA, TP>(TEvent @event, TA argument)
@@ -140,7 +148,7 @@ namespace Binstate
       {
         if (state.EnterArgumentType != null)
         {
-          if (!argument.IsSpecified)
+          if (!argument.HasAnyArgument)
             throw new TransitionException($"The enter action of the state '{state.Id}' is configured as required an argument but no argument was specified.");
             
           if (!argument.IsMatch(state.EnterArgumentType))
@@ -150,13 +158,13 @@ namespace Binstate
         }
       }
 
-      if (argument.IsSpecified && enterWithArgumentCount == 0)
+      if (argument.HasAnyArgument && enterWithArgumentCount == 0)
       {
         var statesToActivate = string.Join("->", states.Select(_ => _.Id.ToString()));
 
         throw new TransitionException(
           $"Transition from the state '{activeState.Id}' by the event '{@event}' will activate following states [{statesToActivate}]. No one of them are defined with "
-          + $"the enter action accepting an argument, but argument was passed or relayed");
+          + "the enter action accepting an argument, but argument was passed or relayed");
       }
     }
   }

@@ -19,6 +19,11 @@ namespace Binstate
     /// </summary>
     /// <param name="onException">All exception thrown from enter and exit actions passed to the state machine are caught in order to not break the state of the
     /// state machine. Use this action to be notified about these exceptions.</param>
+    /// <param name="enableLooseRelaying">Enables non strict relaying of the argument attached ot the state. If it is <see cref="ITuple{TArgument,TRelay}"/>
+    /// all 'enter' actions receiving arguments of type  <see cref="ITuple{TArgument,TRelay}"/>, TArgument, and TRelay will received corresponding argument.
+    /// If not enabled all 'enter' action in child/parent relation should have the same parameter type of declared 'enter' action. Also it's possible that some
+    /// of state requires an argument but some not.
+    /// </param>
     public Builder([NotNull] Action<Exception> onException, bool enableLooseRelaying = false)
     {
       _onException = onException ?? throw new ArgumentNullException(nameof(onException));
@@ -38,7 +43,7 @@ namespace Binstate
       _stateConfigs.Add(stateId, stateConfig);
       return stateConfig;
     }
-    
+
     /// <summary>
     /// Defines the new state in the state machine, if it is already defined, returns the configurator.
     /// </summary>
@@ -51,37 +56,6 @@ namespace Binstate
       if(!_stateConfigs.TryGetValue(stateId, out var stateConfig)) 
         stateConfig = DefineState(stateId);
       return stateConfig;
-    } 
-
-    private State<TState, TEvent> CreateStateAndAddToMap([NotNull] Config<TState, TEvent>.State stateConfig, Dictionary<TState, State<TState, TEvent>> states)
-    {
-      if (!states.TryGetValue(stateConfig.StateId, out var state)) // state could be already created during creating parent states
-      {
-        state = CreateState(
-          stateConfig,
-          stateConfig.ParentStateId.IsNotNull()
-            ? CreateStateAndAddToMap(_stateConfigs[stateConfig.ParentStateId], states) // recursive call to create the parent state;
-            : null);
-        states.Add(state.Id, state);
-      }
-      return state;
-    }
-
-    private static State<TState, TEvent> CreateState(
-      [NotNull] Config<TState, TEvent>.State stateConfig,
-      [CanBeNull] State<TState, TEvent> parentState)
-    {
-      var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();
-      foreach (var transition in stateConfig.TransitionList)
-      {
-        if (transitions.ContainsKey(transition.Event))
-          throw new InvalidOperationException($"Duplicated event '{transition.Event}' in state '{stateConfig.StateId}'");
-
-        transitions.Add(transition.Event, transition);
-      }
-
-      
-      return stateConfig.CreateState(parentState);
     }
 
     /// <summary>
@@ -110,6 +84,34 @@ namespace Binstate
         ValidateSubstateEnterArgument(states);
       
       return new StateMachine<TState, TEvent>(states[initialState], states, _onException);
+    }
+
+    private State<TState, TEvent> CreateStateAndAddToMap([NotNull] Config<TState, TEvent>.State stateConfig, Dictionary<TState, State<TState, TEvent>> states)
+    {
+      if (!states.TryGetValue(stateConfig.StateId, out var state)) // state could be already created during creating parent states
+      {
+        state = CreateState(
+          stateConfig,
+          stateConfig.ParentStateId.IsNotNull()
+            ? CreateStateAndAddToMap(_stateConfigs[stateConfig.ParentStateId], states) // recursive call to create the parent state;
+            : null);
+        states.Add(state.Id, state);
+      }
+      return state;
+    }
+
+    private static State<TState, TEvent> CreateState([NotNull] Config<TState, TEvent>.State stateConfig, [CanBeNull] State<TState, TEvent> parentState)
+    {
+      var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();
+      foreach (var transition in stateConfig.TransitionList)
+      {
+        if (transitions.ContainsKey(transition.Event))
+          throw new InvalidOperationException($"Duplicated event '{transition.Event}' in state '{stateConfig.StateId}'");
+
+        transitions.Add(transition.Event, transition);
+      }
+
+      return stateConfig.CreateState(parentState);
     }
 
     private static void ValidateSubstateEnterArgument(Dictionary<TState, State<TState, TEvent>> states)
@@ -141,6 +143,7 @@ namespace Binstate
       }
     }
     
+    // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
     private void ValidateTransitions(Dictionary<TState, State<TState, TEvent>> states)
     {
       foreach (var stateConfig in _stateConfigs.Values)

@@ -26,7 +26,9 @@ namespace Binstate
     {
       Enter(onException, enter =>
         {
-          Argument = argument;
+          if(Binstate.Argument.IsSpecified<TArgument>())
+            Argument = argument; // remember an argument passed into enter action if any
+          
           var typedEnter = (IEnterActionInvoker<TEvent, TArgument>) enter;
           return typedEnter.Invoke(stateMachine, argument);
         });

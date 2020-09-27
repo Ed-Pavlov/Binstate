@@ -1,10 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
-using JetBrains.Annotations;
-
 namespace Binstate
 {
   /// <summary>
@@ -12,6 +5,14 @@ namespace Binstate
   /// </summary>
   public static partial class Config<TState, TEvent>
   {
+    /// <summary>
+    /// There are two types of the state in the system with and w/o parameter in the 'enter' action. In order to make a code type safe and avoid
+    /// boxing of value type arguments, complex generic types machinery is introduced. This is the first part of this machinery,
+    /// Factories what creates <see cref="State{TState, TEvetn}"/> or <see cref="State{TState, TEvent, TArguments}"/>. Depending on was 'enter' action
+    /// with parameter is defined for the state one of these types are instantiated.
+    /// See <see cref="IEnterActionInvoker{TEvent,TArgument}"/>, <see cref="IState{TState,TEvent,TArgument}"/>, <see cref="State{TState,TEvent,TArgument}"/>
+    /// and their usage for implementation details.
+    /// </summary>
     private interface IStateFactory
     {
       State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent> parentState);
@@ -19,36 +20,14 @@ namespace Binstate
 
     private class NoArgumentStateFactory : IStateFactory
     {
-      public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent> parentState)
-      {
-        var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();
-        foreach (var transition in stateConfig.TransitionList)
-        {
-          if (transitions.ContainsKey(transition.Event))
-            throw new InvalidOperationException($"Duplicated event '{transition.Event}' in state '{stateConfig.StateId}'");
-
-          transitions.Add(transition.Event, transition);
-        }
-
-        return new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterActionAction, null, stateConfig.ExitAction, transitions, parentState);
-      }
+      public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent> parentState) => 
+        new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterActionAction, null, stateConfig.ExitAction, stateConfig.CreateTransitions(), parentState);
     }
 
     private class StateFactory<TArgument> : IStateFactory
     {
-      public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent> parentState)
-      {
-        var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();
-        foreach (var transition in stateConfig.TransitionList)
-        {
-          if (transitions.ContainsKey(transition.Event))
-            throw new InvalidOperationException($"Duplicated event '{transition.Event}' in state '{stateConfig.StateId}'");
-
-          transitions.Add(transition.Event, transition);
-        }
-
-        return new State<TState, TEvent, TArgument>(stateConfig.StateId, stateConfig.EnterActionAction, stateConfig.ExitAction, transitions, parentState);
-      }
+      public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent> parentState) => 
+        new State<TState, TEvent, TArgument>(stateConfig.StateId, stateConfig.EnterActionAction, stateConfig.ExitAction, stateConfig.CreateTransitions(), parentState);
     }
   }
 }

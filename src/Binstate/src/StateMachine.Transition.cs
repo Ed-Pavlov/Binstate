@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
 
 namespace Binstate
 {
   public partial class StateMachine<TState, TEvent>
   {
-    private readonly AutoResetEvent _lock = new AutoResetEvent(true);
-
     /// <summary>
     /// Performing transition is split into two parts, the first one is "read only", preparing and checking all the data, can throw an exception. 
     /// </summary>
@@ -23,9 +20,9 @@ namespace Binstate
       {
         _lock.WaitOne();
 
-        if (!_activeState.FindTransitionTransitive(@event, out var transition)
-          || !transition.GetTargetStateId(out var stateId)) // looks for a transition through all parent states
-        {
+        if (!_activeState.FindTransitionTransitive(@event, out var transition)  // looks for a transition through all parent states
+          || !transition.GetTargetStateId(out var stateId))
+        { // no transition by specified event is found or dynamic transition returns null as target state id
           _lock.Set();
           return null;
         }
@@ -52,26 +49,9 @@ namespace Binstate
       }
     }
 
-    private static MixOf<TA, TP> PrepareRealArgument<TA, TP>(TA argument, State<TState, TEvent> sourceState)
-    {
-      if (typeof(TP) == typeof(Unit))
-        return typeof(TA) == typeof(Unit) ? MixOf<TA, TP>.Empty : new MixOf<TA, TP>(argument.ToMaybe(), Maybe<TP>.Nothing);
-
-      var state = sourceState;
-      while (state != null)
-      {
-        if (state is State<TState, TEvent, TP> stateWithArgument)
-          return typeof(TA) == typeof(Unit) ? new MixOf<TA, TP>(Maybe<TA>.Nothing, stateWithArgument.Argument.ToMaybe()) : stateWithArgument.CreateTuple(argument);
-
-        state = state.ParentState;
-      }
-      
-      throw new TransitionException("propagating from the state w/o a state");
-    }
-
     /// <summary>
     /// Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
-    /// into the delegate passed to <see cref="Builder{TState,TEvent}(Action{Exception})"/> 
+    /// into the delegate passed to <see cref="Builder{TState,TEvent}(Action{Exception}, bool)"/> 
     /// </summary>
     [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery", Justification = "foreach is more readable here")]
     private bool PerformTransition<TA, TP>(TransitionData<MixOf<TA, TP>> transitionData)
@@ -129,9 +109,26 @@ namespace Binstate
       {
         IState<TState, TEvent, TA> passedArgumentState => () => passedArgumentState.EnterSafe(controller, argument.PassedArgument.Value, _onException),
         IState<TState, TEvent, TP> relayedArgumentState => () => relayedArgumentState.EnterSafe(controller, argument.RelayedArgument.Value, _onException),
-        IState<TState, TEvent, ITuple<TA, TP>> bothArgumentsState => () => bothArgumentsState.EnterSafe(controller, argument.ToTuple(), _onException),
+        IState<TState, TEvent, ITuple<TA, TP>> bothArgumentsState => () => bothArgumentsState.EnterSafe(controller, argument.ToTupleUnsafe(), _onException),
         _ => () => state.EnterSafe(controller, _onException) // no arguments state
       };
+    }
+
+    private static MixOf<TA, TP> PrepareRealArgument<TA, TP>(TA argument, State<TState, TEvent> sourceState)
+    {
+      if (!Argument.IsSpecified<TP>()) // no relaying argument
+        return Argument.IsSpecified<TA>() ? new MixOf<TA, TP>(argument.ToMaybe(), Maybe<TP>.Nothing) : MixOf<TA, TP>.Empty;
+
+      var state = sourceState;
+      while (state != null)
+      {
+        if (state is State<TState, TEvent, TP> stateWithArgument)
+          return Argument.IsSpecified<TA>() ? stateWithArgument.CreateTuple(argument) : new MixOf<TA, TP>(Maybe<TA>.Nothing, stateWithArgument.Argument.ToMaybe());
+
+        state = state.ParentState;
+      }
+      
+      throw new TransitionException("propagating from the state w/o a state");
     }
 
     private readonly struct TransitionData<T>

@@ -11,24 +11,24 @@ namespace Binstate
     [CanBeNull]
     private readonly IEnterActionInvoker<TEvent> _enterAction;
     [CanBeNull]
-    private readonly Action _exit;
+    private readonly Action _exitAction;
 
     private readonly Dictionary<TEvent, Transition<TState, TEvent>> _transitions;
 
     /// <summary>
-    /// This event is used to avoid race condition when <see cref="ExitSafe"/> method is called before <see cref="Config{TState,TEvent}.Enter"/> method.
+    /// This event is used to avoid race condition when <see cref="ExitSafe"/> method is called before <see cref="EnterSafe"/> method.
     /// See usages for details.
     /// </summary>
     private readonly ManualResetEvent _entered = new ManualResetEvent(true);
 
     /// <summary>
-    /// This event is used to wait while state's OnEnter action is finished before call OnExit action and change the active state of the state machine.
+    /// This event is used to wait while state's 'enter' action is finished before call 'exit' action and change the active state of the state machine.
     /// See usages for details. 
     /// </summary>
-    private readonly ManualResetEvent _enterFunctionFinished = new ManualResetEvent(true);
+    private readonly ManualResetEvent _enterActionFinished = new ManualResetEvent(true);
 
     /// <summary>
-    /// This task is used to wait while state's OnEnter action is finished before call OnExit action and change the active state of the state machine in
+    /// This task is used to wait while state's 'enter' action is finished before call 'exit' action and change the active state of the state machine in
     /// case of async OnEnter action.
     /// See usages for details. 
     /// </summary>
@@ -41,14 +41,14 @@ namespace Binstate
       TState id,
       IEnterActionInvoker<TEvent> enterAction,
       Type enterArgumentType,
-      Action exit,
+      Action exitAction,
       Dictionary<TEvent, Transition<TState, TEvent>> transitions,
       State<TState, TEvent> parentState)
     {
       Id = id;
       _enterAction = enterAction;
       EnterArgumentType = enterArgumentType;
-      _exit = exit;
+      _exitAction = exitAction;
       _transitions = transitions;
       ParentState = parentState;
       DepthInTree = parentState?.DepthInTree + 1 ?? 0;
@@ -60,6 +60,20 @@ namespace Binstate
 
     public readonly int DepthInTree;
     public readonly State<TState, TEvent> ParentState;
+
+    /// <summary>
+    /// This property is set from protected by lock part of the code so it's no need synchronization
+    /// see <see cref="StateMachine{TState,TEvent}.ActivateStateNotGuarded{TA,TP}"/> implementation for details.
+    /// </summary>
+    public bool IsActive
+    {
+      get => _isActive;
+      set
+      {
+        if (value) _entered.Reset();
+        _isActive = value;
+      }
+    }
 
     public void EnterSafe(IStateMachine<TEvent> stateMachine, Action<Exception> onException)
     {
@@ -74,7 +88,7 @@ namespace Binstate
     {
       try
       {
-        _enterFunctionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
+        _enterActionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
         _entered.Set(); // it is safe to set the state as entered
 
         if (_enterAction == null) return;
@@ -86,7 +100,35 @@ namespace Binstate
       }
       finally
       {
-        _enterFunctionFinished.Set();
+        _enterActionFinished.Set();
+      }
+    }
+
+    /// <summary>
+    /// <see cref="ExitSafe"/> can be called earlier then <see cref="Config{TState,TEvent}.Enter"/> of the activated state,
+    /// see <see cref="StateMachine{TState,TEvent}.PerformTransition{TA, TP}"/> implementation for details.
+    /// In this case it should wait till <see cref="Config{TState,TEvent}.Enter"/> will be called and exited, before call exit action
+    /// </summary>
+    public void ExitSafe(Action<Exception> onException)
+    {
+      try
+      {
+        IsActive = false; // signal that current state is no more active and blocking enter action can finish
+
+        // if action is set as active but enter action still is not called, wait for it 
+        _entered.WaitOne();
+
+        // wait till State.Enter function finishes
+        // if enter action is blocking or no action: _enterFunctionFinished is set means it finishes
+        _enterActionFinished.WaitOne();
+        // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till action finishes
+        _task?.Wait();
+
+        _exitAction?.Invoke();
+      }
+      catch (Exception exception)
+      {
+        onException(exception);
       }
     }
 
@@ -102,50 +144,9 @@ namespace Binstate
       }
 
       // no transition found through all parents
+      // ReSharper disable once RedundantAssignment // it's a R# fault in fact
       transition = default;
       return false;
-    }
-
-    /// <summary>
-    /// This property is set from protected by lock part of the code so it's no need synchronization
-    /// see <see cref="StateMachine{TState,TEvent}.PerformTransition{T}"/> implementation for details.
-    /// </summary>
-    public bool IsActive
-    {
-      get => _isActive;
-      set
-      {
-        if (value) _entered.Reset();
-        _isActive = value;
-      }
-    }
-
-    /// <summary>
-    /// <see cref="ExitSafe"/> can be called earlier then <see cref="Config{TState,TEvent}.Enter"/> of the activated state,
-    /// see <see cref="StateMachine{TState,TEvent}.PerformTransition{T}"/> implementation for details.
-    /// In this case it should wait till <see cref="Config{TState,TEvent}.Enter"/> will be called and exited, before call exit action
-    /// </summary>
-    public void ExitSafe(Action<Exception> onException)
-    {
-      try
-      {
-        IsActive = false; // signal that current state is no more active
-
-        // if action is set as active but enter action still is not called, wait for it 
-        _entered.WaitOne();
-
-        // wait till State.Enter function finishes
-        // if enter action is blocking or no action: _enterFunctionFinished is set means it finishes
-        _enterFunctionFinished.WaitOne(Timeout.Infinite);
-        // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till action finishes
-        _task?.Wait(Timeout.Infinite);
-
-        _exit?.Invoke();
-      }
-      catch (Exception exception)
-      {
-        onException(exception);
-      }
     }
 
     public IReadOnlyCollection<State<TState, TEvent>> GetAllStatesForActivationTillParent([CanBeNull] State<TState, TEvent> tillState)

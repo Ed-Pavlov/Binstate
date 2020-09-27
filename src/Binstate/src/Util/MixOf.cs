@@ -2,7 +2,10 @@
 
 namespace Binstate
 {
-  public struct MixOf<TA, TP>
+  /// <summary>
+  /// Internal data structure for (de)composing passed and relayed arguments 
+  /// </summary>
+  internal readonly struct MixOf<TA, TP>
   {
     public static readonly MixOf<TA, TP> Empty = new MixOf<TA, TP>();
     
@@ -10,15 +13,18 @@ namespace Binstate
     {
       PassedArgument = passedArgument;
       RelayedArgument = relayedArgument;
-      IsSpecified = passedArgument.HasValue || relayedArgument.HasValue;
+      HasAnyArgument = passedArgument.HasValue || relayedArgument.HasValue;
     }
 
     public readonly Maybe<TA> PassedArgument;
     public readonly Maybe<TP> RelayedArgument;
-    public readonly bool IsSpecified;
-    
+    public readonly bool HasAnyArgument;
+
     // ReSharper disable once SimplifyConditionalTernaryExpression
-    public bool IsMatch(Type parameterType, bool fullMatch = false) =>
+    /// <summary>
+    /// Checks if any of specified argument can be passed into the state's enter action represented by <paramref name="parameterType"/>  
+    /// </summary>
+    public bool IsMatch(Type parameterType) =>
       parameterType.IsAssignableFrom(typeof(ITuple<TA, TP>)) ? PassedArgument.HasValue && RelayedArgument.HasValue :
       parameterType.IsAssignableFrom(typeof(TA)) ? PassedArgument.HasValue :
       parameterType.IsAssignableFrom(typeof(TP)) ? RelayedArgument.HasValue : 

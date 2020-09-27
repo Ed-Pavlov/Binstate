@@ -1,6 +1,6 @@
 ﻿namespace Binstate
 {
-  public struct Maybe<T>
+  internal readonly struct Maybe<T>
   {
     public static readonly Maybe<T> Nothing = new Maybe<T>();
 
@@ -14,7 +14,7 @@
     public T Value { get; }
   }
 
-  public static class Maybe
+  internal static class Maybe
   {
     public static Maybe<T> ToMaybe<T>(this T value) => new Maybe<T>(value);
   }

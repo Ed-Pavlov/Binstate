@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 
 namespace Binstate
 {
+  // ReSharper disable once UnusedTypeParameter
   public static partial class Config<TState, TEvent>
   {
     /// <summary>

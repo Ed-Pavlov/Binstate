@@ -1,5 +1,6 @@
 namespace Binstate
 {
+  // ReSharper disable once UnusedTypeParameter
   public static partial class Config<TState, TEvent>
   {
     /// <summary>
@@ -13,7 +14,7 @@ namespace Binstate
       { }
 
       /// <summary>
-      /// Defines the currently configured state as a subset of a composite state 
+      /// Defines the currently configured state as a substate of a composite state 
       /// </summary>
       public Enter AsSubstateOf(TState parentStateId)
       {

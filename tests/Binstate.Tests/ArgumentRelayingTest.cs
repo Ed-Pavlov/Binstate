@@ -90,6 +90,31 @@ namespace Instate.Tests
       actual.PassedArgument.Should().Be(expectedObject);
       actual.RelayedArgument.Should().Be(expectedDisposable);
     }
+
+    [TestCaseSource(nameof(using_relay_raise_and_raise_async_source))]
+    public void should_relay_argument_from_parent_of_active_state(RelayingRaise<string, int> relayingRaise)
+    {
+      const int expected = 3987;
+      var actual = expected - 87;
+      
+      // --arrange
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      
+      builder.DefineState(Initial).AddTransition(Event1, Child);
+      builder.DefineState(Parent).OnEnter<int>(_ => { });
+      builder.DefineState(Child).AsSubstateOf(Parent).AddTransition(Event2, State2);
+      
+      builder.DefineState(State2).OnEnter<int>(value => actual = value);
+
+      var target = builder.Build(Initial);
+      target.Raise(Event1, expected);
+
+      // --act
+      relayingRaise(target, Event2);
+      
+      // --assert
+      actual.Should().Be(expected);
+    }
     
     [TestCaseSource(nameof(using_relay_raise_and_raise_async_source))]
     public void should_fail_if_target_state_has_no_argument(RelayingRaise<string, int> relayingRaise)

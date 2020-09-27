@@ -54,18 +54,19 @@ namespace Binstate
 
     private static MixOf<TA, TP> PrepareRealArgument<TA, TP>(TA argument, State<TState, TEvent> sourceState)
     {
-      MixOf<TA, TP> mix;
       if (typeof(TP) == typeof(Unit))
-        mix = typeof(TA) == typeof(Unit) ? MixOf<TA, TP>.Empty : new MixOf<TA, TP>(argument.ToMaybe(), Maybe<TP>.Nothing);
-      else
+        return typeof(TA) == typeof(Unit) ? MixOf<TA, TP>.Empty : new MixOf<TA, TP>(argument.ToMaybe(), Maybe<TP>.Nothing);
+
+      var state = sourceState;
+      while (state != null)
       {
-        if (!(sourceState is State<TState, TEvent, TP> stateWithArgument)) // trying to relay an argument but active state has not an argument of passed type
-          throw new TransitionException("propagating from the state w/o a state");
+        if (state is State<TState, TEvent, TP> stateWithArgument)
+          return typeof(TA) == typeof(Unit) ? new MixOf<TA, TP>(Maybe<TA>.Nothing, stateWithArgument.Argument.ToMaybe()) : stateWithArgument.CreateTuple(argument);
 
-        mix = typeof(TA) == typeof(Unit) ? new MixOf<TA, TP>(Maybe<TA>.Nothing, stateWithArgument.Argument.ToMaybe()) : stateWithArgument.CreateTuple(argument);
+        state = state.ParentState;
       }
-
-      return mix;
+      
+      throw new TransitionException("propagating from the state w/o a state");
     }
 
     /// <summary>

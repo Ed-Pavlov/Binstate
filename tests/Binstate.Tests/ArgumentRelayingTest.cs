@@ -117,7 +117,7 @@ namespace Instate.Tests
     }
     
     [Test]
-    public void should_pass_null_if_target_state_has_no_argument()
+    public void should_pass_null_if_active_state_has_no_argument()
     {
       var actual = "bad";
       

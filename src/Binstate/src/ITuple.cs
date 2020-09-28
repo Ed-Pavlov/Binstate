@@ -20,15 +20,15 @@
     TRelay RelayedArgument{ get; }
   }
   
-  internal class Tuple<TArgument, TPropagate> : ITuple<TArgument, TPropagate>
+  internal class Tuple<TArgument, TRelay> : ITuple<TArgument, TRelay>
   {
-    public Tuple(TArgument passedArgument, TPropagate relayedArgument)
+    public Tuple(TArgument passedArgument, TRelay relayedArgument)
     {
       PassedArgument = passedArgument;
       RelayedArgument = relayedArgument;
     }
 
     public TArgument PassedArgument { get; }
-    public TPropagate RelayedArgument { get; }
+    public TRelay RelayedArgument { get; }
   }
 }

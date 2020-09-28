@@ -78,13 +78,13 @@ namespace Binstate
     public IStateMachine<TState, TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true) => 
       new Relayer<TRelay>(this, relayArgumentIsRequired ? Maybe<TRelay>.Nothing : default(TRelay).ToMaybe());
     
-    private bool PerformTransitionSync<TA, TP>(TEvent @event, TA argument, Maybe<TP> backupRelayArgument)
+    private bool PerformTransitionSync<TA, TRelay>(TEvent @event, TA argument, Maybe<TRelay> backupRelayArgument)
     {
       var data = PrepareTransition(@event, argument, backupRelayArgument);
       return data != null && PerformTransition(data.Value);
     }
 
-    private Task<bool> PerformTransitionAsync<TA, TP>(TEvent @event, TA argument, Maybe<TP> backupRelayArgument)
+    private Task<bool> PerformTransitionAsync<TA, TRelay>(TEvent @event, TA argument, Maybe<TRelay> backupRelayArgument)
     {
       var data = PrepareTransition(@event, argument, backupRelayArgument);
 
@@ -147,11 +147,11 @@ namespace Binstate
     /// of configuration.
     /// </summary>
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
-    private static void ValidateStates<TA, TP>(
+    private static void ValidateStates<TA, TRelay>(
       IEnumerable<State<TState, TEvent>> states,
       State<TState, TEvent> activeState,
       TEvent @event,
-      MixOf<TA, TP> argument)
+      MixOf<TA, TRelay> argument)
     {
       var enterWithArgumentCount = 0;
 

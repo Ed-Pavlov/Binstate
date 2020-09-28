@@ -63,7 +63,7 @@ namespace Binstate
 
     /// <summary>
     /// This property is set from protected by lock part of the code so it's no need synchronization
-    /// see <see cref="StateMachine{TState,TEvent}.ActivateStateNotGuarded{TA,TP}"/> implementation for details.
+    /// see <see cref="StateMachine{TState,TEvent}.ActivateStateNotGuarded{TArgument,TRelay}"/> implementation for details.
     /// </summary>
     public bool IsActive
     {
@@ -106,7 +106,7 @@ namespace Binstate
 
     /// <summary>
     /// <see cref="ExitSafe"/> can be called earlier then <see cref="Config{TState,TEvent}.Enter"/> of the activated state,
-    /// see <see cref="StateMachine{TState,TEvent}.PerformTransition{TA, TP}"/> implementation for details.
+    /// see <see cref="StateMachine{TState,TEvent}.PerformTransition{TArgument, TRelay}"/> implementation for details.
     /// In this case it should wait till <see cref="Config{TState,TEvent}.Enter"/> will be called and exited, before call exit action
     /// </summary>
     public void ExitSafe(Action<Exception> onException)

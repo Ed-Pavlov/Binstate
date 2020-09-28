@@ -29,11 +29,40 @@ namespace Binstate
       {
         if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
         
-        var data = _owner.PrepareTransition<T, Unit>(@event, default);
+        var data = _owner.PrepareTransition(@event, argument, Maybe<Unit>.Nothing);
         if (data == null) return false;
         
         Task.Run(() => _owner.PerformTransition(data.Value));
         return true;
+      }
+
+      /// <inheritdoc />
+      public IAutoTransition<TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true) => 
+        new ControllerRelayer<TRelay>(_owner, relayArgumentIsRequired ? Maybe<TRelay>.Nothing : default(TRelay).ToMaybe());
+
+      private class ControllerRelayer<TRelay> : IAutoTransition<TEvent>
+      {
+        private readonly StateMachine<TState, TEvent> _owner;
+        private readonly Maybe<TRelay> _backupValue;
+
+        public ControllerRelayer(StateMachine<TState, TEvent> owner, Maybe<TRelay> backupValue)
+        {
+          _owner = owner;
+          _backupValue = backupValue;
+        }
+
+        public bool RaiseAsync(TEvent @event) => RaiseAsync<Unit>(@event, default);
+
+        public bool RaiseAsync<T>(TEvent @event, [CanBeNull] T argument)
+        {
+          if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+        
+          var data = _owner.PrepareTransition<T, TRelay>(@event, default, _backupValue);
+          if (data == null) return false;
+        
+          Task.Run(() => _owner.PerformTransition(data.Value));
+          return true;
+        }
       }
     }
   }

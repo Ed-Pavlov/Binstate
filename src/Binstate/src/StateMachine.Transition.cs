@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
@@ -14,7 +14,7 @@ namespace Binstate
     /// dynamic transition returns 'null'
     /// </returns>
     /// <exception cref="TransitionException">Throws if passed argument doesn't match the 'enter' action of the target state.</exception>
-    private TransitionData<MixOf<TA, TP>>? PrepareTransition<TA, TP>(TEvent @event, TA argument)
+    private TransitionData<MixOf<TA, TP>>? PrepareTransition<TA, TP>(TEvent @event, TA argument, Maybe<TP> backupRelayArgument)
     {
       try
       {
@@ -31,7 +31,7 @@ namespace Binstate
 
         var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);
         var statesToEnter = targetState.GetAllStatesForActivationTillParent(commonAncestor); // get states from activeState with all parents till newState itself to activate
-        var mixedArgument = PrepareRealArgument<TA, TP>(argument, _activeState);
+        var mixedArgument = PrepareRealArgument<TA, TP>(argument, _activeState, backupRelayArgument);
         ValidateStates(statesToEnter, _activeState, @event, mixedArgument); // validate before changing any state of the state machine
 
         return new TransitionData<MixOf<TA, TP>>(_activeState, transition, targetState, statesToEnter, commonAncestor, mixedArgument);
@@ -114,7 +114,7 @@ namespace Binstate
       };
     }
 
-    private static MixOf<TA, TP> PrepareRealArgument<TA, TP>(TA argument, State<TState, TEvent> sourceState)
+    private static MixOf<TA, TP> PrepareRealArgument<TA, TP>(TA argument, State<TState, TEvent> sourceState, Maybe<TP> backupRelayArgument)
     {
       if (!Argument.IsSpecified<TP>()) // no relaying argument
         return Argument.IsSpecified<TA>() ? new MixOf<TA, TP>(argument.ToMaybe(), Maybe<TP>.Nothing) : MixOf<TA, TP>.Empty;
@@ -128,7 +128,12 @@ namespace Binstate
         state = state.ParentState;
       }
       
-      throw new TransitionException("propagating from the state w/o a state");
+      if(backupRelayArgument.HasValue)
+        return Argument.IsSpecified<TA>()
+          ? new MixOf<TA, TP>(argument.ToMaybe(), backupRelayArgument) 
+          : new MixOf<TA, TP>(Maybe<TA>.Nothing, backupRelayArgument);
+      
+      throw new TransitionException("propagating from the state w/o a state and a backup argument for relay");
     }
 
     private readonly struct TransitionData<T>

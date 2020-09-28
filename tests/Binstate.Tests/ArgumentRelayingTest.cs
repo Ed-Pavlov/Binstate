@@ -116,6 +116,26 @@ namespace Instate.Tests
       actual.Should().Be(expected);
     }
     
+    [Test]
+    public void should_pass_null_if_target_state_has_no_argument()
+    {
+      var actual = "bad";
+      
+      // --arrange
+      var builder = new Builder<string, int>(_ => Assert.Fail(_.Message));
+      
+      builder.DefineState(Initial).AddTransition(Event1, State1);
+      builder.DefineState(State1).OnEnter<string>(value => actual = value);
+
+      var stateMachine = builder.Build(Initial);
+
+      // --act
+      stateMachine.Relaying<string>(false).Raise(Event1);
+      
+      // --assert
+      actual.Should().BeNull();
+    }
+    
     [TestCaseSource(nameof(using_relay_raise_and_raise_async_source))]
     public void should_fail_if_target_state_has_no_argument(RelayingRaise<string, int> relayingRaise)
     {

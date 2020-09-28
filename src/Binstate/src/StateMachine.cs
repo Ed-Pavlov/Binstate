@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -38,7 +38,7 @@ namespace Binstate
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
 
-      return PerformTransitionSync<Unit, Unit>(@event, null);
+      return PerformTransitionSync<Unit, Unit>(@event, null, Maybe<Unit>.Nothing);
     }
 
     /// <inheritdoc />
@@ -46,7 +46,7 @@ namespace Binstate
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
 
-      return PerformTransitionSync<T, Unit>(@event, argument);
+      return PerformTransitionSync(@event, argument, Maybe<Unit>.Nothing);
     }
 
     /// <inheritdoc />
@@ -54,7 +54,7 @@ namespace Binstate
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
 
-      return PerformTransitionAsync<Unit, Unit>(@event, default);
+      return PerformTransitionAsync<Unit, Unit>(@event, default, Maybe<Unit>.Nothing);
     }
 
     /// <inheritdoc />
@@ -62,7 +62,7 @@ namespace Binstate
     {
       if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
 
-      return PerformTransitionAsync<T, Unit>(@event, argument);
+      return PerformTransitionAsync(@event, argument, Maybe<Unit>.Nothing);
     }
 
     /// <summary>
@@ -71,17 +71,22 @@ namespace Binstate
     /// <typeparam name="TRelay">The type of the argument. Should be exactly the same as the generic type passed into 
     /// <see cref="Config{TState,TEvent}.Enter.OnEnter{T}(Action{T})"/> or one of it's overload when configured currently active state (of one of it's parent).
     /// </typeparam>
-    public IStateMachine<TState, TEvent> Relaying<TRelay>() => new Relayer<TRelay>(this);
-
-    private bool PerformTransitionSync<TA, TP>(TEvent @event, TA argument)
+    /// <param name="relayArgumentIsRequired">If there is no active state with argument for relaying:
+    /// true: Raise method throws an exception
+    /// false: state machine will pass default(TRelay) as an argument 
+    /// </param>
+    public IStateMachine<TState, TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true) => 
+      new Relayer<TRelay>(this, relayArgumentIsRequired ? Maybe<TRelay>.Nothing : default(TRelay).ToMaybe());
+    
+    private bool PerformTransitionSync<TA, TP>(TEvent @event, TA argument, Maybe<TP> backupRelayArgument)
     {
-      var data = PrepareTransition<TA, TP>(@event, argument);
+      var data = PrepareTransition(@event, argument, backupRelayArgument);
       return data != null && PerformTransition(data.Value);
     }
 
-    private Task<bool> PerformTransitionAsync<TA, TP>(TEvent @event, TA argument)
+    private Task<bool> PerformTransitionAsync<TA, TP>(TEvent @event, TA argument, Maybe<TP> backupRelayArgument)
     {
-      var data = PrepareTransition<TA, TP>(@event, argument);
+      var data = PrepareTransition(@event, argument, backupRelayArgument);
 
       return data == null
         ? Task.FromResult(false)

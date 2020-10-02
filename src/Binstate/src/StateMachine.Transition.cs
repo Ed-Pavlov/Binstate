@@ -51,7 +51,7 @@ namespace Binstate
 
     /// <summary>
     /// Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
-    /// into the delegate passed to <see cref="Builder{TState,TEvent}(Action{Exception}, bool)"/> 
+    /// into the delegate passed to <see cref="Builder{TState,TEvent}(Action{Exception})"/> 
     /// </summary>
     [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery", Justification = "foreach is more readable here")]
     private bool PerformTransition<TArgument, TRelay>(TransitionData<MixOf<TArgument, TRelay>> transitionData)

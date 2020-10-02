@@ -19,7 +19,7 @@ namespace Binstate
     /// <returns>Returns true if state was changed, false if not</returns>
     /// <exception cref="TransitionException">Throws if the 'enter' action of the target state requires argument.
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-    /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{System.Exception}, bool)"/>
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception})"/>
     /// </exception>
     bool Raise([NotNull] TEvent @event);
 
@@ -31,7 +31,7 @@ namespace Binstate
     /// <returns>Returns true if state was changed, false if not</returns>
     /// <exception cref="TransitionException">Throws if the 'enter' action of the target state doesn't requires argument or requires argument of not compatible type.
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception}, bool)"/>
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
     /// </exception>
     bool Raise<T>([NotNull] TEvent @event, [CanBeNull] T argument);
 
@@ -44,7 +44,7 @@ namespace Binstate
     /// <returns>Synchronously returns false if the transition was not found.</returns>
     /// <exception cref="TransitionException">Throws if the 'enter' action of the target state requires argument.
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception}, bool)"/>
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
     /// </exception>
     Task<bool> RaiseAsync([NotNull] TEvent @event);
 
@@ -55,7 +55,7 @@ namespace Binstate
     /// <returns>Synchronously returns false if the transition was not found.</returns>
     /// <exception cref="TransitionException">Throws if the 'enter' action of the target state doesn't requires argument or requires argument of not compatible type.
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception}, bool)"/>
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
     /// </exception>
     Task<bool> RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument);
   }

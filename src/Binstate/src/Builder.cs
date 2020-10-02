@@ -53,7 +53,7 @@ namespace Binstate
     /// </summary>
     /// <param name="initialStateId">The initial state of the state machine. The entering action of the initial state must not require argument.</param>
     /// <param name="enableLooseRelaying">Enables non strict relaying model of the argument attached ot the state. If relayed argument type
-    /// is <see cref="ITuple{TArgument,TRelay}"/> all 'enter' actions receiving arguments of type  <see cref="ITuple{TArgument,TRelay}"/>, TArgument, and TRelay
+    /// is <see cref="ITuple{TPassed,TRelay}"/> all 'enter' actions receiving arguments of type  <see cref="ITuple{TPassed,TRelay}"/>, TArgument, and TRelay
     /// will receive corresponding argument.
     /// If not enabled - all 'enter' action in child/parent relation should have the same parameter type of declared 'enter' action. Also it's possible that some
     /// of state requires an argument but some not.

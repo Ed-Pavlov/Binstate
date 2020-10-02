@@ -15,7 +15,7 @@ namespace Binstate
     /// <returns>Synchronously returns false if a transition was not found and true if the transition will be performed.</returns>
     /// <exception cref="TransitionException">Throws if the 'enter' action of the target state requires argument.
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-    /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception}, bool)"/>
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception})"/>
     /// </exception>
     bool RaiseAsync([NotNull] TEvent @event);
     
@@ -27,7 +27,7 @@ namespace Binstate
     /// <returns>Synchronously returns false if a transition was not found and true if the transition will be performed.</returns>
     /// <exception cref="TransitionException">Throws if the 'enter' action of the target state requires argument.
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-    /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception}, bool)"/>
+    /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception})"/>
     /// </exception>
     bool RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument);
   }

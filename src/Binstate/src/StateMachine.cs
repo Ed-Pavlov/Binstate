@@ -142,14 +142,16 @@ namespace Binstate
     /// </summary>
     [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     private static void ValidateStates<TA, TRelay>(
-      IEnumerable<State<TState, TEvent>> states,
       State<TState, TEvent> activeState,
       TEvent @event,
-      MixOf<TA, TRelay> argument)
+      State<TState, TEvent> targetState,
+      MixOf<TA, TRelay> argument,
+      State<TState, TEvent> commonAncestor)
     {
       var enterWithArgumentCount = 0;
 
-      foreach (var state in states)
+      var state = targetState; 
+      while(state != commonAncestor)
       {
         if (state.EnterArgumentType != null)
         {
@@ -162,10 +164,23 @@ namespace Binstate
 
           enterWithArgumentCount++;
         }
+
+        state = state.ParentState;
       }
 
       if (argument.HasAnyArgument && enterWithArgumentCount == 0)
       {
+        // we can allocate here, because it's an exceptional case
+        var states = new List<State<TState, TEvent>>();
+        state = targetState.ParentState;
+        while (state != commonAncestor)
+        {
+          states.Add(state);
+          state = state.ParentState;
+        }
+        states.Reverse();
+        states.Add(targetState);
+
         var statesToActivate = string.Join("->", states.Select(_ => _.Id.ToString()));
 
         throw new TransitionException(

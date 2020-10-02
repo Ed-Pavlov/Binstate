@@ -149,21 +149,6 @@ namespace Binstate
       return false;
     }
 
-    public IReadOnlyCollection<State<TState, TEvent>> GetAllStatesForActivationTillParent([CanBeNull] State<TState, TEvent> tillState)
-    {
-      var states = new List<State<TState, TEvent>>();
-      var parent = ParentState;
-      while (parent != null && !ReferenceEquals(parent, tillState))
-      {
-        states.Add(parent);
-        parent = parent.ParentState;
-      }
-
-      states.Reverse();
-      states.Add(this);
-      return states;
-    }
-
     public override string ToString() => Id.ToString();
   }
 }

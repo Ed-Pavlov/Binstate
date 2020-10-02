@@ -1,6 +1,5 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Binstate
 {
@@ -29,12 +28,11 @@ namespace Binstate
 
         var targetState = GetStateById(stateId);
 
-        var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);
-        var statesToEnter = targetState.GetAllStatesForActivationTillParent(commonAncestor); // get states from activeState with all parents till newState itself to activate
         var mixedArgument = PrepareRealArgument(argument, _activeState, backupRelayArgument);
-        ValidateStates(statesToEnter, _activeState, @event, mixedArgument); // validate before changing any state of the state machine
+        var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);
+        ValidateStates(_activeState, @event, targetState, mixedArgument, commonAncestor); // validate before changing any state of the state machine
 
-        return new TransitionData<MixOf<TArgument, TRelay>>(_activeState, transition, targetState, statesToEnter, commonAncestor, mixedArgument);
+        return new TransitionData<MixOf<TArgument, TRelay>>(_activeState, transition, targetState, mixedArgument, commonAncestor);
       }
       catch (TransitionException)
       {
@@ -53,13 +51,12 @@ namespace Binstate
     /// Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
     /// into the delegate passed to <see cref="Builder{TState,TEvent}(Action{Exception})"/> 
     /// </summary>
-    [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery", Justification = "foreach is more readable here")]
+    // [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery", Justification = "foreach is more readable here")]
     private bool PerformTransition<TArgument, TRelay>(TransitionData<MixOf<TArgument, TRelay>> transitionData)
     {
       var currentActiveState = transitionData.CurrentActiveState;
       var transition = transitionData.Transition;
       var targetState = transitionData.TargetState;
-      var statesToEnter = transitionData.StatesToEnter;
       var argument = transitionData.Argument;
       var commonAncestor = transitionData.CommonAncestor;
 
@@ -77,22 +74,23 @@ namespace Binstate
         transition.InvokeActionSafe(_onException);
 
         // and then activate new active states
-        foreach (var state in statesToEnter)
-        {
-          var enterAction = ActivateStateNotGuarded(state, argument);
-          enterActions.Add(enterAction);
-        }
-
         _activeState = targetState;
+        while (targetState != commonAncestor)
+        {
+          var enterAction = ActivateStateNotGuarded(targetState, argument);
+          enterActions.Add(enterAction);
+          targetState = targetState.ParentState;
+        }
       }
       finally // no exception should be thrown here, but paranoia is my life
       {
         _lock.Set();
       }
 
-      // call Enter actions out of the lock due to it can block execution
-      foreach (var enterAction in enterActions)
-        enterAction();
+      // call 'enter' actions out of the lock due to it can block execution
+      // call them in reverse order, parent's 'enter' is called first, child's one last 
+      for (var i = enterActions.Count - 1; i >=0; i--) 
+        enterActions[i]();
 
       return true; // just to reduce amount of code calling this method
     }
@@ -100,9 +98,11 @@ namespace Binstate
     /// <summary>
     /// Doesn't acquire lock itself, caller should care about safe context 
     /// </summary>
+    /// <returns>Returns 'enter' action of the state</returns>
     private Action ActivateStateNotGuarded<TArgument, TRelay>(State<TState, TEvent> state, MixOf<TArgument, TRelay> argument)
     {
       state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
+      
       var controller = new Controller(state, this);
 
       return state switch
@@ -142,23 +142,20 @@ namespace Binstate
       public readonly State<TState, TEvent> CurrentActiveState;
       public readonly State<TState, TEvent> CommonAncestor;
       public readonly Transition<TState, TEvent> Transition;
-      public readonly IEnumerable<State<TState, TEvent>> StatesToEnter;
       public readonly T Argument;
 
       public TransitionData(
         State<TState, TEvent> currentActiveState,
         Transition<TState, TEvent> transition,
         State<TState, TEvent> targetState,
-        IEnumerable<State<TState, TEvent>> statesToEnter,
-        State<TState, TEvent> commonAncestor,
-        T argument)
+        T argument,
+        State<TState, TEvent> commonAncestor)
       {
-        TargetState = targetState;
         CurrentActiveState = currentActiveState;
-        CommonAncestor = commonAncestor;
         Transition = transition;
-        StatesToEnter = statesToEnter;
+        TargetState = targetState;
         Argument = argument;
+        CommonAncestor = commonAncestor;
       }
     }
   }

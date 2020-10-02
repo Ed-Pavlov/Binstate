@@ -11,7 +11,6 @@ namespace Binstate
   public class Builder<TState, TEvent>
   {
     private readonly Action<Exception> _onException;
-    private readonly bool _enableLooseRelaying;
     private readonly Dictionary<TState, Config<TState, TEvent>.State> _stateConfigs = new Dictionary<TState, Config<TState, TEvent>.State>();
 
     /// <summary>
@@ -19,16 +18,7 @@ namespace Binstate
     /// </summary>
     /// <param name="onException">All exception thrown from enter and exit actions passed to the state machine are caught in order to not break the state of the
     /// state machine. Use this action to be notified about these exceptions.</param>
-    /// <param name="enableLooseRelaying">Enables non strict relaying of the argument attached ot the state. If it is <see cref="ITuple{TArgument,TRelay}"/>
-    /// all 'enter' actions receiving arguments of type  <see cref="ITuple{TArgument,TRelay}"/>, TArgument, and TRelay will received corresponding argument.
-    /// If not enabled all 'enter' action in child/parent relation should have the same parameter type of declared 'enter' action. Also it's possible that some
-    /// of state requires an argument but some not.
-    /// </param>
-    public Builder([NotNull] Action<Exception> onException, bool enableLooseRelaying = false)
-    {
-      _onException = onException ?? throw new ArgumentNullException(nameof(onException));
-      _enableLooseRelaying = enableLooseRelaying;
-    }
+    public Builder([NotNull] Action<Exception> onException) => _onException = onException ?? throw new ArgumentNullException(nameof(onException));
 
     /// <summary>
     /// Defines the new state in the state machine, if it is already defined throws an exception
@@ -61,16 +51,23 @@ namespace Binstate
     /// <summary>
     /// Validates consistency and builds the state machine using provided configuration. 
     /// </summary>
-    /// <param name="initialState">The initial state of the state machine. The entering action of the initial state is not called by building the state machine.</param>
+    /// <param name="initialStateId">The initial state of the state machine. The entering action of the initial state must not require argument.</param>
+    /// <param name="enableLooseRelaying">Enables non strict relaying model of the argument attached ot the state. If relayed argument type
+    /// is <see cref="ITuple{TArgument,TRelay}"/> all 'enter' actions receiving arguments of type  <see cref="ITuple{TArgument,TRelay}"/>, TArgument, and TRelay
+    /// will receive corresponding argument.
+    /// If not enabled - all 'enter' action in child/parent relation should have the same parameter type of declared 'enter' action. Also it's possible that some
+    /// of state requires an argument but some not.
+    /// </param>
     /// <exception cref="InvalidOperationException">Throws if there are any inconsistencies in the provided configuration.</exception>
-    public StateMachine<TState, TEvent> Build([NotNull] TState initialState)
+    public StateMachine<TState, TEvent> Build([NotNull] TState initialStateId, bool enableLooseRelaying = false)
     {
-      if (initialState.IsNull()) throw new ArgumentNullException(nameof(initialState));
+      if (initialStateId.IsNull()) throw new ArgumentNullException(nameof(initialStateId));
 
-      if (!_stateConfigs.ContainsKey(initialState))
-        throw new ArgumentException($"No state '{initialState}' is defined");
+      if (!_stateConfigs.ContainsKey(initialStateId))
+        throw new ArgumentException($"No state '{initialStateId}' is defined");
       
-      var initialStateConfig = _stateConfigs[initialState];
+      var initialStateConfig = _stateConfigs[initialStateId];
+
       if(initialStateConfig.TransitionList.Count == 0)
         throw new ArgumentException("No transitions defined from the initial state");
       
@@ -79,11 +76,15 @@ namespace Binstate
       foreach (var stateConfig in _stateConfigs.Values) 
         CreateStateAndAddToMap(stateConfig, states);
 
+      var initialState = states[initialStateId];
+      if (initialState.EnterArgumentType != null)
+        throw new TransitionException("The enter action of the initial state must not require argument.");
+      
       ValidateTransitions(states);
-      if(!_enableLooseRelaying)
+      if(!enableLooseRelaying)
         ValidateSubstateEnterArgument(states);
       
-      return new StateMachine<TState, TEvent>(states[initialState], states, _onException);
+      return new StateMachine<TState, TEvent>(states[initialStateId], states, _onException);
     }
 
     private State<TState, TEvent> CreateStateAndAddToMap([NotNull] Config<TState, TEvent>.State stateConfig, Dictionary<TState, State<TState, TEvent>> states)

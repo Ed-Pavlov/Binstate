@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Binstate;
@@ -9,8 +8,8 @@ namespace Instate.Tests
 {
   public class HierarchicalStateMachineTest : StateMachineTestBase
   {
-    [Test]
-    public void should_enter_all_parent_states()
+    [TestCaseSource(nameof(RaiseWays))]
+    public void should_enter_all_parent_states(RaiseWay raiseWay)
     {
       var actual = new List<string>();
 
@@ -43,14 +42,14 @@ namespace Instate.Tests
       var target = builder.Build(Initial);
 
       // --act
-      target.Raise(Branch1Level3);
+      target.Raise(raiseWay, Branch1Level3);
 
       // --assert
       actual.Should().Equal(Root, Branch1Level1, Branch1Level2, Branch1Level3);
     }
 
-    [Test]
-    public void should_exit_all_parent_states()
+    [TestCaseSource(nameof(RaiseWays))]
+    public void should_exit_all_parent_states(RaiseWay raiseWay)
     {
       var actual = new List<string>();
       
@@ -97,17 +96,17 @@ namespace Instate.Tests
         .OnEnter(_ => actual.Add(Free1));
 
       var target = builder.Build(Initial);
-      target.Raise(Branch1Level3);
+      target.Raise(raiseWay, Branch1Level3);
 
       // --act
-      target.Raise(Free1);
+      target.Raise(raiseWay, Free1);
 
       // --assert
       actual.Should().Equal(Branch1Level3+Exit, Branch1Level3, Branch1Level2+Exit, Branch1Level2, Branch1Level1+Exit, Branch1Level1, Root+Exit, Root, Free1);
     }
 
-    [Test]
-    public void should_not_exit_parent_state()
+    [TestCaseSource(nameof(RaiseWays))]
+    public void should_not_exit_parent_state(RaiseWay raiseWay)
     {
       var actual = new List<string>();
       
@@ -149,17 +148,17 @@ namespace Instate.Tests
         .OnEnter(_ => actual.Add(Branch1Level3));
       
       var target = builder.Build(Initial);
-      target.Raise(Branch1Level2);
+      target.Raise(raiseWay, Branch1Level2);
 
       // --act
-      target.Raise(Branch1Level3);
+      target.Raise(raiseWay, Branch1Level3);
 
       // --assert
       actual.Should().Equal(Branch1Level3);
     }
 
-    [Test]
-    public void should_not_exit_common_root()
+    [TestCaseSource(nameof(RaiseWays))]
+    public void should_not_exit_common_root(RaiseWay raiseWay)
     {
       var actual = new List<string>();
       
@@ -205,54 +204,15 @@ namespace Instate.Tests
         .OnEnter(_ => actual.Add(Branch2Level2));
       
       var target = builder.Build(Initial);
-      target.Raise(Branch1Level2);
+      target.Raise(raiseWay, Branch1Level2);
 
       // --act
-      target.Raise(Branch2Level2);
+      target.Raise(raiseWay, Branch2Level2);
 
       // --assert
       actual.Should().Equal(Root, Branch1Level2, Branch1Level1, Branch2Level1, Branch2Level2);      
     }
 
-    [Test]
-    public void should_use_parent_transition()
-    {
-      var actual = new List<string>();
-
-      // --arrange
-      var builder = new Builder<string, string>(OnException);
-
-      builder
-        .DefineState(Initial)
-        .AddTransition(Branch1Level2, Branch1Level2);
-
-      builder
-        .DefineState(Root)
-        .AddTransition(Free1, Free1);
-
-      builder
-        .DefineState(Branch1Level1)
-        .AsSubstateOf(Root);
-
-      builder
-        .DefineState(Branch1Level2)
-        .AsSubstateOf(Branch1Level1)
-        .OnEnter(_ => actual.Add(Branch1Level2));
-
-      builder
-        .DefineState(Free1)
-        .OnEnter(_ => actual.Add(Free1));
-      
-      var target = builder.Build(Initial);
-      target.Raise(Branch1Level2);
-
-      // --act
-      target.Raise(Free1);
-
-      // --assert
-      actual.Should().Equal(Branch1Level2, Free1);      
-    }
-    
     private const string Branch1Level1 = nameof(Branch1Level1);
     private const string Branch1Level2 = nameof(Branch1Level2);
     private const string Branch1Level3 = nameof(Branch1Level3);

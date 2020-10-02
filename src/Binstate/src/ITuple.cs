@@ -1,4 +1,6 @@
-﻿namespace Binstate
+﻿using JetBrains.Annotations;
+
+namespace Binstate
 {
   /// <summary>
   /// Interface is used to make argument types invariant in order to pass arguments of compatible types
@@ -12,23 +14,40 @@
     /// <summary>
     /// Passed argument value
     /// </summary>
+    [CanBeNull]
     TArgument PassedArgument { get; }
     
     /// <summary>
     /// Relayed argument value
     /// </summary>
+    [CanBeNull]
     TRelay RelayedArgument{ get; }
   }
-  
+
+  /// <inheritdoc />
   internal class Tuple<TArgument, TRelay> : ITuple<TArgument, TRelay>
   {
-    public Tuple(TArgument passedArgument, TRelay relayedArgument)
+    public Tuple([CanBeNull] TArgument passedArgument, [CanBeNull] TRelay relayedArgument)
     {
       PassedArgument = passedArgument;
       RelayedArgument = relayedArgument;
     }
 
+    /// <inheritdoc />
     public TArgument PassedArgument { get; }
+    
+    /// <inheritdoc />
     public TRelay RelayedArgument { get; }
+  }
+
+  /// <summary>
+  /// Syntax sugar for creating <see cref="ITuple{TArgument,TRelay}"/> without specifying generic arguments
+  /// </summary>
+  public static class Pair
+  {
+    /// <summary>
+    /// Creates <see cref="ITuple{TArgument,TRelay}"/>
+    /// </summary>
+    public static ITuple<TArgument, TRelay> Of<TArgument, TRelay>(TArgument passedArgument, TRelay relayedArgument) => new Tuple<TArgument,TRelay>(passedArgument, relayedArgument);
   }
 }

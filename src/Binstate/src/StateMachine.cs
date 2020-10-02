@@ -95,16 +95,10 @@ namespace Binstate
 
     private void ActivateInitialState(State<TState, TEvent> initialState, Action<Exception> onException)
     {
-      if (initialState.EnterArgumentType != null)
-        throw new TransitionException("The enter action of the initial state must not require argument.");
-
       var enterAction = ActivateStateNotGuarded<Unit, Unit>(initialState, default);
-      try
-      {
+      try {
         enterAction();
-      }
-      catch (Exception exception)
-      {
+      } catch (Exception exception) {
         onException(exception);
       }
     }

@@ -11,8 +11,11 @@ namespace Instate.Tests
   public class MultiThreadingTest : StateMachineTestBase
   {
     [Test]
-    public void blocking_enter_should_be_stopped_by_changing_state()
+    public void eternal_async_enter_should_be_stopped_by_changing_state()
     {
+      const string enter = nameof(enter);
+      const string exit = nameof(exit);
+      
       // --arrange
       var actual = new List<string>();
       var entered = new ManualResetEvent(false);
@@ -21,24 +24,21 @@ namespace Instate.Tests
       {
         entered.Set();
         while (machine.InMyState) Thread.Sleep(100);
-        actual.Add(OnEnter);
+        actual.Add(enter);
       }
       
       var builder = new Builder<string, int>(OnException);
       
-      builder
-        .DefineState(Initial)
-        .AddTransition(Event1, State1);
+      builder.DefineState(Initial).AddTransition(Event1, State1);
 
-      builder
-        .DefineState(State1)
+      builder.DefineState(State1)
         .OnEnter(BlockingEnter)
-        .OnExit(() => actual.Add(OnExit))
-        .AddTransition(Terminate, Terminated);
+        .OnExit(() => actual.Add(exit))
+        .AddTransition(Event2, State2);
 
       builder
-        .DefineState(Terminated)
-        .OnEnter(_ => actual.Add(Terminated));
+        .DefineState(State2)
+        .OnEnter(_ => actual.Add(State2));
       
       var target = builder.Build(Initial);
 
@@ -46,14 +46,14 @@ namespace Instate.Tests
       entered.WaitOne(); // wait till OnEnter will block execution
       
       // --act
-      target.Raise(Terminate);
+      target.Raise(Event2);
 
       // -- assert
-      actual.Should().Equal(OnEnter, OnExit, Terminated);
+      actual.Should().Equal(enter, exit, State2);
     }
 
-    [Test, Timeout(5000)]
-    public void async_enter_should_not_block()
+    [TestCaseSource(nameof(RaiseWays)), Timeout(5000)]
+    public void async_enter_should_not_block(RaiseWay raiseWay)
     {
       // --arrange
       var entered = new ManualResetEvent(false);
@@ -61,33 +61,29 @@ namespace Instate.Tests
       async Task AsyncEnter(IStateMachine<int> stateMachine)
       {
         entered.Set();
-        while (stateMachine.InMyState) await Task.Delay(100);
+        while (stateMachine.InMyState) await Task.Delay(546);
       }
       
       var builder = new Builder<string, int>(OnException);
-      builder
-        .DefineState(Initial)
-        .AddTransition(Event1, State1);
+      builder.DefineState(Initial).AddTransition(Event1, State1);
 
       builder
         .DefineState(State1)
         .OnEnter(AsyncEnter)
-        .AddTransition(Terminate, Terminated);
+        .AddTransition(Event2, State2);
 
-      builder
-        .DefineState(Terminated);
+      builder.DefineState(State2);
       
       var target = builder.Build(Initial);
       
       // --act
-      target.Raise(Event1);
-      
+      target.Raise(raiseWay, Event1);
 
       // --assert
-      entered.WaitOne(TimeSpan.FromSeconds(5)).Should().BeTrue();
+      entered.WaitOne(TimeSpan.FromSeconds(4)).Should().BeTrue();
       
       // --cleanup
-      target.Raise(Terminate); // exit async method
+      target.Raise(Event2); // exit async method
     }
   }
 }

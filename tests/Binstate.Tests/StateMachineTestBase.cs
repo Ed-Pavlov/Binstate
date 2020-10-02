@@ -15,45 +15,34 @@ namespace Instate.Tests
     protected const string Root = "Root";
     protected const string Parent = "Parent";
     protected const string Child = "Child";
-    protected const string Terminated = "Terminated";
-    protected const int Terminate = 8932;
     
-    protected const string OnEnter = "OnEnter";
-    protected const string OnExit = "OnExit";
+    protected static void OnException(Exception exception) => Assert.Fail(exception.Message);
 
-    protected void OnException(Exception exception) => Assert.Fail(exception.Message);
+    public static IEnumerable<RaiseWay> RaiseWays() => new[] {RaiseWay.Raise, RaiseWay.RaiseAsync};
+  }
 
-    public delegate bool Raise<TState, TEvent>(StateMachine<TState, TEvent> stateMachine, TEvent @event);
-    public delegate bool RaiseArgument<TState, TEvent>(StateMachine<TState, TEvent> stateMachine, TEvent @event, int argument);
-    public delegate bool RelayingRaise<TState, TEvent>(StateMachine<TState, TEvent> stateMachine, TEvent @event);
-    public delegate bool RelayingRaiseArgument<TState, TEvent>(StateMachine<TState, TEvent> stateMachine, TEvent @event, int argument);
-    
-    protected static IEnumerable<TestCaseData> raise_and_raise_async_source()
-    {
-      // using blocking and Async.Wait in order test should not exit before raising an event is completely handled
-      yield return new TestCaseData(new Raise<string, int>((_, e) => _.Raise(e))).SetName("Raise");
-      yield return new TestCaseData(new Raise<string, int>((_, e) => _.RaiseAsync(e).Result)).SetName("RaiseAsync");
-    }
+  public enum RaiseWay
+  {
+    Raise,
+    RaiseAsync
+  }
+  
+  public static class Extension
+  {
+    public static bool Raise<TState, TEvent>(this IStateMachine<TState, TEvent> stateMachine, RaiseWay way, TEvent @event) => 
+      Call(way, () => stateMachine.Raise(@event), () => stateMachine.RaiseAsync(@event).Result);
 
-    protected static IEnumerable<TestCaseData> raise_and_raise_async_with_argument_source()
-    {
-      // using blocking and Async.Wait in order test should not exit before raising an event is completely handled
-      yield return new TestCaseData(new RaiseArgument<string, int>((_, e, arg) => _.Raise(e, arg))).SetName("Raise");
-      yield return new TestCaseData(new RaiseArgument<string, int>((_, e, arg) => _.RaiseAsync(e, arg).Result)).SetName("RaiseAsync");
-    }
+    public static bool Raise<TState, TEvent, TA>(this IStateMachine<TState, TEvent> stateMachine, RaiseWay way, TEvent @event, TA arg) => 
+      Call(way, () => stateMachine.Raise(@event, arg), () => stateMachine.RaiseAsync(@event, arg).Result);
 
-    protected static IEnumerable<TestCaseData> using_relay_raise_and_raise_async_source()
+    private static bool Call(RaiseWay way, Func<bool> syncAction, Func<bool> asyncAction)
     {
-      // using blocking and Async.Wait in order test should not exit before raising an event is completely handled
-      yield return new TestCaseData(new RelayingRaise<string, int>((_, e) => _.Relaying<int>().Raise(e))).SetName("RaisePropagate");
-      yield return new TestCaseData(new RelayingRaise<string, int>((_, e) => _.Relaying<int>().RaiseAsync(e).Result)).SetName("RaisePropagateAsync");
-    }
-    
-    protected static IEnumerable<TestCaseData> using_relay_raise_and_raise_async_with_argument_source()
-    {
-      // using blocking and Async.Wait in order test should not exit before raising an event is completely handled
-      yield return new TestCaseData(new RelayingRaiseArgument<string, int>((_, e, arg) => _.Relaying<int>().Raise(e, arg))).SetName("RaisePropagate");
-      yield return new TestCaseData(new RelayingRaiseArgument<string, int>((_, e, arg) => _.Relaying<int>().RaiseAsync(e, arg).Result)).SetName("RaisePropagateAsync");
+      return way switch
+      {
+        RaiseWay.Raise => syncAction(),
+        RaiseWay.RaiseAsync => asyncAction(),
+        _ => throw new InvalidOperationException()
+      };
     }
   }
 }

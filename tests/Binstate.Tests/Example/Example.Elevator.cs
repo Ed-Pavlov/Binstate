@@ -1,12 +1,10 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using Binstate;
 
-namespace Instate.Tests.example
+namespace Binstate.Tests
 {
   public partial class Example
   {
-    // uncompleted
     [SuppressMessage("ReSharper", "UnusedParameter.Local")]
     [SuppressMessage("ReSharper", "UnusedMember.Global")]
     public class Elevator

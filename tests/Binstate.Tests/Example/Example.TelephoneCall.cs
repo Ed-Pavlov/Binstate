@@ -1,8 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using Binstate;
 
-namespace Instate.Tests.example
+namespace Binstate.Tests
 {
   public partial class Example
   {

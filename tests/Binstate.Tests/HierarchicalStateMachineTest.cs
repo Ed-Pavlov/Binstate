@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Binstate;
 using FluentAssertions;
 using NUnit.Framework;
 
-namespace Instate.Tests
+namespace Binstate.Tests
 {
   public class HierarchicalStateMachineTest : StateMachineTestBase
   {

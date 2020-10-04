@@ -1,10 +1,9 @@
 ﻿using System;
 using System.IO;
-using Binstate;
 using FluentAssertions;
 using NUnit.Framework;
 
-namespace Instate.Tests
+namespace Binstate.Tests
 {
   public class ArgumentRelayingTest : StateMachineTestBase
   {

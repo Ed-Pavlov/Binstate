@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
-using Binstate;
 using NUnit.Framework;
 
-namespace Instate.Tests
+namespace Binstate.Tests
 {
   public abstract class StateMachineTestBase
   {

@@ -1,3 +1,4 @@
+using System;
 using System.Net;
 using System.Threading.Tasks;
 using Binstate;
@@ -5,7 +6,7 @@ using Binstate;
 
 #pragma warning disable 1998
 
-namespace Instate.Tests.example
+namespace Binstate.Tests
 {
   public partial class Example
   {

@@ -3,7 +3,6 @@
         <IsPackable>false</IsPackable>
         <LangVersion>8</LangVersion>
         <Nullable>disable</Nullable>
-        <RootNamespace>Instate.Tests</RootNamespace>
         <OutputType>Library</OutputType>
         <TargetFrameworks>net45;netcoreapp3.1</TargetFrameworks>
         <SignAssembly>true</SignAssembly>
@@ -13,6 +12,7 @@
 
     <ItemGroup>
         <PackageReference Include="FluentAssertions" Version="5.10.3" />
+        <PackageReference Include="JetBrains.dotMemoryUnit" Version="3.1.20200127.214830" />
         <PackageReference Include="Moq" Version="4.13.1" />
         <PackageReference Include="nunit" Version="3.12.0" />
         <PackageReference Include="NUnit3TestAdapter" Version="3.15.1" />

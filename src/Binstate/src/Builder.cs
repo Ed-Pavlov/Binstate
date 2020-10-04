@@ -52,6 +52,7 @@ namespace Binstate
     /// Validates consistency and builds the state machine using provided configuration. 
     /// </summary>
     /// <param name="initialStateId">The initial state of the state machine. The entering action of the initial state must not require argument.</param>
+    /// <param name="initialStateArgument">If initial state requires argument use this overload to pass it</param>
     /// <param name="enableLooseRelaying">Enables non strict relaying model of the argument attached ot the state. If relayed argument type
     /// is <see cref="ITuple{TPassed,TRelay}"/> all 'enter' actions receiving arguments of type  <see cref="ITuple{TPassed,TRelay}"/>, TArgument, and TRelay
     /// will receive corresponding argument.
@@ -59,7 +60,7 @@ namespace Binstate
     /// of state requires an argument but some not.
     /// </param>
     /// <exception cref="InvalidOperationException">Throws if there are any inconsistencies in the provided configuration.</exception>
-    public StateMachine<TState, TEvent> Build([NotNull] TState initialStateId, bool enableLooseRelaying = false)
+    public StateMachine<TState, TEvent> Build<T>([NotNull] TState initialStateId, T initialStateArgument, bool enableLooseRelaying = false)
     {
       if (initialStateId.IsNull()) throw new ArgumentNullException(nameof(initialStateId));
 
@@ -83,9 +84,25 @@ namespace Binstate
       ValidateTransitions(states);
       if(!enableLooseRelaying)
         ValidateSubstateEnterArgument(states);
-      
-      return new StateMachine<TState, TEvent>(states[initialStateId], states, _onException);
+
+      var stateMachine = new StateMachine<TState, TEvent>(states, _onException);
+      stateMachine.SetInitialState(initialStateId, initialStateArgument);
+      return stateMachine;
     }
+    
+    /// <summary>
+    /// Validates consistency and builds the state machine using provided configuration. 
+    /// </summary>
+    /// <param name="initialStateId">The initial state of the state machine. The entering action of the initial state must not require argument.</param>
+    /// <param name="enableLooseRelaying">Enables non strict relaying model of the argument attached ot the state. If relayed argument type
+    /// is <see cref="ITuple{TPassed,TRelay}"/> all 'enter' actions receiving arguments of type  <see cref="ITuple{TPassed,TRelay}"/>, TArgument, and TRelay
+    /// will receive corresponding argument.
+    /// If not enabled - all 'enter' action in child/parent relation should have the same parameter type of declared 'enter' action. Also it's possible that some
+    /// of state requires an argument but some not.
+    /// </param>
+    /// <exception cref="InvalidOperationException">Throws if there are any inconsistencies in the provided configuration.</exception>
+    public StateMachine<TState, TEvent> Build([NotNull] TState initialStateId, bool enableLooseRelaying = false) => 
+      Build<Unit>(initialStateId, default, enableLooseRelaying);
 
     private State<TState, TEvent> CreateStateAndAddToMap([NotNull] Config<TState, TEvent>.State stateConfig, Dictionary<TState, State<TState, TEvent>> states)
     {

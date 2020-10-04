@@ -24,13 +24,21 @@ namespace Binstate
     private readonly AutoResetEvent _lock = new AutoResetEvent(true);
     private volatile State<TState, TEvent> _activeState;
 
-    internal StateMachine(State<TState, TEvent> initialState, Dictionary<TState, State<TState, TEvent>> states, Action<Exception> onException)
+    internal StateMachine(Dictionary<TState, State<TState, TEvent>> states, Action<Exception> onException)
     {
       _states = states;
       _onException = onException;
-
-      _activeState = initialState;
-      ActivateInitialState(initialState, onException);
+    }
+    
+    internal void SetInitialState<T>(TState initialStateId, T initialStateArgument)
+    {
+      _activeState = GetStateById(initialStateId);
+      var enterAction = ActivateStateNotGuarded(_activeState, new MixOf<T, Unit>(initialStateArgument.ToMaybe(), Maybe<Unit>.Nothing));
+      try {
+        enterAction();
+      } catch (Exception exception) {
+        _onException(exception);
+      }
     }
 
     /// <inheritdoc />
@@ -91,16 +99,6 @@ namespace Binstate
       return data == null
         ? Task.FromResult(false)
         : Task.Run(() => PerformTransition(data.Value));
-    }
-
-    private void ActivateInitialState(State<TState, TEvent> initialState, Action<Exception> onException)
-    {
-      var enterAction = ActivateStateNotGuarded<Unit, Unit>(initialState, default);
-      try {
-        enterAction();
-      } catch (Exception exception) {
-        onException(exception);
-      }
     }
 
     private State<TState, TEvent> GetStateById([NotNull] TState state) =>

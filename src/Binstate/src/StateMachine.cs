@@ -44,7 +44,7 @@ namespace Binstate
     /// <inheritdoc />
     public bool Raise([NotNull] TEvent @event)
     {
-      if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+      if (@event == null) throw new ArgumentNullException(nameof(@event));
 
       return PerformTransitionSync<Unit, Unit>(@event, null, Maybe<Unit>.Nothing);
     }
@@ -52,7 +52,7 @@ namespace Binstate
     /// <inheritdoc />
     public bool Raise<T>([NotNull] TEvent @event, [CanBeNull] T argument)
     {
-      if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+      if (@event == null) throw new ArgumentNullException(nameof(@event));
 
       return PerformTransitionSync(@event, argument, Maybe<Unit>.Nothing);
     }
@@ -60,7 +60,7 @@ namespace Binstate
     /// <inheritdoc />
     public Task<bool> RaiseAsync([NotNull] TEvent @event)
     {
-      if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+      if (@event == null) throw new ArgumentNullException(nameof(@event));
 
       return PerformTransitionAsync<Unit, Unit>(@event, default, Maybe<Unit>.Nothing);
     }
@@ -68,7 +68,7 @@ namespace Binstate
     /// <inheritdoc />
     public Task<bool> RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument)
     {
-      if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+      if (@event == null) throw new ArgumentNullException(nameof(@event));
 
       return PerformTransitionAsync(@event, argument, Maybe<Unit>.Nothing);
     }
@@ -138,7 +138,6 @@ namespace Binstate
     /// Validates that all 'enter' actions match (not)passed argument. Throws the exception if not, because it is not runtime problem, but the problem
     /// of configuration.
     /// </summary>
-    [SuppressMessage("ReSharper", "PossibleMultipleEnumeration")]
     private static void ValidateStates<TA, TRelay>(
       State<TState, TEvent> activeState,
       TEvent @event,

@@ -27,7 +27,7 @@ namespace Binstate
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
     public Config<TState, TEvent>.State DefineState([NotNull] TState stateId)
     {
-      if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
+      if (stateId == null) throw new ArgumentNullException(nameof(stateId));
 
       var stateConfig = new Config<TState, TEvent>.State(stateId);
       _stateConfigs.Add(stateId, stateConfig);
@@ -41,7 +41,7 @@ namespace Binstate
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
     public Config<TState, TEvent>.State GetOrDefineState([NotNull] TState stateId)
     {
-      if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
+      if (stateId == null) throw new ArgumentNullException(nameof(stateId));
 
       if(!_stateConfigs.TryGetValue(stateId, out var stateConfig)) 
         stateConfig = DefineState(stateId);
@@ -62,7 +62,7 @@ namespace Binstate
     /// <exception cref="InvalidOperationException">Throws if there are any inconsistencies in the provided configuration.</exception>
     public StateMachine<TState, TEvent> Build<T>([NotNull] TState initialStateId, T initialStateArgument, bool enableLooseRelaying = false)
     {
-      if (initialStateId.IsNull()) throw new ArgumentNullException(nameof(initialStateId));
+      if (initialStateId == null) throw new ArgumentNullException(nameof(initialStateId));
 
       if (!_stateConfigs.ContainsKey(initialStateId))
         throw new ArgumentException($"No state '{initialStateId}' is defined");
@@ -110,8 +110,8 @@ namespace Binstate
       {
         state = CreateState(
           stateConfig,
-          stateConfig.ParentStateId.IsNotNull()
-            ? CreateStateAndAddToMap(_stateConfigs[stateConfig.ParentStateId], states) // recursive call to create the parent state;
+          stateConfig.ParentStateId.HasValue
+            ? CreateStateAndAddToMap(_stateConfigs[stateConfig.ParentStateId.Value], states) // recursive call to create the parent state;
             : null);
         states.Add(state.Id, state);
       }

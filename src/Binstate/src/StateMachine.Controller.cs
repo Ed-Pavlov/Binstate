@@ -31,7 +31,7 @@ namespace Binstate
       /// </summary>
       private bool RaiseAsyncInternal<T, TRelay>([NotNull] TEvent @event, [CanBeNull] T argument, Maybe<TRelay> backupValue)
       {
-        if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
+        if (@event == null) throw new ArgumentNullException(nameof(@event));
 
         var data = _owner.PrepareTransition(@event, argument, backupValue);
         if (data == null) return false;

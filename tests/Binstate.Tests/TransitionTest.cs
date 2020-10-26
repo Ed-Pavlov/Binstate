@@ -70,9 +70,8 @@ namespace Binstate.Tests
     }
 
     [TestCaseSource(nameof(RaiseWays))]
-    public void should_transit_via_dynamic_transition(RaiseWay raiseWay)
+    public void should_transit_using_dynamic_transition(RaiseWay raiseWay)
     {
-      
       var actual = new List<string>();
       
       // --arrange
@@ -107,6 +106,102 @@ namespace Binstate.Tests
     }
     
     [TestCaseSource(nameof(RaiseWays))]
+    public void should_transit_using_dynamic_transition_using_value_type_default(RaiseWay raiseWay)
+    {
+      const int initialStateId = 1;
+      const int stateId1 = 0; // default value
+      const int stateId2 = 38;
+
+      var first = true;
+      bool DynamicTransition(out int state)
+      {
+        state = first ? stateId1 : stateId2;
+        first = false;
+        return true;
+      }
+
+      
+      var actual = new List<int>();
+      
+      // --arrange
+      var builder = new Builder<int, int>(OnException);
+     
+      builder
+        .DefineState(initialStateId)
+        .AddTransition(Event1, DynamicTransition);
+      
+      builder
+        .DefineState(stateId1).AsSubstateOf(initialStateId)
+        .OnEnter(_ => actual.Add(stateId1));
+      
+      builder
+        .DefineState(stateId2)
+        .OnEnter(_ => actual.Add(stateId2));
+
+      var target = builder.Build(initialStateId);
+      
+      // --act
+      target.Raise(raiseWay, Event1);
+      target.Raise(raiseWay, Event1);
+      
+      // --assert
+      actual.Should().BeEquivalentTo(stateId1, stateId2);
+    }
+    
+    [TestCaseSource(nameof(RaiseWays))]
+    public void raise_should_return_false_if_dynamic_transition_returns_false_value_type(RaiseWay raiseWay)
+    {
+      const int initialStateId = 1;
+      const int stateId = 2;
+      
+      static bool DynamicTransition(out int state)
+      {
+        state = stateId;
+        return false;
+      }
+      
+      // --arrange
+      var builder = new Builder<int, int>(OnException);
+
+      builder.DefineState(initialStateId)
+        .AddTransition(Event1, DynamicTransition);
+      builder.DefineState(stateId).OnEnter(() => Assert.Fail("No transition should be performed"));
+
+      var target = builder.Build(initialStateId);
+
+      // --act
+      var actual = target.Raise(raiseWay, Event1);
+      
+      // --assert
+      actual.Should().BeFalse();
+    }
+    
+    [TestCaseSource(nameof(RaiseWays))]
+    public void raise_should_return_false_if_dynamic_transition_returns_false_reference_type(RaiseWay raiseWay)
+    {
+      // --arrange
+      var builder = new Builder<string, int>(OnException);
+
+      static bool DynamicTransition(out string stateId)
+      {
+        stateId = State1;
+        return false;
+      }
+
+      builder.DefineState(Initial)
+        .AddTransition(Event1, DynamicTransition);
+      builder.DefineState(State1).OnEnter(() => Assert.Fail("No transition should be performed"));
+
+      var target = builder.Build(Initial);
+
+      // --act
+      var actual = target.Raise(raiseWay, Event1);
+      
+      // --assert
+      actual.Should().BeFalse();
+    }
+    
+    [TestCaseSource(nameof(RaiseWays))]
     public void raise_should_return_false_if_dynamic_transition_returns_null(RaiseWay raiseWay)
     {
       // --arrange
@@ -123,7 +218,29 @@ namespace Binstate.Tests
       // --assert
       actual.Should().BeFalse();
     }
+    
+    [TestCaseSource(nameof(RaiseWays))]
+    public void raise_should_return_false_if_dynamic_transition_returns_default(RaiseWay raiseWay)
+    {
+      const int initialStateId = 1;
+      const int stateId = 2;
+      
+      // --arrange
+      var builder = new Builder<int, int>(OnException);
+      builder.DefineState(initialStateId)
+        .AddTransition(Event1, () => default);
+      
+      builder.DefineState(stateId).OnEnter(() => Assert.Fail("No transition should be performed"));
 
+      var target = builder.Build(initialStateId);
+
+      // --act
+      var actual = target.Raise(raiseWay, Event1);
+      
+      // --assert
+      actual.Should().BeFalse();
+    }
+   
     [Test]
     public void controller_should_return_false_if_dynamic_transition_returns_null()
     {
@@ -138,7 +255,31 @@ namespace Binstate.Tests
       static void OnEnterInitialState(IStateMachine<string> stateMachine)
       {
         // --act
-        var actual = stateMachine.RaiseAsync("WrongEvent");
+        var actual = stateMachine.RaiseAsync(State1);
+        
+        // --assert
+        actual.Should().BeFalse();
+      }
+    }
+    
+    [Test]
+    public void controller_should_return_false_if_dynamic_transition_returns_default()
+    {
+      const int initialStateId = 1;
+      const int stateId = 2;
+      
+      // --arrange
+      var builder = new Builder<int, int>(OnException);
+      builder.DefineState(initialStateId).OnEnter(OnEnterInitialState)
+        .AddTransition(Event1, () => default);
+      builder.DefineState(stateId).OnEnter(() => Assert.Fail("No transition should be performed"));
+      
+      builder.Build(initialStateId);
+
+      static void OnEnterInitialState(IStateMachine<int> stateMachine)
+      {
+        // --act
+        var actual = stateMachine.RaiseAsync(Event1);
         
         // --assert
         actual.Should().BeFalse();

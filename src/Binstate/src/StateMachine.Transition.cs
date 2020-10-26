@@ -109,10 +109,13 @@ namespace Binstate
       {
         IState<TState, TEvent, TArgument> passedArgumentState => () => passedArgumentState.EnterSafe(controller, argument.PassedArgument.Value, _onException),
         IState<TState, TEvent, TRelay> relayedArgumentState => () => relayedArgumentState.EnterSafe(controller, argument.RelayedArgument.Value, _onException),
-        IState<TState, TEvent, ITuple<TArgument, TRelay>> bothArgumentsState => () => bothArgumentsState.EnterSafe(controller, argument.ToTupleUnsafe(), _onException),
+        IState<TState, TEvent, ITuple<TArgument, TRelay>> bothArgumentsState => () => bothArgumentsState.EnterSafe(controller, CreateTuple(argument), _onException),
         _ => () => state.EnterSafe(controller, _onException) // no arguments state
       };
     }
+
+    private static Tuple<TArgument, TRelay> CreateTuple<TArgument, TRelay>(MixOf<TArgument, TRelay> mixOf) =>
+      new Tuple<TArgument, TRelay>(mixOf.PassedArgument.Value, mixOf.RelayedArgument.Value);
 
     private static MixOf<TArgument, TRelay> PrepareRealArgument<TArgument, TRelay>(TArgument argument, State<TState, TEvent> sourceState, Maybe<TRelay> backupRelayArgument)
     {

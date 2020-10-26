@@ -1,3 +1,6 @@
+using System;
+using JetBrains.Annotations;
+
 namespace Binstate
 {
   // ReSharper disable once UnusedTypeParameter
@@ -8,7 +11,7 @@ namespace Binstate
     /// </summary>
     public class State : Enter
     {
-      internal TState ParentStateId; 
+      internal Maybe<TState> ParentStateId = Maybe<TState>.Nothing; 
       
       internal State(TState stateId) : base(stateId)
       { }
@@ -16,9 +19,11 @@ namespace Binstate
       /// <summary>
       /// Defines the currently configured state as a substate of a composite state 
       /// </summary>
-      public Enter AsSubstateOf(TState parentStateId)
+      public Enter AsSubstateOf([NotNull] TState parentStateId)
       {
-        ParentStateId = parentStateId;
+        if (parentStateId == null) throw new ArgumentNullException(nameof(parentStateId));
+        
+        ParentStateId = parentStateId.ToMaybe();
         return this;
       }
     }

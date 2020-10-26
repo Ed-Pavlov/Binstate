@@ -5,14 +5,13 @@ namespace Binstate
 {
   internal class Transition<TState, TEvent>
   {
-    private readonly Func<TState> _getTargetStateId;
     [CanBeNull]
     private readonly Action _action;
 
-    public Transition(TEvent @event, Func<TState> getTargetStateId, bool isStatic, [CanBeNull] Action action)
+    public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, [CanBeNull] Action action)
     {
       Event = @event;
-      _getTargetStateId = getTargetStateId;
+      GetTargetStateId = getTargetStateId;
       IsStatic = isStatic;
       _action = action;
     }
@@ -24,12 +23,8 @@ namespace Binstate
     
     public TEvent Event { get; }
 
-    public bool GetTargetStateId(out TState state)
-    {
-      state = _getTargetStateId();
-      return state.IsNotNull();
-    }
-
+    public readonly GetState<TState> GetTargetStateId;
+    
     public void InvokeActionSafe(Action<Exception> onException)
     {
       try {
@@ -40,6 +35,15 @@ namespace Binstate
       }
     }
 
-    public override string ToString() => $"[{Event} -> {(IsStatic ? _getTargetStateId().ToString() : "dynamic")}]";
+    public override string ToString()
+    {
+      var stateName = "dynamic";
+      if (IsStatic)
+      {
+        GetTargetStateId(out var state);
+        stateName = state.ToString();
+      }
+      return $"[{Event} -> {stateName}]";
+    }
   }
 }

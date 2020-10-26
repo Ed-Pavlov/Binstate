@@ -32,7 +32,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter([NotNull] Action enterAction)
       {
-        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
         return OnEnter(_ => enterAction());
@@ -45,7 +45,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter([NotNull] Action<IStateMachine<TEvent>> enterAction)
       {
-        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
         EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(enterAction);
@@ -60,7 +60,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter([NotNull] Func<Task> enterAction)
       {
-        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
 
         EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(_ => enterAction());
         return this;
@@ -73,7 +73,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter([NotNull] Func<IStateMachine<TEvent>, Task> enterAction)
       {
-        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
 
         EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(enterAction);
         return this;
@@ -90,7 +90,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument>([NotNull] Action<TArgument> enterAction)
       {
-        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
         return OnEnter<TArgument>((_, argument) => enterAction(argument));
@@ -106,7 +106,7 @@ namespace Binstate
 #pragma warning restore 1574
       public Exit OnEnter<TArgument>([NotNull] Action<IStateMachine<TEvent>, TArgument> enterAction)
       {
-        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
         EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(enterAction);
@@ -122,7 +122,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument>([NotNull] Func<TArgument, Task> enterAction)
       {
-        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
 
         EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create<TArgument>((_, arg) => enterAction(arg));
         _stateFactory = new StateFactory<TArgument>();
@@ -136,7 +136,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument>([NotNull] Func<IStateMachine<TEvent>, TArgument, Task> enterAction)
       {
-        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
 
         EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(enterAction);
         _stateFactory = new StateFactory<TArgument>();
@@ -154,7 +154,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument, TRelay>([NotNull] Action<TArgument, TRelay> enterAction)
       {
-        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
         return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple.PassedArgument, tuple.RelayedArgument));
       }
@@ -171,7 +171,7 @@ namespace Binstate
 #pragma warning restore 1574
       public Exit OnEnter<TArgument, TRelay>([NotNull] Action<IStateMachine<TEvent>, TArgument, TRelay> enterAction)
       {
-        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
         return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple.PassedArgument, tuple.RelayedArgument));
       }
@@ -186,7 +186,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument, TRelay>([NotNull] Func<TArgument, TRelay, Task> enterAction)
       {
-        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
         return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple.PassedArgument, tuple.RelayedArgument));
       }
 
@@ -199,7 +199,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument, TRelay>([NotNull] Func<IStateMachine<TEvent>, TArgument, TRelay, Task> enterAction)
       {
-        if (enterAction.IsNull()) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
         return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple.PassedArgument, tuple.RelayedArgument));
       }
       

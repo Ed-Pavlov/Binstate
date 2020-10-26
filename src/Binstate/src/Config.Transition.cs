@@ -28,31 +28,65 @@ namespace Binstate
       /// </summary>
       public Transitions AddTransition([NotNull] TEvent @event, [NotNull] TState stateId, Action action = null)
       {
-        if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-        if (stateId.IsNull()) throw new ArgumentNullException(nameof(stateId));
+        if (@event == null) throw new ArgumentNullException(nameof(@event));
+        if (stateId == null) throw new ArgumentNullException(nameof(stateId));
 
-        return AddTransition(@event, () => stateId, true, action);
+        bool GetStateWrapper(out TState state)
+        {
+          state = stateId;
+          return true;
+        }
+        
+        return AddTransition(@event, GetStateWrapper, true, action);
+      }
+
+      /// <summary>
+      /// Defines transition from the currently configured state to the state calculated dynamically depending on other application state.
+      /// </summary>
+      /// <param name="event"></param>
+      /// <param name="getState">If getState returns false no transition performed.</param>
+      /// <remarks>
+      /// Use this overload if you use a value type (e.g. enum) as a <typeparamref name="TState"/> and the default value of the value type as a valid State id.
+      /// Otherwise consider using <see cref="AddTransition(TEvent,Func{TState})"/> method as more simple.
+      /// </remarks>
+      public Transitions AddTransition([NotNull] TEvent @event, [NotNull] GetState<TState> getState)
+      {
+        if (@event == null) throw new ArgumentNullException(nameof(@event));
+        if (getState == null) throw new ArgumentNullException(nameof(getState));
+
+        return AddTransition(@event, getState, false, null);
       }
 
       /// <summary>
       /// Defines transition from the currently configured state to the state calculated dynamically depending on other application state. 
       /// </summary>
       /// <param name="event"></param>
-      /// <param name="getState">If getState returns null no transition executed</param>
+      /// <param name="getState">If getState returns 'default' value of the type used as <typeparamref name="TState"/> no transition performed.</param>
+      /// <remarks>
+      /// Use this overload if you use a reference type (class) as a <typeparamref name="TState"/> or the default value of the value type doesn't represent a valid State id.
+      /// if you use a value type (e.g. enum) as a <typeparamref name="TState"/> and the default value of the value type as a valid State id you must use
+      /// <see cref="AddTransition(TEvent,GetState{TState})"/> method.
+      /// </remarks>
       public Transitions AddTransition([NotNull] TEvent @event, [NotNull] Func<TState> getState)
       {
-        if (@event.IsNull()) throw new ArgumentNullException(nameof(@event));
-        if (getState.IsNull()) throw new ArgumentNullException(nameof(getState));
-        
-        return AddTransition(@event, getState, false, null);
+        if (@event == null) throw new ArgumentNullException(nameof(@event));
+        if (getState == null) throw new ArgumentNullException(nameof(getState));
+
+        bool GetStateWrapper(out TState state)
+        {
+          state = getState();
+          return !EqualityComparer<TState>.Default.Equals(state, default); // generics in C# sucks
+        }
+
+        return AddTransition(@event, GetStateWrapper, false, null);
       }
 
       /// <summary>
       /// Defines transition from the state to itself when <param name="event"> is raised. Exit and enter actions are called in case of such transition.</param>
       /// </summary>
-      public void AllowReentrancy(TEvent @event) => AddTransition(@event, () => StateId, true, null);
+      public void AllowReentrancy(TEvent @event) => AddTransition(@event, StateId);
       
-      private Transitions AddTransition(TEvent @event, Func<TState> getState, bool isStatic, [CanBeNull] Action action)
+      private Transitions AddTransition(TEvent @event, GetState<TState> getState, bool isStatic, [CanBeNull] Action action)
       {
         TransitionList.Add(new Transition<TState, TEvent>(@event, getState, isStatic, action));
         return this;
@@ -72,6 +106,5 @@ namespace Binstate
         return transitions;
       }
     }
-    
   }
 }

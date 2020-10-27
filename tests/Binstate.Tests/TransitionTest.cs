@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using FluentAssertions;
 using NUnit.Framework;
 
@@ -311,6 +312,44 @@ namespace Binstate.Tests
 
       // --assert
       actual.Should().Equal(Parent, State1);      
+    }
+
+    [TestCaseSource(nameof(RaiseWays))]
+    public void should_catch_user_action_exception_and_report(RaiseWay raiseWay)
+    {
+      Exception reportedException = null;
+      
+      // --arrange
+      var builder = new Builder<string, string>(exc => reportedException = exc);
+      builder.DefineState(Initial)
+        .AddTransition(State1, State1, () => throw new TestException());
+
+      builder.DefineState(State1);
+
+      var target = builder.Build(Initial);
+
+      // --act
+      var actual = target.Raise(raiseWay, State1);
+
+      // --assert
+      actual.Should().BeTrue();
+      reportedException.Should().BeOfType<TestException>();
+    }
+    
+    [Test]
+    public void should_throw_exception_if_transitions_to_different_states_by_one_event()
+    {
+      var builder = new Builder<string, int>(OnException);
+
+      var config = builder
+        .DefineState(Initial)
+        .AddTransition(Event1, State1);
+
+      // --act
+      Action target = () => config.AddTransition(Event1, State2);;
+      
+      // --assert
+      target.Should().ThrowExactly<ArgumentException>().WithMessage($"An item with the same key has already been added*");
     }
   }
 }

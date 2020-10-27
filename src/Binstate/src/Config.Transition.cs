@@ -21,7 +21,7 @@ namespace Binstate
       /// </summary>
       protected Transitions(TState stateId) => StateId = stateId;
 
-      internal readonly List<Transition<TState, TEvent>> TransitionList = new List<Transition<TState, TEvent>>();
+      internal readonly Dictionary<TEvent, Transition<TState, TEvent>> TransitionList = new Dictionary<TEvent, Transition<TState, TEvent>>();
 
       /// <summary>
       /// Defines transition from the currently configured state to the <paramref name="stateId"> specified state</paramref> when <paramref name="event"> event is raised</paramref> 
@@ -40,6 +40,7 @@ namespace Binstate
         return AddTransition(@event, GetStateWrapper, true, action);
       }
 
+#pragma warning disable 1574,1584,1581,1580
       /// <summary>
       /// Defines transition from the currently configured state to the state calculated dynamically depending on other application state.
       /// </summary>
@@ -49,6 +50,7 @@ namespace Binstate
       /// Use this overload if you use a value type (e.g. enum) as a <typeparamref name="TState"/> and the default value of the value type as a valid State id.
       /// Otherwise consider using <see cref="AddTransition(TEvent,Func{TState})"/> method as more simple.
       /// </remarks>
+#pragma warning restore 1574,1584,1581,1580
       public Transitions AddTransition([NotNull] TEvent @event, [NotNull] GetState<TState> getState)
       {
         if (@event == null) throw new ArgumentNullException(nameof(@event));
@@ -57,6 +59,7 @@ namespace Binstate
         return AddTransition(@event, getState, false, null);
       }
 
+#pragma warning disable 1574,1584,1581,1580      
       /// <summary>
       /// Defines transition from the currently configured state to the state calculated dynamically depending on other application state. 
       /// </summary>
@@ -67,6 +70,7 @@ namespace Binstate
       /// if you use a value type (e.g. enum) as a <typeparamref name="TState"/> and the default value of the value type as a valid State id you must use
       /// <see cref="AddTransition(TEvent,GetState{TState})"/> method.
       /// </remarks>
+#pragma warning restore 1574,1584,1581,1580
       public Transitions AddTransition([NotNull] TEvent @event, [NotNull] Func<TState> getState)
       {
         if (@event == null) throw new ArgumentNullException(nameof(@event));
@@ -88,22 +92,8 @@ namespace Binstate
       
       private Transitions AddTransition(TEvent @event, GetState<TState> getState, bool isStatic, [CanBeNull] Action action)
       {
-        TransitionList.Add(new Transition<TState, TEvent>(@event, getState, isStatic, action));
+        TransitionList.Add(@event, new Transition<TState, TEvent>(@event, getState, isStatic, action));
         return this;
-      }
-      
-      internal Dictionary<TEvent, Transition<TState, TEvent>> CreateTransitions()
-      {
-        var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();
-        foreach (var transition in TransitionList)
-        {
-          if (transitions.ContainsKey(transition.Event))
-            throw new InvalidOperationException($"Duplicated event '{transition.Event}' in state '{StateId}'");
-
-          transitions.Add(transition.Event, transition);
-        }
-
-        return transitions;
       }
     }
   }

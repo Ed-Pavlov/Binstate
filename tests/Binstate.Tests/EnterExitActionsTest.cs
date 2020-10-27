@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Binstate.Tests
 {
-  public class EnterActionTest : StateMachineTestBase
+  public class EnterExitActionsTest : StateMachineTestBase
   {
     [Test]
     public void should_call_enter_of_initial_state()
@@ -23,6 +23,25 @@ namespace Binstate.Tests
       
       // --assert
       entered.Should().BeTrue();
+    }
+    
+    [Test]
+    public void should_call_enter_of_initial_state_with_argument()
+    {
+      const string expected = "expectedValue";
+      var actual = expected + "bad";
+      
+      // --arrange
+      var builder = new Builder<string, int>(OnException);
+
+      builder.DefineState(Initial)
+        .OnEnter<string>(arg => actual = arg).AddTransition(Event1, () => null);
+      
+      // --act
+      builder.Build(Initial, expected);
+      
+      // --assert
+      actual.Should().Be(expected);
     }
     
     [TestCaseSource(nameof(RaiseWays))]
@@ -46,49 +65,6 @@ namespace Binstate.Tests
       
       // --assert
       actual.Should().BeEquivalentTo(State1);
-    }
-
-    [Test]
-    public void should_not_accept_async_void_enter_action()
-    {
-      // --arrange
-      var builder = new Builder<string, int>(OnException);
-      var state = builder.DefineState(State1);
-      
-      // --act
-      Action action = () => state.OnEnter(AsyncVoidMethod);
-      
-      // --assert
-      action.Should().ThrowExactly<ArgumentException>().WithMessage("'async void' methods are not supported, use Task return type for async method");
-    }
-
-    [Test]
-    public void should_not_accept_async_void_simple_enter_action()
-    {
-      // --arrange
-      var builder = new Builder<string, int>(OnException);
-      var state = builder.DefineState(State1);
-      
-      // --act
-      Action action = () => state.OnEnter(SimpleAsyncVoidMethod);
-      
-      // --assert
-      action.Should().ThrowExactly<ArgumentException>().WithMessage("'async void' methods are not supported, use Task return type for async method");
-    }
-
-    [Test]
-    public void should_throw_exception_if_initial_state_enter_requires_argument()
-    {
-      // --arrange
-      var builder = new Builder<string, int>(OnException);
-
-      builder.DefineState(Initial).OnEnter<int>(_ => throw new InvalidOperationException()).AddTransition(Event1, () => null);
-      
-      // --act
-      Action target = () => builder.Build(Initial);
-      
-      // --assert
-      target.Should().ThrowExactly<TransitionException>().WithMessage("The enter action of the initial state must not require argument.");
     }
 
     [TestCaseSource(nameof(RaiseWays))]
@@ -159,15 +135,5 @@ namespace Binstate.Tests
       // --assert
       actual.Should().BeEquivalentTo(enter, exit, enter);
     }
-    
-#pragma warning disable CS1998
-    private static async void AsyncVoidMethod(IStateMachine<int> _)
-    {
-    }
-
-    private static async void SimpleAsyncVoidMethod()
-    {
-    }
-#pragma warning restore
   }
 }

@@ -21,13 +21,13 @@ namespace Binstate
     private class NoArgumentStateFactory : IStateFactory
     {
       public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent> parentState) => 
-        new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterActionInvoker, null, stateConfig.ExitAction, stateConfig.CreateTransitions(), parentState);
+        new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterActionInvoker, null, stateConfig.ExitAction, stateConfig.TransitionList, parentState);
     }
 
     private class StateFactory<TArgument> : IStateFactory
     {
       public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent> parentState) => 
-        new State<TState, TEvent, TArgument>(stateConfig.StateId, stateConfig.EnterActionInvoker, stateConfig.ExitAction, stateConfig.CreateTransitions(), parentState);
+        new State<TState, TEvent, TArgument>(stateConfig.StateId, stateConfig.EnterActionInvoker, stateConfig.ExitAction, stateConfig.TransitionList, parentState);
     }
   }
 }

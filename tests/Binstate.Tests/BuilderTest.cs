@@ -39,50 +39,33 @@ namespace Binstate.Tests
     }
 
     [Test]
-    public void define_state_should_throw_exception_if_already_defined()
+    public void should_throw_exception_if_initial_state_does_not_require_argument_but_argument_is_specified()
     {
       // --arrange
       var builder = new Builder<string, int>(OnException);
 
-      builder.DefineState(Initial);
+      builder.DefineState(Initial).AllowReentrancy(Event1);
       
       // --act
-      Action target = () => builder.DefineState(Initial);
-
+      Action target = () => builder.Build(Initial, "argument");
+      
       // --assert
-      target.Should().ThrowExactly<ArgumentException>();
+      target.Should().ThrowExactly<InvalidOperationException>().WithMessage("The enter action of the initial state doesn't require argument, but argument is provided.");
     }
     
     [Test]
-    public void get_or_define_state_should_return_existent_state_if_already_defined()
+    public void should_throw_exception_if_initial_state_requires_argument_but_no_argument_is_specified()
     {
       // --arrange
       var builder = new Builder<string, int>(OnException);
 
-      var expected = builder.DefineState(Initial);
+      builder.DefineState(Initial).OnEnter<string>(_ => {}).AllowReentrancy(Event1);
       
-      // --act
-      var actual = builder.GetOrDefineState(Initial);
-      
-      // --assert
-      actual.Should().BeSameAs(expected);
-    }
-    
-    [Test]
-    public void should_throw_exception_if_transitions_to_different_states_by_one_event()
-    {
-      var builder = new Builder<string, int>(OnException);
-
-      builder
-        .DefineState(Initial)
-        .AddTransition(Event1, State1)
-        .AddTransition(Event1, State2);
-
       // --act
       Action target = () => builder.Build(Initial);
       
       // --assert
-      target.Should().ThrowExactly<InvalidOperationException>().WithMessage("Duplicated event *");
+      target.Should().ThrowExactly<InvalidOperationException>().WithMessage("The enter action of the initial state requires argument, but no argument is provided.");
     }
     
     [Test]
@@ -148,6 +131,21 @@ namespace Binstate.Tests
 
       // --assert
       target.Should().NotBeNull();
+    }
+
+    [Test]
+    public void should_throw_exception_if_transition_references_not_defined_state()
+    {
+      // --arrange
+      var builder = new Builder<string, int>(OnException);
+
+      builder.DefineState(Initial).AddTransition(Event1, Child);
+      
+      // --act
+      Action target = () => builder.Build(Initial);
+      
+      // --assert
+      target.Should().ThrowExactly<InvalidOperationException>($"The transition '{Event1}' from the state '{Initial}' references not defined state '{Child}'");
     }
   }
 }

@@ -51,7 +51,7 @@ namespace Binstate
     /// <summary>
     /// Validates consistency and builds the state machine using provided configuration. 
     /// </summary>
-    /// <param name="initialStateId">The initial state of the state machine. The entering action of the initial state must not require argument.</param>
+    /// <param name="initialStateId">The initial state of the state machine.</param>
     /// <param name="initialStateArgument">If initial state requires argument use this overload to pass it</param>
     /// <param name="enableLooseRelaying">Enables non strict relaying model of the argument attached ot the state. If relayed argument type
     /// is <see cref="ITuple{TPassed,TRelay}"/> all 'enter' actions receiving arguments of type  <see cref="ITuple{TPassed,TRelay}"/>, TArgument, and TRelay
@@ -78,9 +78,17 @@ namespace Binstate
         CreateStateAndAddToMap(stateConfig, states);
 
       var initialState = states[initialStateId];
-      if (initialState.EnterArgumentType != null)
-        throw new TransitionException("The enter action of the initial state must not require argument.");
-      
+      if(Argument.IsSpecified<T>())
+      {
+        if (initialState.EnterArgumentType == null)
+          throw new InvalidOperationException("The enter action of the initial state doesn't require argument, but argument is provided.");
+      }
+      else
+      {
+        if (initialState.EnterArgumentType != null)
+          throw new InvalidOperationException("The enter action of the initial state requires argument, but no argument is provided.");
+      }
+        
       ValidateTransitions(states);
       if(!enableLooseRelaying)
         ValidateSubstateEnterArgument(states);
@@ -93,7 +101,7 @@ namespace Binstate
     /// <summary>
     /// Validates consistency and builds the state machine using provided configuration. 
     /// </summary>
-    /// <param name="initialStateId">The initial state of the state machine. The entering action of the initial state must not require argument.</param>
+    /// <param name="initialStateId">The initial state of the state machine.</param>
     /// <param name="enableLooseRelaying">Enables non strict relaying model of the argument attached ot the state. If relayed argument type
     /// is <see cref="ITuple{TPassed,TRelay}"/> all 'enter' actions receiving arguments of type  <see cref="ITuple{TPassed,TRelay}"/>, TArgument, and TRelay
     /// will receive corresponding argument.
@@ -108,28 +116,13 @@ namespace Binstate
     {
       if (!states.TryGetValue(stateConfig.StateId, out var state)) // state could be already created during creating parent states
       {
-        state = CreateState(
-          stateConfig,
+        state = stateConfig.CreateState(
           stateConfig.ParentStateId.HasValue
             ? CreateStateAndAddToMap(_stateConfigs[stateConfig.ParentStateId.Value], states) // recursive call to create the parent state;
             : null);
         states.Add(state.Id, state);
       }
       return state;
-    }
-
-    private static State<TState, TEvent> CreateState([NotNull] Config<TState, TEvent>.State stateConfig, [CanBeNull] State<TState, TEvent> parentState)
-    {
-      var transitions = new Dictionary<TEvent, Transition<TState, TEvent>>();
-      foreach (var transition in stateConfig.TransitionList)
-      {
-        if (transitions.ContainsKey(transition.Event))
-          throw new InvalidOperationException($"Duplicated event '{transition.Event}' in state '{stateConfig.StateId}'");
-
-        transitions.Add(transition.Event, transition);
-      }
-
-      return stateConfig.CreateState(parentState);
     }
 
     private static void ValidateSubstateEnterArgument(Dictionary<TState, State<TState, TEvent>> states)
@@ -165,7 +158,7 @@ namespace Binstate
     private void ValidateTransitions(Dictionary<TState, State<TState, TEvent>> states)
     {
       foreach (var stateConfig in _stateConfigs.Values)
-        foreach (var transition in stateConfig.TransitionList.Where(_ => _.IsStatic)) // do not check dynamic transitions because they are depends on the app state
+        foreach (var transition in stateConfig.TransitionList.Values.Where(_ => _.IsStatic)) // do not check dynamic transitions because they are depends on the app state
         {
           transition.GetTargetStateId(out var targetStateId);
 

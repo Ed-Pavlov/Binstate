@@ -26,7 +26,7 @@ namespace Binstate
     /// </summary>
     public bool IsMatch(Type parameterType) =>
       parameterType.IsAssignableFrom(typeof(ITuple<TArgument, TRelay>)) ? PassedArgument.HasValue && RelayedArgument.HasValue :
-      parameterType.IsAssignableFrom(typeof(TArgument)) ? PassedArgument.HasValue :
+      parameterType.IsAssignableFrom(typeof(TArgument)) ? PassedArgument.HasValue : // check passed argument first as it hase a priority 
       parameterType.IsAssignableFrom(typeof(TRelay)) ? RelayedArgument.HasValue : 
       false;
   }

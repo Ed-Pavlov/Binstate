@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using JetBrains.Annotations;
 
 namespace Binstate
@@ -35,6 +36,7 @@ namespace Binstate
       }
     }
 
+    [ExcludeFromCodeCoverage]
     public override string ToString()
     {
       var stateName = "dynamic";

@@ -1,7 +1,7 @@
 [![Nuget](https://img.shields.io/nuget/dt/Binstate)](https://www.nuget.org/packages/Binstate/)
-[![TeamCity](https://edpavlov.beta.teamcity.com/app/rest/builds/buildType:(id:Binstate_Build)/statusIcon)](https://edpavlov.beta.teamcity.com/viewType.html?buildTypeId=Binstate_Build&guest=1)
+[![TeamCity](https://edpavlov.beta.teamcity.com/app/rest/builds/buildType:(id:Binstate_Build)/statusIcon.svg)](https://edpavlov.beta.teamcity.com/viewType.html?buildTypeId=Binstate_Build&guest=1)
 ___
-
+[![Logo](/src/Binstate/build/icon.png?raw=true)](https://github.com/Ed-Pavlov/Binstate/releases)
 # Binstate
 
 Binstate *(pronounced as "Be in state")* is a simple but yet powerful state machine for .NET. Thread safe. Supports async methods. Supports hierarchically nested states.

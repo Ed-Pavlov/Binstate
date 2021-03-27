@@ -1,17 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace Binstate
 {
   internal class State<TState, TEvent>
   {
-    [CanBeNull]
-    private readonly IEnterActionInvoker<TEvent> _enterAction;
-    [CanBeNull]
-    private readonly Action _exitAction;
+    private readonly IEnterActionInvoker? _enterAction;
+    private readonly Action? _exitAction;
 
     private readonly Dictionary<TEvent, Transition<TState, TEvent>> _transitions;
 
@@ -32,34 +30,33 @@ namespace Binstate
     /// case of async OnEnter action.
     /// See usages for details. 
     /// </summary>
-    [CanBeNull]
-    private Task _task;
+    private Task? _task;
 
     private volatile bool _isActive;
 
     public State(
       TState id,
-      IEnterActionInvoker<TEvent> enterAction,
-      Type enterArgumentType,
-      Action exitAction,
+      IEnterActionInvoker? enterAction,
+      Type? enterArgumentType,
+      Action? exitAction,
       Dictionary<TEvent, Transition<TState, TEvent>> transitions,
-      State<TState, TEvent> parentState)
+      State<TState, TEvent>? parentState)
     {
-      Id = id;
+      Id = id ?? throw new ArgumentNullException(nameof(id));
       _enterAction = enterAction;
       EnterArgumentType = enterArgumentType;
       _exitAction = exitAction;
-      _transitions = transitions;
+      _transitions = transitions ?? throw new ArgumentNullException(nameof(transitions));
       ParentState = parentState;
       DepthInTree = parentState?.DepthInTree + 1 ?? 0;
     }
 
+    //TODO: why nullability think it can be null?
     public readonly TState Id;
-    [CanBeNull]
-    public readonly Type EnterArgumentType;
+    public readonly Type? EnterArgumentType;
 
     public readonly int DepthInTree;
-    public readonly State<TState, TEvent> ParentState;
+    public readonly State<TState, TEvent>? ParentState;
 
     /// <summary>
     /// This property is set from protected by lock part of the code so it's no need synchronization
@@ -84,7 +81,7 @@ namespace Binstate
         });
     }
 
-    protected void Enter(Action<Exception> onException, Func<IEnterActionInvoker<TEvent>, Task> invokeEnterAction)
+    protected void Enter(Action<Exception> onException, Func<IEnterActionInvoker, Task?> invokeEnterAction)
     {
       try
       {
@@ -132,7 +129,7 @@ namespace Binstate
       }
     }
 
-    public bool FindTransitionTransitive(TEvent @event, out Transition<TState, TEvent> transition)
+    public bool FindTransitionTransitive(TEvent @event, [NotNullWhen(returnValue: true)] out Transition<TState, TEvent>? transition)
     {
       var state = this;
       while (state != null)
@@ -149,6 +146,6 @@ namespace Binstate
       return false;
     }
 
-    public override string ToString() => Id.ToString();
+    public override string ToString() => Id!.ToString();
   }
 }

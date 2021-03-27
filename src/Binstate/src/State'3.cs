@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
 namespace Binstate
 {
@@ -11,18 +10,18 @@ namespace Binstate
   /// </summary>
   internal class State<TState, TEvent, TArgument> : State<TState, TEvent>, IState<TState, TEvent, TArgument>
   {
-    public TArgument Argument;
+    public TArgument? Argument;
 
     public State(
-      [NotNull] TState id,
-      [CanBeNull] IEnterActionInvoker<TEvent> enterAction,
-      [CanBeNull] Action exit,
-      [NotNull] Dictionary<TEvent, Transition<TState, TEvent>> transitions,
-      [CanBeNull] State<TState, TEvent> parentState) : base(id, enterAction, typeof(TArgument), exit, transitions, parentState)
+      TState id,
+      IEnterActionInvoker? enterAction,
+      Action? exit,
+      Dictionary<TEvent, Transition<TState, TEvent>> transitions,
+      State<TState, TEvent>? parentState) : base(id, enterAction, typeof(TArgument), exit, transitions, parentState)
     {
     }
 
-    public void EnterSafe(IStateMachine<TEvent> stateMachine, TArgument argument, Action<Exception> onException)
+    public void EnterSafe(IStateMachine<TEvent> stateMachine, TArgument? argument, Action<Exception> onException)
     {
       Enter(onException, enter =>
         {

@@ -1,5 +1,4 @@
 using System;
-using JetBrains.Annotations;
 
 namespace Binstate
 {
@@ -11,8 +10,7 @@ namespace Binstate
     /// </summary>
     public class Exit : Transitions
     {
-      [CanBeNull] 
-      internal Action ExitAction;
+      internal Action? ExitAction;
 
       /// <inheritdoc />
       protected Exit(TState stateId) : base(stateId) { }
@@ -20,7 +18,7 @@ namespace Binstate
       /// <summary>
       /// Specifies the action to be called on exiting the currently configured state.
       /// </summary>
-      public Transitions OnExit([NotNull] Action exitAction)
+      public Transitions OnExit(Action exitAction)
       {
         ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
         return this;

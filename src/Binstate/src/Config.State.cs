@@ -1,9 +1,7 @@
 using System;
-using JetBrains.Annotations;
 
 namespace Binstate
 {
-  // ReSharper disable once UnusedTypeParameter
   public static partial class Config<TState, TEvent>
   {
     /// <summary>
@@ -19,7 +17,7 @@ namespace Binstate
       /// <summary>
       /// Defines the currently configured state as a substate of a composite state 
       /// </summary>
-      public Enter AsSubstateOf([NotNull] TState parentStateId)
+      public Enter AsSubstateOf(TState parentStateId)
       {
         if (parentStateId == null) throw new ArgumentNullException(nameof(parentStateId));
         

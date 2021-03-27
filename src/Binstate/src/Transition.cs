@@ -1,15 +1,13 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
-using JetBrains.Annotations;
 
 namespace Binstate
 {
   internal class Transition<TState, TEvent>
   {
-    [CanBeNull]
-    private readonly Action _action;
+    private readonly Action? _action;
 
-    public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, [CanBeNull] Action action)
+    public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, Action? action)
     {
       Event = @event;
       GetTargetStateId = getTargetStateId;
@@ -43,7 +41,7 @@ namespace Binstate
       if (IsStatic)
       {
         GetTargetStateId(out var state);
-        stateName = state.ToString();
+        stateName = state!.ToString();
       }
       return $"[{Event} -> {stateName}]";
     }

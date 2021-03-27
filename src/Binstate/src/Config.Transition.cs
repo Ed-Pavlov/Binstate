@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
 namespace Binstate
 {
@@ -15,29 +14,29 @@ namespace Binstate
     public class Transitions
     {
       internal readonly TState StateId;
-      
+
       /// <summary>
       /// Protected ctor
       /// </summary>
-      protected Transitions(TState stateId) => StateId = stateId;
+      protected Transitions(TState stateId) => StateId = stateId ?? throw new ArgumentNullException(nameof(stateId));
 
       internal readonly Dictionary<TEvent, Transition<TState, TEvent>> TransitionList = new Dictionary<TEvent, Transition<TState, TEvent>>();
 
       /// <summary>
       /// Defines transition from the currently configured state to the <paramref name="stateId"> specified state</paramref> when <paramref name="event"> event is raised</paramref> 
       /// </summary>
-      public Transitions AddTransition([NotNull] TEvent @event, [NotNull] TState stateId, Action action = null)
+      public Transitions AddTransition(TEvent @event, TState stateId, Action? action = null)
       {
         if (@event == null) throw new ArgumentNullException(nameof(@event));
         if (stateId == null) throw new ArgumentNullException(nameof(stateId));
 
-        bool GetStateWrapper(out TState state)
-        {
-          state = stateId;
-          return true;
-        }
+        var getStateWrapper = new GetState<TState>((out TState? state) =>
+          {
+            state = stateId;
+            return true;
+          });
         
-        return AddTransition(@event, GetStateWrapper, true, action);
+        return AddTransition(@event, getStateWrapper, true, action);
       }
 
 #pragma warning disable 1574,1584,1581,1580
@@ -51,7 +50,7 @@ namespace Binstate
       /// Otherwise consider using <see cref="AddTransition(TEvent,Func{TState})"/> method as more simple.
       /// </remarks>
 #pragma warning restore 1574,1584,1581,1580
-      public Transitions AddTransition([NotNull] TEvent @event, [NotNull] GetState<TState> getState)
+      public Transitions AddTransition(TEvent @event, GetState<TState> getState)
       {
         if (@event == null) throw new ArgumentNullException(nameof(@event));
         if (getState == null) throw new ArgumentNullException(nameof(getState));
@@ -71,18 +70,18 @@ namespace Binstate
       /// <see cref="AddTransition(TEvent,GetState{TState})"/> method.
       /// </remarks>
 #pragma warning restore 1574,1584,1581,1580
-      public Transitions AddTransition([NotNull] TEvent @event, [NotNull] Func<TState> getState)
+      public Transitions AddTransition(TEvent @event, Func<TState?> getState)
       {
         if (@event == null) throw new ArgumentNullException(nameof(@event));
         if (getState == null) throw new ArgumentNullException(nameof(getState));
 
-        bool GetStateWrapper(out TState state)
-        {
-          state = getState();
-          return !EqualityComparer<TState>.Default.Equals(state, default); // generics in C# sucks
-        }
+        var getStateWrapper = new GetState<TState>((out TState? state) =>
+          {
+            state = getState();
+            return !EqualityComparer<TState?>.Default.Equals(state, default);
+          });
 
-        return AddTransition(@event, GetStateWrapper, false, null);
+        return AddTransition(@event, getStateWrapper, false, null);
       }
 
       /// <summary>
@@ -90,8 +89,11 @@ namespace Binstate
       /// </summary>
       public void AllowReentrancy(TEvent @event) => AddTransition(@event, StateId);
       
-      private Transitions AddTransition(TEvent @event, GetState<TState> getState, bool isStatic, [CanBeNull] Action action)
+      private Transitions AddTransition(TEvent @event, GetState<TState> getState, bool isStatic, Action? action)
       {
+        if (@event is null) throw new ArgumentNullException(nameof(@event));
+        if (getState is null) throw new ArgumentNullException(nameof(getState));
+
         TransitionList.Add(@event, new Transition<TState, TEvent>(@event, getState, isStatic, action));
         return this;
       }

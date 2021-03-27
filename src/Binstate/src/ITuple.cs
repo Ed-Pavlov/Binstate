@@ -1,6 +1,4 @@
-﻿using JetBrains.Annotations;
-
-namespace Binstate
+﻿namespace Binstate
 {
   /// <summary>
   /// Interface is used to make argument types invariant in order to pass arguments of compatible types
@@ -14,29 +12,27 @@ namespace Binstate
     /// <summary>
     /// Passed argument value
     /// </summary>
-    [CanBeNull]
-    TPassed PassedArgument { get; }
+    TPassed? PassedArgument { get; }
     
     /// <summary>
     /// Relayed argument value
     /// </summary>
-    [CanBeNull]
-    TRelay RelayedArgument{ get; }
+    TRelay? RelayedArgument{ get; }
   }
 
   /// <inheritdoc />
   internal class Tuple<TPassed, TRelay> : ITuple<TPassed, TRelay>
   {
-    public Tuple([CanBeNull] TPassed passedArgument, [CanBeNull] TRelay relayedArgument)
+    public Tuple(TPassed? passedArgument, TRelay? relayedArgument)
     {
       PassedArgument = passedArgument;
       RelayedArgument = relayedArgument;
     }
 
     /// <inheritdoc />
-    public TPassed PassedArgument { get; }
+    public TPassed? PassedArgument { get; }
     
     /// <inheritdoc />
-    public TRelay RelayedArgument { get; }
+    public TRelay? RelayedArgument { get; }
   }
 }

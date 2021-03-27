@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <IsPackable>false</IsPackable>
-        <LangVersion>8</LangVersion>
-        <Nullable>disable</Nullable>
+        <LangVersion>9</LangVersion>
+        <Nullable>warnings</Nullable>
         <OutputType>Library</OutputType>
-        <TargetFrameworks>net45;netcoreapp3.1</TargetFrameworks>
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>..\..\src\Binstate\build\binstate.public.snk</AssemblyOriginatorKeyFile>
         <PublicSign>true</PublicSign>
+        <TargetFramework>netcoreapp3.1</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>

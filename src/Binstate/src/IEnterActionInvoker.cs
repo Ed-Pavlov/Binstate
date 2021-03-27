@@ -7,7 +7,7 @@ namespace Binstate
   /// See <see cref="State{TState,TEvent}.EnterSafe"/> implementation for details.
   /// </summary>
   // ReSharper disable once UnusedTypeParameter
-  internal interface IEnterActionInvoker<TEvent>
+  internal interface IEnterActionInvoker
   {
   }
   
@@ -16,8 +16,9 @@ namespace Binstate
   /// argument assignable to the <see cref="State{TState,TEvent,TArgument}.EnterSafe(IStateMachine{TEvent},TArgument,System.Action{System.Exception})"/> but not exactly the same.
   /// See casting of these types in implementation of the <see cref="State{TState,TEvent,TArgument}"/> class.
   /// </summary>
-  internal interface IEnterActionInvoker<TEvent, in TArgument> : IEnterActionInvoker<TEvent>
+  // ReSharper disable once TypeParameterCanBeVariant
+  internal interface IEnterActionInvoker<TEvent, in TArgument> : IEnterActionInvoker
   {
-    Task Invoke(IStateMachine<TEvent> isInState, TArgument argument);
+    Task? Invoke(IStateMachine<TEvent> isInState, TArgument? argument);
   }
 }

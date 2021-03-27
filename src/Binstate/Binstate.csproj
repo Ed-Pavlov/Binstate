@@ -1,13 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <LangVersion>8</LangVersion>
-        <Nullable>disable</Nullable>
+        <LangVersion>9</LangVersion>
+        <Nullable>enable</Nullable>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>build\binstate.public.snk</AssemblyOriginatorKeyFile>
         <PublicSign>true</PublicSign>
-        <TargetFrameworks>net45;netstandard2.0</TargetFrameworks>
+        <TargetFramework>netstandard2.1</TargetFramework>
     </PropertyGroup>
 
     <PropertyGroup Label="nuspec">
@@ -27,11 +27,13 @@
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
         <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
         <DocumentationFile>bin\Debug\Binstate.xml</DocumentationFile>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
         <DocumentationFile>bin\Release\Binstate.xml</DocumentationFile>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>

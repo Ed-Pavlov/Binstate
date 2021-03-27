@@ -1,10 +1,9 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace Binstate
 {
@@ -22,7 +21,7 @@ namespace Binstate
     private readonly Dictionary<TState, State<TState, TEvent>> _states;
 
     private readonly AutoResetEvent _lock = new AutoResetEvent(true);
-    private volatile State<TState, TEvent> _activeState;
+    private volatile State<TState, TEvent>? _activeState;
 
     internal StateMachine(Dictionary<TState, State<TState, TEvent>> states, Action<Exception> onException)
     {
@@ -30,7 +29,7 @@ namespace Binstate
       _onException = onException;
     }
     
-    internal void SetInitialState<T>(TState initialStateId, T initialStateArgument)
+    internal void SetInitialState<T>(TState initialStateId, T? initialStateArgument)
     {
       _activeState = GetStateById(initialStateId);
       var enterAction = ActivateStateNotGuarded(_activeState, new MixOf<T, Unit>(initialStateArgument.ToMaybe(), Maybe<Unit>.Nothing));
@@ -42,7 +41,7 @@ namespace Binstate
     }
 
     /// <inheritdoc />
-    public bool Raise([NotNull] TEvent @event)
+    public bool Raise(TEvent @event)
     {
       if (@event == null) throw new ArgumentNullException(nameof(@event));
 
@@ -50,7 +49,7 @@ namespace Binstate
     }
 
     /// <inheritdoc />
-    public bool Raise<T>([NotNull] TEvent @event, [CanBeNull] T argument)
+    public bool Raise<T>(TEvent @event, T? argument)
     {
       if (@event == null) throw new ArgumentNullException(nameof(@event));
 
@@ -58,7 +57,7 @@ namespace Binstate
     }
 
     /// <inheritdoc />
-    public Task<bool> RaiseAsync([NotNull] TEvent @event)
+    public Task<bool> RaiseAsync(TEvent @event)
     {
       if (@event == null) throw new ArgumentNullException(nameof(@event));
 
@@ -66,7 +65,7 @@ namespace Binstate
     }
 
     /// <inheritdoc />
-    public Task<bool> RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument)
+    public Task<bool> RaiseAsync<T>(TEvent @event, T? argument)
     {
       if (@event == null) throw new ArgumentNullException(nameof(@event));
 
@@ -86,13 +85,13 @@ namespace Binstate
     public IStateMachine<TState, TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true) => 
       new Relayer<TRelay>(this, relayArgumentIsRequired ? Maybe<TRelay>.Nothing : default(TRelay).ToMaybe());
     
-    private bool PerformTransitionSync<TA, TRelay>(TEvent @event, TA argument, Maybe<TRelay> backupRelayArgument)
+    private bool PerformTransitionSync<TA, TRelay>(TEvent @event, TA? argument, Maybe<TRelay> backupRelayArgument)
     {
       var data = PrepareTransition(@event, argument, backupRelayArgument);
       return data != null && PerformTransition(data.Value);
     }
 
-    private Task<bool> PerformTransitionAsync<TA, TRelay>(TEvent @event, TA argument, Maybe<TRelay> backupRelayArgument)
+    private Task<bool> PerformTransitionAsync<TA, TRelay>(TEvent @event, TA? argument, Maybe<TRelay> backupRelayArgument)
     {
       var data = PrepareTransition(@event, argument, backupRelayArgument);
 
@@ -101,34 +100,39 @@ namespace Binstate
         : Task.Run(() => PerformTransition(data.Value));
     }
 
-    private State<TState, TEvent> GetStateById([NotNull] TState state) =>
+    private State<TState, TEvent> GetStateById(TState state) =>
       _states.TryGetValue(state, out var result) ? result : throw new TransitionException($"State '{state}' is not defined");
 
-    [CanBeNull]
-    private static State<TState, TEvent> FindLeastCommonAncestor(State<TState, TEvent> l, State<TState, TEvent> r)
+    private static State<TState, TEvent>? FindLeastCommonAncestor(State<TState, TEvent> left, State<TState, TEvent> right)
     {
-      if (ReferenceEquals(l, r)) return null; // no common ancestor with yourself
+      if (ReferenceEquals(left, right)) return null; // no common ancestor with itself
 
+      var l = left;
+      var r = right;
+      
       var lDepth = l.DepthInTree;
       var rDepth = r.DepthInTree;
+
+      // State<TState, TEvent>? left = l;
+      
       while (lDepth != rDepth)
       {
         if (lDepth > rDepth)
         {
           lDepth--;
-          l = l.ParentState;
+          l = l!.ParentState;
         }
         else
         {
           rDepth--;
-          r = r.ParentState;
+          r = r!.ParentState;
         }
       }
 
       while (!ReferenceEquals(l, r))
       {
-        l = l.ParentState;
-        r = r.ParentState;
+        l = l!.ParentState;
+        r = r!.ParentState;
       }
 
       return l;
@@ -143,14 +147,14 @@ namespace Binstate
       TEvent @event,
       State<TState, TEvent> targetState,
       MixOf<TA, TRelay> argument,
-      State<TState, TEvent> commonAncestor)
+      State<TState, TEvent>? commonAncestor)
     {
       var enterWithArgumentCount = 0;
 
       var state = targetState; 
       while(state != commonAncestor)
       {
-        if (state.EnterArgumentType != null)
+        if (state!.EnterArgumentType != null)
         {
           if (!argument.HasAnyArgument)
             throw new TransitionException($"The enter action of the state '{state.Id}' is configured as required an argument but no argument was specified.");
@@ -172,13 +176,13 @@ namespace Binstate
         state = targetState.ParentState;
         while (state != commonAncestor)
         {
-          states.Add(state);
-          state = state.ParentState;
+          states.Add(state!);
+          state = state!.ParentState;
         }
         states.Reverse();
         states.Add(targetState);
 
-        var statesToActivate = string.Join("->", states.Select(_ => _.Id.ToString()));
+        var statesToActivate = string.Join("->", states.Select(_ => _.Id!.ToString()));
 
         throw new TransitionException(
           $"Transition from the state '{activeState.Id}' by the event '{@event}' will activate following states [{statesToActivate}]. No one of them are defined with "

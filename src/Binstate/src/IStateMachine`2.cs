@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace Binstate
 {
@@ -21,7 +20,7 @@ namespace Binstate
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
     /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception})"/>
     /// </exception>
-    bool Raise([NotNull] TEvent @event);
+    bool Raise(TEvent @event);
 
     /// <summary>
     /// Raises the event with an argument in the blocking way. It waits while on entering and exiting actions (if defined) of the current state is finished, then:
@@ -33,7 +32,7 @@ namespace Binstate
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
     /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
     /// </exception>
-    bool Raise<T>([NotNull] TEvent @event, [CanBeNull] T argument);
+    bool Raise<T>(TEvent @event, T? argument);
 
     /// <summary>
     /// Raises the event asynchronously. Finishing can be controller by returned <see cref="Task"/>, entering and exiting actions (if defined) of the current
@@ -46,7 +45,7 @@ namespace Binstate
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
     /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
     /// </exception>
-    Task<bool> RaiseAsync([NotNull] TEvent @event);
+    Task<bool> RaiseAsync(TEvent @event);
 
     /// Raises the event with an argument asynchronously. Finishing can be controller by returned <see cref="Task"/>, entering and exiting actions (if defined)
     /// of the current state is finished, then:
@@ -57,6 +56,6 @@ namespace Binstate
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
     /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
     /// </exception>
-    Task<bool> RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument);
+    Task<bool> RaiseAsync<T>(TEvent @event, T? argument);
   }
 }

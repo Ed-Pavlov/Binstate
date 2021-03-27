@@ -1,6 +1,5 @@
-﻿﻿using System;
+﻿using System;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace Binstate
 {
@@ -18,30 +17,34 @@ namespace Binstate
       }
 
       /// <inheritdoc />
-      public bool Raise([NotNull] TEvent @event)
+      public bool Raise(TEvent @event)
       {
         if (@event == null) throw new ArgumentNullException(nameof(@event));
+        
         return _owner.PerformTransitionSync<Unit, TRelay>(@event, null, _backupValue);
       }
 
       /// <inheritdoc />
-      public bool Raise<T>([NotNull] TEvent @event, [CanBeNull] T argument)
+      public bool Raise<T>(TEvent @event, T? argument)
       {
         if (@event == null) throw new ArgumentNullException(nameof(@event));
+        
         return _owner.PerformTransitionSync(@event, argument, _backupValue);
       }
 
       /// <inheritdoc />
-      public Task<bool> RaiseAsync([NotNull] TEvent @event)
+      public Task<bool> RaiseAsync(TEvent @event)
       {
         if (@event == null) throw new ArgumentNullException(nameof(@event));
+        
         return _owner.PerformTransitionAsync<Unit, TRelay>(@event, default, _backupValue);
       }
 
       /// <inheritdoc />
-      public Task<bool> RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument)
+      public Task<bool> RaiseAsync<T>(TEvent @event, T? argument)
       {
         if (@event == null) throw new ArgumentNullException(nameof(@event));
+        
         return _owner.PerformTransitionAsync(@event, argument, _backupValue);
       }
     }

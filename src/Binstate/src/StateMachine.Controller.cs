@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
 
 namespace Binstate
 {
@@ -19,9 +18,9 @@ namespace Binstate
 
       public bool InMyState => _state.IsActive;
       
-      public bool RaiseAsync([NotNull] TEvent @event) => RaiseAsync<Unit>(@event, default);
+      public bool RaiseAsync(TEvent @event) => RaiseAsync<Unit>(@event, default);
       
-      public bool RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument) => RaiseAsyncInternal(@event, argument, Maybe<Unit>.Nothing);
+      public bool RaiseAsync<T>(TEvent @event, T? argument) => RaiseAsyncInternal(@event, argument, Maybe<Unit>.Nothing);
 
       public IAutoTransition<TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true) =>
         new ControllerRelayer<TRelay>(this, relayArgumentIsRequired ? Maybe<TRelay>.Nothing : default(TRelay).ToMaybe());
@@ -29,10 +28,8 @@ namespace Binstate
       /// <summary>
       /// Implementation shared between <see cref="Controller"/> itself and <see cref="ControllerRelayer{TRelay}"/>
       /// </summary>
-      private bool RaiseAsyncInternal<T, TRelay>([NotNull] TEvent @event, [CanBeNull] T argument, Maybe<TRelay> backupValue)
+      private bool RaiseAsyncInternal<T, TRelay>(TEvent @event, T? argument, Maybe<TRelay> backupValue)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
-
         var data = _owner.PrepareTransition(@event, argument, backupValue);
         if (data == null) return false;
 
@@ -53,7 +50,12 @@ namespace Binstate
 
         public bool RaiseAsync(TEvent @event) => RaiseAsync<Unit>(@event, default);
 
-        public bool RaiseAsync<T>(TEvent @event, [CanBeNull] T argument) => _owner.RaiseAsyncInternal(@event, argument, _backupValue);
+        public bool RaiseAsync<T>(TEvent @event, T? argument)
+        {
+          if (@event is null) throw new ArgumentNullException(nameof(@event));
+
+          return _owner.RaiseAsyncInternal(@event, argument, _backupValue);
+        }
       }
     }
   }

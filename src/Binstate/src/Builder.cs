@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 
 namespace Binstate
 {
@@ -18,14 +17,14 @@ namespace Binstate
     /// </summary>
     /// <param name="onException">All exception thrown from enter and exit actions passed to the state machine are caught in order to not break the state of the
     /// state machine. Use this action to be notified about these exceptions.</param>
-    public Builder([NotNull] Action<Exception> onException) => _onException = onException ?? throw new ArgumentNullException(nameof(onException));
+    public Builder(Action<Exception> onException) => _onException = onException ?? throw new ArgumentNullException(nameof(onException));
 
     /// <summary>
     /// Defines the new state in the state machine, if it is already defined throws an exception
     /// </summary>
     /// <param name="stateId">Id of the state, is used to reference it from other elements of the state machine.</param>
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
-    public Config<TState, TEvent>.State DefineState([NotNull] TState stateId)
+    public Config<TState, TEvent>.State DefineState(TState stateId)
     {
       if (stateId == null) throw new ArgumentNullException(nameof(stateId));
 
@@ -39,7 +38,7 @@ namespace Binstate
     /// </summary>
     /// <param name="stateId">Id of the state, is used to reference it from other elements of the state machine.</param>
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
-    public Config<TState, TEvent>.State GetOrDefineState([NotNull] TState stateId)
+    public Config<TState, TEvent>.State GetOrDefineState(TState stateId)
     {
       if (stateId == null) throw new ArgumentNullException(nameof(stateId));
 
@@ -60,7 +59,7 @@ namespace Binstate
     /// of state requires an argument but some not.
     /// </param>
     /// <exception cref="InvalidOperationException">Throws if there are any inconsistencies in the provided configuration.</exception>
-    public StateMachine<TState, TEvent> Build<T>([NotNull] TState initialStateId, T initialStateArgument, bool enableLooseRelaying = false)
+    public StateMachine<TState, TEvent> Build<T>(TState initialStateId, T? initialStateArgument, bool enableLooseRelaying = false)
     {
       if (initialStateId == null) throw new ArgumentNullException(nameof(initialStateId));
 
@@ -109,16 +108,16 @@ namespace Binstate
     /// of state requires an argument but some not.
     /// </param>
     /// <exception cref="InvalidOperationException">Throws if there are any inconsistencies in the provided configuration.</exception>
-    public StateMachine<TState, TEvent> Build([NotNull] TState initialStateId, bool enableLooseRelaying = false) => 
+    public StateMachine<TState, TEvent> Build(TState initialStateId, bool enableLooseRelaying = false) => 
       Build<Unit>(initialStateId, default, enableLooseRelaying);
 
-    private State<TState, TEvent> CreateStateAndAddToMap([NotNull] Config<TState, TEvent>.State stateConfig, Dictionary<TState, State<TState, TEvent>> states)
+    private State<TState, TEvent> CreateStateAndAddToMap(Config<TState, TEvent>.State stateConfig, Dictionary<TState, State<TState, TEvent>> states)
     {
       if (!states.TryGetValue(stateConfig.StateId, out var state)) // state could be already created during creating parent states
       {
         state = stateConfig.CreateState(
           stateConfig.ParentStateId.HasValue
-            ? CreateStateAndAddToMap(_stateConfigs[stateConfig.ParentStateId.Value], states) // recursive call to create the parent state;
+            ? CreateStateAndAddToMap(_stateConfigs[stateConfig.ParentStateId.Value!], states) // recursive call to create the parent state;
             : null);
         states.Add(state.Id, state);
       }
@@ -162,7 +161,7 @@ namespace Binstate
         {
           transition.GetTargetStateId(out var targetStateId);
 
-          if (!states.ContainsKey(targetStateId))
+          if (!states.ContainsKey(targetStateId!))
             throw new InvalidOperationException($"The transition '{transition.Event}' from the state '{stateConfig.StateId}' references not defined state '{targetStateId}'");
         }
     }

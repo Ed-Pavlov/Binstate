@@ -221,5 +221,23 @@ namespace Binstate.Tests
         .WithMessage($"Transition from the state '{State1}' by the event '{Event2}' will activate following states [{State2}]. No one of them are defined " +
                      "with the enter action accepting an argument, but argument was passed or relayed");
     }
+
+    [Test]
+    public void should_throw_exception_if_no_argument_for_relaying()
+    {
+      // --arrange
+      var builder = new Builder<string, int>(OnException);
+      
+      builder.DefineState(Initial).AddTransition(Event1, State1);
+      builder.DefineState(State1);
+
+      var stateMachine = builder.Build(Initial);
+      
+      // --act
+      Action target = () => stateMachine.Relaying<int>().Raise(Event1, 93);
+      
+      // --assert
+      target.Should().ThrowExactly<TransitionException>().WithMessage("Raise with relaying argument is called from the state w/o an attached value and a backup argument for relay is not provided");
+    }
   }
 }

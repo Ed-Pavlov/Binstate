@@ -13,13 +13,13 @@ namespace Binstate
     /// dynamic transition returns 'null'
     /// </returns>
     /// <exception cref="TransitionException">Throws if passed argument doesn't match the 'enter' action of the target state.</exception>
-    private TransitionData<MixOf<TArgument, TRelay>>? PrepareTransition<TArgument, TRelay>(TEvent @event, TArgument argument, Maybe<TRelay> backupRelayArgument)
+    private TransitionData<TArgument, TRelay>? PrepareTransition<TArgument, TRelay>(TEvent @event, TArgument argument, Maybe<TRelay> backupRelayArgument)
     {
       try
       {
         _lock.WaitOne();
 
-        if (!_activeState.FindTransitionTransitive(@event, out var transition)  // looks for a transition through all parent states
+        if (!_activeState!.FindTransitionTransitive(@event, out var transition)  // looks for a transition through all parent states
           || !transition.GetTargetStateId(out var stateId))
         { // no transition by specified event is found or dynamic transition returns null as target state id
           _lock.Set();
@@ -32,7 +32,7 @@ namespace Binstate
         var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);
         ValidateStates(_activeState, @event, targetState, mixedArgument, commonAncestor); // validate before changing any state of the state machine
 
-        return new TransitionData<MixOf<TArgument, TRelay>>(_activeState, transition, targetState, mixedArgument, commonAncestor);
+        return new TransitionData<TArgument, TRelay>(_activeState, transition, targetState, mixedArgument, commonAncestor);
       }
       catch (TransitionException)
       {
@@ -52,7 +52,7 @@ namespace Binstate
     /// into the delegate passed to <see cref="Builder{TState,TEvent}(Action{Exception})"/> 
     /// </summary>
     // [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery", Justification = "foreach is more readable here")]
-    private bool PerformTransition<TArgument, TRelay>(TransitionData<MixOf<TArgument, TRelay>> transitionData)
+    private bool PerformTransition<TArgument, TRelay>(TransitionData<TArgument, TRelay> transitionData)
     {
       var currentActiveState = transitionData.CurrentActiveState;
       var transition = transitionData.Transition;
@@ -66,7 +66,7 @@ namespace Binstate
         // exit all active states which are not parent for the new state
         while (currentActiveState != commonAncestor)
         {
-          currentActiveState.ExitSafe(_onException);
+          currentActiveState!.ExitSafe(_onException); // currentActiveState can't become null earlier then be equal to commonAncestor
           currentActiveState = currentActiveState.ParentState;
         }
 
@@ -75,11 +75,11 @@ namespace Binstate
 
         // and then activate new active states
         _activeState = targetState;
-        while (targetState != commonAncestor)
+        while (targetState != commonAncestor) // targetState can't become null earlier then be equal to commonAncestor
         {
-          var enterAction = ActivateStateNotGuarded(targetState, argument);
+          var enterAction = ActivateStateNotGuarded(targetState!, argument);
           enterActions.Add(enterAction);
-          targetState = targetState.ParentState;
+          targetState = targetState!.ParentState;
         }
       }
       finally // no exception should be thrown here, but paranoia is my life
@@ -117,7 +117,7 @@ namespace Binstate
     private static Tuple<TArgument, TRelay> CreateTuple<TArgument, TRelay>(MixOf<TArgument, TRelay> mixOf) =>
       new Tuple<TArgument, TRelay>(mixOf.PassedArgument.Value, mixOf.RelayedArgument.Value);
 
-    private static MixOf<TArgument, TRelay> PrepareRealArgument<TArgument, TRelay>(TArgument argument, State<TState, TEvent> sourceState, Maybe<TRelay> backupRelayArgument)
+    private static MixOf<TArgument, TRelay> PrepareRealArgument<TArgument, TRelay>(TArgument argument, State<TState, TEvent>? sourceState, Maybe<TRelay> backupRelayArgument)
     {
       if (!Argument.IsSpecified<TRelay>()) // no relaying argument
         return Argument.IsSpecified<TArgument>() ? new MixOf<TArgument, TRelay>(argument.ToMaybe(), Maybe<TRelay>.Nothing) : MixOf<TArgument, TRelay>.Empty;
@@ -136,23 +136,23 @@ namespace Binstate
           ? new MixOf<TArgument, TRelay>(argument.ToMaybe(), backupRelayArgument) 
           : new MixOf<TArgument, TRelay>(Maybe<TArgument>.Nothing, backupRelayArgument);
       
-      throw new TransitionException("propagating from the state w/o a state and a backup argument for relay");
+      throw new TransitionException("Raise with relaying argument is called from the state w/o an attached value and a backup argument for relay is not provided");
     }
 
-    private readonly struct TransitionData<T>
+    private readonly struct TransitionData<TArgument, TRelay>
     {
-      public readonly State<TState, TEvent> TargetState;
       public readonly State<TState, TEvent> CurrentActiveState;
-      public readonly State<TState, TEvent> CommonAncestor;
       public readonly Transition<TState, TEvent> Transition;
-      public readonly T Argument;
+      public readonly State<TState, TEvent> TargetState;
+      public readonly MixOf<TArgument, TRelay> Argument;
+      public readonly State<TState, TEvent>? CommonAncestor;
 
       public TransitionData(
         State<TState, TEvent> currentActiveState,
         Transition<TState, TEvent> transition,
         State<TState, TEvent> targetState,
-        T argument,
-        State<TState, TEvent> commonAncestor)
+        MixOf<TArgument, TRelay> argument,
+        State<TState, TEvent>? commonAncestor)
       {
         CurrentActiveState = currentActiveState;
         Transition = transition;

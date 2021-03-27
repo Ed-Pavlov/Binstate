@@ -1,5 +1,4 @@
 using System;
-using JetBrains.Annotations;
 
 namespace Binstate
 {
@@ -17,7 +16,7 @@ namespace Binstate
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
     /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception})"/>
     /// </exception>
-    bool RaiseAsync([NotNull] TEvent @event);
+    bool RaiseAsync(TEvent @event);
     
     /// <summary>
     /// Passing the event with an argument to the state machine asynchronously. The arguments is needed if the 'enter' action of the
@@ -29,7 +28,7 @@ namespace Binstate
     /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
     /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception})"/>
     /// </exception>
-    bool RaiseAsync<T>([NotNull] TEvent @event, [CanBeNull] T argument);
+    bool RaiseAsync<T>(TEvent @event, T? argument);
   }
   
   /// <summary>

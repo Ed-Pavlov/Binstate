@@ -12,17 +12,17 @@ namespace Binstate
           return null;
         });
 
-    public static NoParameterEnterActionActionInvoker<TEvent> Create(Func<IStateMachine<TEvent>, Task> action) =>
+    public static NoParameterEnterActionActionInvoker<TEvent> Create(Func<IStateMachine<TEvent>, Task?> action) =>
       new NoParameterEnterActionActionInvoker<TEvent>(action);
 
-    public static EnterActionInvoker<TEvent, TArg> Create<TArg>(Action<IStateMachine<TEvent>, TArg> action) =>
+    public static EnterActionInvoker<TEvent, TArg> Create<TArg>(Action<IStateMachine<TEvent>, TArg?> action) =>
       new EnterActionInvoker<TEvent, TArg>((stateMachine, arg) =>
         {
           action(stateMachine, arg);
           return null;
         });
 
-    public static EnterActionInvoker<TEvent, TArgument> Create<TArgument>(Func<IStateMachine<TEvent>, TArgument, Task> action) =>
+    public static EnterActionInvoker<TEvent, TArgument> Create<TArgument>(Func<IStateMachine<TEvent>, TArgument?, Task?> action) =>
       new EnterActionInvoker<TEvent, TArgument>(action);
   }
 }

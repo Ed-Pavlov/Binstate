@@ -351,5 +351,26 @@ namespace Binstate.Tests
       // --assert
       target.Should().ThrowExactly<ArgumentException>().WithMessage($"An item with the same key has already been added*");
     }
+
+    [TestCaseSource(nameof(RaiseWays))]
+    public void should_not_perform_transition_if_dynamic_transition_throws_exception(RaiseWay raiseWay)
+    {
+      Exception actual = null;
+      // --arrange
+      var builder = new Builder<string, int>(exc => actual = exc);
+
+      builder
+        .DefineState(Initial)
+        .AddTransition(Event1, () => throw new TestException());
+
+      var target = builder.Build(Initial);
+
+      // --act
+      var result = target.Raise(raiseWay, Event1);
+
+      // --assert
+      result.Should().BeFalse();
+      actual.Should().BeOfType<TestException>();
+    }
   }
 }

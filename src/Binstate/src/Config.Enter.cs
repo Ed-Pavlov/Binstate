@@ -30,7 +30,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter(Action enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
         return OnEnter(_ => enterAction());
@@ -43,7 +43,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter(Action<IStateMachine<TEvent>> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
         EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(enterAction);
@@ -58,7 +58,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter(Func<Task> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         return OnEnter(_ => enterAction());
       }
 
@@ -69,7 +69,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter(Func<IStateMachine<TEvent>, Task> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
         EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(enterAction);
         return this;
@@ -86,7 +86,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument>(Action<TArgument?> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
         return OnEnter<TArgument>((_, argument) => enterAction(argument));
@@ -102,7 +102,7 @@ namespace Binstate
 #pragma warning restore 1574
       public Exit OnEnter<TArgument>(Action<IStateMachine<TEvent>, TArgument?> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
         EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(enterAction);
@@ -118,7 +118,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument>(Func<TArgument?, Task> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         return OnEnter<TArgument>((_, argument) => enterAction(argument));
       }
 
@@ -129,7 +129,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument>(Func<IStateMachine<TEvent>, TArgument?, Task> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
         EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(enterAction);
         _stateFactory = new StateFactory<TArgument>();
@@ -147,7 +147,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument, TRelay>(Action<TArgument?, TRelay?> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
         return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.PassedArgument, tuple.RelayedArgument));
@@ -165,7 +165,7 @@ namespace Binstate
 #pragma warning restore 1574
       public Exit OnEnter<TArgument, TRelay>(Action<IStateMachine<TEvent>, TArgument?, TRelay?> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         
         if (IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
         return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.PassedArgument, tuple.RelayedArgument));
@@ -181,7 +181,7 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument, TRelay>(Func<TArgument?, TRelay?, Task> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.PassedArgument, tuple.RelayedArgument));
       }
 
@@ -194,13 +194,13 @@ namespace Binstate
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
       public Exit OnEnter<TArgument, TRelay>(Func<IStateMachine<TEvent>, TArgument?, TRelay?, Task> enterAction)
       {
-        if (enterAction == null) throw new ArgumentNullException(nameof(enterAction));
+        if (enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.PassedArgument, tuple.RelayedArgument));
       }
       
       internal State<TState, TEvent> CreateState(State<TState, TEvent>? parentState) => _stateFactory.CreateState(this, parentState);
 
-      private static bool IsAsyncMethod(MemberInfo method) => method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) != null;
+      private static bool IsAsyncMethod(MemberInfo method) => method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) is not null;
     }
   }
 }

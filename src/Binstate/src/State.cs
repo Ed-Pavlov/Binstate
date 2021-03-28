@@ -87,7 +87,7 @@ namespace Binstate
         _enterActionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
         _entered.Set(); // it is safe to set the state as entered
 
-        if (_enterAction == null) return;
+        if (_enterAction is null) return;
         _task = invokeEnterAction(_enterAction);
       }
       catch (Exception exception)

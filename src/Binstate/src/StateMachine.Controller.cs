@@ -31,7 +31,7 @@ namespace Binstate
       private bool RaiseAsyncInternal<T, TRelay>(TEvent @event, T? argument, Maybe<TRelay> backupValue)
       {
         var data = _owner.PrepareTransition(@event, argument, backupValue);
-        if (data == null) return false;
+        if (data is null) return false;
 
         Task.Run(() => _owner.PerformTransition(data.Value));
         return true;

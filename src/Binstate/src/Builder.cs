@@ -26,7 +26,7 @@ namespace Binstate
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
     public Config<TState, TEvent>.State DefineState(TState stateId)
     {
-      if (stateId == null) throw new ArgumentNullException(nameof(stateId));
+      if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
       var stateConfig = new Config<TState, TEvent>.State(stateId);
       _stateConfigs.Add(stateId, stateConfig);
@@ -40,7 +40,7 @@ namespace Binstate
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
     public Config<TState, TEvent>.State GetOrDefineState(TState stateId)
     {
-      if (stateId == null) throw new ArgumentNullException(nameof(stateId));
+      if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
       if(!_stateConfigs.TryGetValue(stateId, out var stateConfig)) 
         stateConfig = DefineState(stateId);
@@ -61,7 +61,7 @@ namespace Binstate
     /// <exception cref="InvalidOperationException">Throws if there are any inconsistencies in the provided configuration.</exception>
     public StateMachine<TState, TEvent> Build<T>(TState initialStateId, T? initialStateArgument, bool enableLooseRelaying = false)
     {
-      if (initialStateId == null) throw new ArgumentNullException(nameof(initialStateId));
+      if (initialStateId is null) throw new ArgumentNullException(nameof(initialStateId));
 
       if (!_stateConfigs.ContainsKey(initialStateId))
         throw new ArgumentException($"No state '{initialStateId}' is defined");
@@ -79,12 +79,12 @@ namespace Binstate
       var initialState = states[initialStateId];
       if(Argument.IsSpecified<T>())
       {
-        if (initialState.EnterArgumentType == null)
+        if (initialState.EnterArgumentType is null)
           throw new InvalidOperationException("The enter action of the initial state doesn't require argument, but argument is provided.");
       }
       else
       {
-        if (initialState.EnterArgumentType != null)
+        if (initialState.EnterArgumentType is not null)
           throw new InvalidOperationException("The enter action of the initial state requires argument, but no argument is provided.");
       }
         
@@ -129,12 +129,12 @@ namespace Binstate
       foreach (var value in states.Values)
       {
         var state = value;
-        if (state.EnterArgumentType != null)
+        if (state.EnterArgumentType is not null)
         {
           var parentState = state.ParentState;
-          while (parentState != null) // it will check the same states several times, may be I'll optimize it later
+          while (parentState is not null) // it will check the same states several times, may be I'll optimize it later
           {
-            if (parentState.EnterArgumentType == null)
+            if (parentState.EnterArgumentType is null)
               parentState = parentState.ParentState;
             else
             {

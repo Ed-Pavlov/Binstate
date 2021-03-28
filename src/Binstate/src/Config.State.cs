@@ -19,7 +19,7 @@ namespace Binstate
       /// </summary>
       public Enter AsSubstateOf(TState parentStateId)
       {
-        if (parentStateId == null) throw new ArgumentNullException(nameof(parentStateId));
+        if (parentStateId is null) throw new ArgumentNullException(nameof(parentStateId));
         
         ParentStateId = parentStateId.ToMaybe();
         return this;

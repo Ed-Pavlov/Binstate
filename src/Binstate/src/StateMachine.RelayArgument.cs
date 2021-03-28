@@ -19,7 +19,7 @@ namespace Binstate
       /// <inheritdoc />
       public bool Raise(TEvent @event)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
+        if (@event is null) throw new ArgumentNullException(nameof(@event));
         
         return _owner.PerformTransitionSync<Unit, TRelay>(@event, null, _backupValue);
       }
@@ -27,7 +27,7 @@ namespace Binstate
       /// <inheritdoc />
       public bool Raise<T>(TEvent @event, T? argument)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
+        if (@event is null) throw new ArgumentNullException(nameof(@event));
         
         return _owner.PerformTransitionSync(@event, argument, _backupValue);
       }
@@ -35,7 +35,7 @@ namespace Binstate
       /// <inheritdoc />
       public Task<bool> RaiseAsync(TEvent @event)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
+        if (@event is null) throw new ArgumentNullException(nameof(@event));
         
         return _owner.PerformTransitionAsync<Unit, TRelay>(@event, default, _backupValue);
       }
@@ -43,7 +43,7 @@ namespace Binstate
       /// <inheritdoc />
       public Task<bool> RaiseAsync<T>(TEvent @event, T? argument)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
+        if (@event is null) throw new ArgumentNullException(nameof(@event));
         
         return _owner.PerformTransitionAsync(@event, argument, _backupValue);
       }

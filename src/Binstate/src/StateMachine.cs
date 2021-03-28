@@ -43,7 +43,7 @@ namespace Binstate
     /// <inheritdoc />
     public bool Raise(TEvent @event)
     {
-      if (@event == null) throw new ArgumentNullException(nameof(@event));
+      if (@event is null) throw new ArgumentNullException(nameof(@event));
 
       return PerformTransitionSync<Unit, Unit>(@event, null, Maybe<Unit>.Nothing);
     }
@@ -51,7 +51,7 @@ namespace Binstate
     /// <inheritdoc />
     public bool Raise<T>(TEvent @event, T? argument)
     {
-      if (@event == null) throw new ArgumentNullException(nameof(@event));
+      if (@event is null) throw new ArgumentNullException(nameof(@event));
 
       return PerformTransitionSync(@event, argument, Maybe<Unit>.Nothing);
     }
@@ -59,7 +59,7 @@ namespace Binstate
     /// <inheritdoc />
     public Task<bool> RaiseAsync(TEvent @event)
     {
-      if (@event == null) throw new ArgumentNullException(nameof(@event));
+      if (@event is null) throw new ArgumentNullException(nameof(@event));
 
       return PerformTransitionAsync<Unit, Unit>(@event, default, Maybe<Unit>.Nothing);
     }
@@ -67,7 +67,7 @@ namespace Binstate
     /// <inheritdoc />
     public Task<bool> RaiseAsync<T>(TEvent @event, T? argument)
     {
-      if (@event == null) throw new ArgumentNullException(nameof(@event));
+      if (@event is null) throw new ArgumentNullException(nameof(@event));
 
       return PerformTransitionAsync(@event, argument, Maybe<Unit>.Nothing);
     }
@@ -95,7 +95,7 @@ namespace Binstate
     {
       var data = PrepareTransition(@event, argument, backupRelayArgument);
 
-      return data == null
+      return data is null
         ? Task.FromResult(false)
         : Task.Run(() => PerformTransition(data.Value));
     }

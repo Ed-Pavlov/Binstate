@@ -25,8 +25,8 @@ namespace Binstate
       /// </summary>
       public Transitions AddTransition(TEvent @event, TState stateId, Action? action = null)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
-        if (stateId == null) throw new ArgumentNullException(nameof(stateId));
+        if (@event is null) throw new ArgumentNullException(nameof(@event));
+        if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
         var getStateWrapper = new GetState<TState>((out TState? state) =>
           {
@@ -50,8 +50,8 @@ namespace Binstate
 #pragma warning restore 1574,1584,1581,1580
       public Transitions AddTransition(TEvent @event, GetState<TState> getState)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
-        if (getState == null) throw new ArgumentNullException(nameof(getState));
+        if (@event is null) throw new ArgumentNullException(nameof(@event));
+        if (getState is null) throw new ArgumentNullException(nameof(getState));
 
         return AddTransition(@event, getState, false, null);
       }
@@ -70,8 +70,8 @@ namespace Binstate
 #pragma warning restore 1574,1584,1581,1580
       public Transitions AddTransition(TEvent @event, Func<TState?> getState)
       {
-        if (@event == null) throw new ArgumentNullException(nameof(@event));
-        if (getState == null) throw new ArgumentNullException(nameof(getState));
+        if (@event is null) throw new ArgumentNullException(nameof(@event));
+        if (getState is null) throw new ArgumentNullException(nameof(getState));
 
         var getStateWrapper = new GetState<TState>((out TState? state) =>
           {

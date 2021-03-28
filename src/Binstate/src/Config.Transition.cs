@@ -15,12 +15,10 @@ namespace Binstate
     {
       internal readonly TState StateId;
 
-      /// <summary>
-      /// Protected ctor
-      /// </summary>
+      /// <summary> Protected ctor </summary>
       protected Transitions(TState stateId) => StateId = stateId ?? throw new ArgumentNullException(nameof(stateId));
 
-      internal readonly Dictionary<TEvent, Transition<TState, TEvent>> TransitionList = new Dictionary<TEvent, Transition<TState, TEvent>>();
+      internal readonly Dictionary<TEvent, Transition<TState, TEvent>> TransitionList = new();
 
       /// <summary>
       /// Defines transition from the currently configured state to the <paramref name="stateId"> specified state</paramref> when <paramref name="event"> event is raised</paramref> 

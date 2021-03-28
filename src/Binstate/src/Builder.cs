@@ -7,10 +7,10 @@ namespace Binstate
   /// <summary>
   /// This class is used to configure and build a state machine.  
   /// </summary>
-  public class Builder<TState, TEvent>
+  public class Builder<TState, TEvent> where TState: notnull where TEvent: notnull
   {
     private readonly Action<Exception> _onException;
-    private readonly Dictionary<TState, Config<TState, TEvent>.State> _stateConfigs = new Dictionary<TState, Config<TState, TEvent>.State>();
+    private readonly Dictionary<TState, Config<TState, TEvent>.State> _stateConfigs = new();
 
     /// <summary>
     /// Creates a builder of a state machine, use it to define state and configure transitions.

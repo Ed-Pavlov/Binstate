@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using FluentAssertions;
 using NUnit.Framework;
 
 namespace Binstate.Tests
 {
+  [SuppressMessage("ReSharper", "UnusedParameter.Local")]
   public class ArgumentPassingTest : StateMachineTestBase
   {
     [TestCaseSource(nameof(RaiseWays))]

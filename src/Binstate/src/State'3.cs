@@ -9,6 +9,7 @@ namespace Binstate
   /// All these complex generic stuff is introduced to avoid casting to 'object' and thus avoid boxing when value type instance is used as the argument.
   /// </summary>
   internal class State<TState, TEvent, TArgument> : State<TState, TEvent>, IState<TState, TEvent, TArgument>
+    where TState: notnull where TEvent: notnull
   {
     public TArgument? Argument;
 
@@ -33,6 +34,6 @@ namespace Binstate
         });
     }
     
-    public MixOf<TA, TArgument> CreateTuple<TA>(TA argument) => new MixOf<TA, TArgument>(argument.ToMaybe(), Argument.ToMaybe());  
+    public MixOf<TA, TArgument> CreateTuple<TA>(TA argument) => new(argument.ToMaybe(), Argument.ToMaybe());  
   }
 }

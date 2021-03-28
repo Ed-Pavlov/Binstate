@@ -346,7 +346,7 @@ namespace Binstate.Tests
         .AddTransition(Event1, State1);
 
       // --act
-      Action target = () => config.AddTransition(Event1, State2);;
+      Action target = () => config.AddTransition(Event1, State2);
       
       // --assert
       target.Should().ThrowExactly<ArgumentException>().WithMessage($"An item with the same key has already been added*");

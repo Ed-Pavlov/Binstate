@@ -1,10 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Binstate
+﻿namespace Binstate
 {
   internal readonly struct Maybe<T>
   {
-    public static readonly Maybe<T> Nothing = new Maybe<T>();
+    public static readonly Maybe<T> Nothing = new();
 
     public Maybe(T? value)
     {
@@ -18,6 +16,6 @@ namespace Binstate
 
   internal static class Maybe
   {
-    public static Maybe<T> ToMaybe<T>(this T? value) => new Maybe<T>(value);
+    public static Maybe<T> ToMaybe<T>(this T? value) => new(value);
   }
 }

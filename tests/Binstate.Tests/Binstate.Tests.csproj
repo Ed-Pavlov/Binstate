@@ -7,7 +7,7 @@
         <SignAssembly>true</SignAssembly>
         <AssemblyOriginatorKeyFile>..\..\src\Binstate\build\binstate.public.snk</AssemblyOriginatorKeyFile>
         <PublicSign>true</PublicSign>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFrameworks>net5.0;netcoreapp3.1</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>

@@ -7,7 +7,7 @@ namespace Binstate
   /// </summary>
   internal readonly struct MixOf<TArgument, TRelay>
   {
-    public static readonly MixOf<TArgument, TRelay> Empty = new MixOf<TArgument, TRelay>();
+    public static readonly MixOf<TArgument, TRelay> Empty = new();
     
     public MixOf(Maybe<TArgument> passedArgument, Maybe<TRelay> relayedArgument)
     {

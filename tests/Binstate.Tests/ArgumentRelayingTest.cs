@@ -157,7 +157,8 @@ namespace Binstate.Tests
       target.Relaying<Stream>().Raise(raiseWay, Event2, expectedPassedValue); // pass and relay arguments to State2 
       
       // --assert
-      actual.PassedArgument.Should().Be(expectedPassedValue);
+      actual.Should().NotBeNull();
+      actual!.PassedArgument.Should().Be(expectedPassedValue);
       actual.RelayedArgument.Should().Be(expectedRelayedValue);
     }
 
@@ -194,7 +195,7 @@ namespace Binstate.Tests
       // --assert
       actualPassed.Should().Be(expectedPassed);
       actualRelayed.Should().Be(expectedRelayed);
-      actualTuple.PassedArgument.Should().Be(expectedPassed);
+      actualTuple!.PassedArgument.Should().Be(expectedPassed);
       actualTuple.RelayedArgument.Should().Be(expectedRelayed);
     }
     

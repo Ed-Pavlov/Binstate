@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Binstate
 {
-  internal class State<TState, TEvent>
+  internal class State<TState, TEvent> where TState: notnull where TEvent: notnull
   {
     private readonly IEnterActionInvoker? _enterAction;
     private readonly Action? _exitAction;
@@ -17,13 +17,13 @@ namespace Binstate
     /// This event is used to avoid race condition when <see cref="ExitSafe"/> method is called before <see cref="EnterSafe"/> method.
     /// See usages for details.
     /// </summary>
-    private readonly ManualResetEvent _entered = new ManualResetEvent(true);
+    private readonly ManualResetEvent _entered = new(true);
 
     /// <summary>
     /// This event is used to wait while state's 'enter' action is finished before call 'exit' action and change the active state of the state machine.
     /// See usages for details. 
     /// </summary>
-    private readonly ManualResetEvent _enterActionFinished = new ManualResetEvent(true);
+    private readonly ManualResetEvent _enterActionFinished = new(true);
 
     /// <summary>
     /// This task is used to wait while state's 'enter' action is finished before call 'exit' action and change the active state of the state machine in
@@ -51,7 +51,6 @@ namespace Binstate
       DepthInTree = parentState?.DepthInTree + 1 ?? 0;
     }
 
-    //TODO: why nullability think it can be null?
     public readonly TState Id;
     public readonly Type? EnterArgumentType;
 
@@ -146,6 +145,6 @@ namespace Binstate
       return false;
     }
 
-    public override string ToString() => Id!.ToString();
+    public override string ToString() => Id.ToString();
   }
 }

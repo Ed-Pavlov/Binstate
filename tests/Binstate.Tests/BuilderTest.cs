@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using FluentAssertions;
 using NUnit.Framework;
 
 namespace Binstate.Tests
 {
+  [SuppressMessage("ReSharper", "UnusedParameter.Local")]
   public class BuilderTest : StateMachineTestBase
   {
     [Test]

@@ -21,7 +21,8 @@ namespace Binstate
 
         if (!_activeState!.FindTransitionTransitive(@event, out var transition)  // looks for a transition through all parent states
           || !transition.GetTargetStateId(out var stateId))
-        { // no transition by specified event is found or dynamic transition returns null as target state id
+        { 
+          // no transition by specified event is found or dynamic transition returns null as target state id
           _lock.Set();
           return null;
         }
@@ -115,7 +116,7 @@ namespace Binstate
     }
 
     private static Tuple<TArgument, TRelay> CreateTuple<TArgument, TRelay>(MixOf<TArgument, TRelay> mixOf) =>
-      new Tuple<TArgument, TRelay>(mixOf.PassedArgument.Value, mixOf.RelayedArgument.Value);
+      new(mixOf.PassedArgument.Value, mixOf.RelayedArgument.Value);
 
     private static MixOf<TArgument, TRelay> PrepareRealArgument<TArgument, TRelay>(TArgument argument, State<TState, TEvent>? sourceState, Maybe<TRelay> backupRelayArgument)
     {

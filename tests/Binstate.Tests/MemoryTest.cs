@@ -1,9 +1,11 @@
-﻿using FluentAssertions;
+﻿using System.Diagnostics.CodeAnalysis;
+using FluentAssertions;
 using JetBrains.dotMemoryUnit;
 using NUnit.Framework;
 
 namespace Binstate.Tests
 {
+  [SuppressMessage("ReSharper", "UnusedParameter.Local")]
   public class MemoryTest : StateMachineTestBase
   {
     [TestCaseSource(nameof(RaiseWays))]
@@ -43,7 +45,7 @@ namespace Binstate.Tests
       // actual.Should().Be(expected); -- this method leads boxing
       actual1.Value.Should().Be(expected1.Value);
       actual2.Value.Should().Be(expected2.Value);
-      actualTuple.RelayedArgument.Value.Should().Be(expected1.Value);
+      actualTuple!.RelayedArgument.Value.Should().Be(expected1.Value);
       actualTuple.PassedArgument.Value.Should().Be(expected2.Value);
     }
     

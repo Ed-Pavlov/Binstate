@@ -69,6 +69,7 @@ namespace Binstate.Tests
       var builder = new Builder<string, string>(OnException);
       var config = builder.DefineState(Initial);
       
+#pragma warning disable 8625
       // --act
       Action target01 = () => config.OnEnter((Action)null);
       Action target02 = () => config.OnEnter((Func<Task>)null);
@@ -87,6 +88,7 @@ namespace Binstate.Tests
       
       Action target11 = () => config.OnEnter((Action<IStateMachine<string>, object, object>)null);
       Action target12 = () => config.OnEnter((Func<IStateMachine<string>, object, object, Task>)null);
+#pragma warning restore 8625
       
       // --assert
       target01.Should().ThrowExactly<ArgumentNullException>();
@@ -150,12 +152,14 @@ namespace Binstate.Tests
       var config = builder.DefineState(Initial);
 
       // --act
+#pragma warning disable 8625
       Action target1 = () => config.AddTransition(null, Initial);
       Action target2 = () => config.AddTransition(Initial, null, null);
       Action target3 = () => config.AddTransition(null, () => "func");
       Action target4 = () => config.AddTransition(Initial, (Func<string>) null);
       Action target5 = () => config.AddTransition(null, GetState);
       Action target6 = () => config.AddTransition(Initial, (GetState<string>) null);
+#pragma warning restore 8625
 
       // --assert
       target1.Should().ThrowExactly<ArgumentNullException>();

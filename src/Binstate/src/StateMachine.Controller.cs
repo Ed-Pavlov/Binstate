@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Binstate
 {
-  public partial class StateMachine<TState, TEvent>
+  public partial class StateMachine<TState, TEvent>  where TState: notnull where TEvent: notnull
   {
     private class Controller : IStateMachine<TEvent>
     {

@@ -20,7 +20,7 @@ namespace Binstate
     /// </summary>
     private readonly Dictionary<TState, State<TState, TEvent>> _states;
 
-    private readonly AutoResetEvent _lock = new AutoResetEvent(true);
+    private readonly AutoResetEvent _lock = new(true);
     private volatile State<TState, TEvent>? _activeState;
 
     internal StateMachine(Dictionary<TState, State<TState, TEvent>> states, Action<Exception> onException)

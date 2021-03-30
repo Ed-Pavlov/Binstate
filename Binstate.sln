@@ -1,12 +1,20 @@
-﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{903ABD44-0ABA-458A-A2A8-6E2114661153}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{159800A0-47C2-4A48-927F-EB09CF9497AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binstate", "Binstate\Binstate.csproj", "{A127DD60-A615-4E6A-87AB-77CDD5C5A24C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binstate", "src\Binstate\Binstate.csproj", "{A127DD60-A615-4E6A-87AB-77CDD5C5A24C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binstate.Tests", "..\tests\Binstate.Tests\Binstate.Tests.csproj", "{1815BD5A-2FF1-4213-860D-021E24FC40B8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binstate.Tests", "tests\Binstate.Tests\Binstate.Tests.csproj", "{1815BD5A-2FF1-4213-860D-021E24FC40B8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{F52DA9F2-4C72-4648-928C-1C53ECE9555D}"
+ProjectSection(SolutionItems) = preProject
+	build\binstate.public.snk = build\binstate.public.snk
+	build\Documentation.md = build\Documentation.md
+	build\GlobalAssemblyInfo.cs = build\GlobalAssemblyInfo.cs
+	build\icon.png = build\icon.png
+	build\logo-big.png = build\logo-big.png
+EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

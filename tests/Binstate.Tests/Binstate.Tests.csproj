@@ -4,9 +4,6 @@
         <LangVersion>9</LangVersion>
         <Nullable>warnings</Nullable>
         <OutputType>Library</OutputType>
-        <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>..\..\src\Binstate\build\binstate.public.snk</AssemblyOriginatorKeyFile>
-        <PublicSign>true</PublicSign>
         <TargetFrameworks>net5.0;netcoreapp3.1</TargetFrameworks>
     </PropertyGroup>
 
@@ -21,12 +18,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\src\Binstate\Binstate.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Include="..\..\src\Binstate\build\binstate.public.snk">
-        <Link>binstate.public.snk</Link>
-      </None>
     </ItemGroup>
 
 </Project>

@@ -5,7 +5,7 @@
         <Nullable>enable</Nullable>
         <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
         <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>build\binstate.public.snk</AssemblyOriginatorKeyFile>
+        <AssemblyOriginatorKeyFile>..\..\build\binstate.public.snk</AssemblyOriginatorKeyFile>
         <PublicSign>true</PublicSign>
         <TargetFramework>netstandard2.1</TargetFramework>
     </PropertyGroup>
@@ -35,12 +35,7 @@
         <DocumentationFile>bin\Release\Binstate.xml</DocumentationFile>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
-
-    <ItemGroup>
-        <None Include="build\icon.png" Pack="true" PackagePath="">
-        </None>
-    </ItemGroup>
-
+	
     <ItemGroup>
       <Compile Update="src\Config.Transition.cs">
         <DependentUpon>Config.cs</DependentUpon>
@@ -75,5 +70,17 @@
       <Compile Update="src\IEnterActionInvoker.cs">
         <DependentUpon>EnterActionInvoker.cs</DependentUpon>
       </Compile>
+      <Compile Include="..\..\build\GlobalAssemblyInfo.cs">
+        <Link>build\GlobalAssemblyInfo.cs</Link>
+      </Compile>
+    </ItemGroup>
+	
+    <ItemGroup>
+      <Content Include="..\..\build\binstate.public.snk">
+        <Link>build\binstate.public.snk</Link>
+      </Content>
+      <Content Include="..\..\build\icon.png" Pack="true" PackagePath="">
+        <Link>build\icon.png</Link>
+      </Content>
     </ItemGroup>
 </Project>

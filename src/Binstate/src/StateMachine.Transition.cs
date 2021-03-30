@@ -20,14 +20,14 @@ namespace Binstate
         _lock.WaitOne();
 
         if (!_activeState!.FindTransitionTransitive(@event, out var transition)  // looks for a transition through all parent states
-          || !transition.GetTargetStateId(out var stateId))
+          || !transition!.GetTargetStateId(out var stateId))
         { 
           // no transition by specified event is found or dynamic transition returns null as target state id
           _lock.Set();
           return null;
         }
 
-        var targetState = GetStateById(stateId);
+        var targetState = GetStateById(stateId!);
 
         var mixedArgument = PrepareRealArgument(argument, _activeState, backupRelayArgument);
         var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -128,7 +127,8 @@ namespace Binstate
       }
     }
 
-    public bool FindTransitionTransitive(TEvent @event, [NotNullWhen(returnValue: true)] out Transition<TState, TEvent>? transition)
+    // use [NotNullWhen(returnValue: true)] when upgrading to .netstandard 2.1 and update usages
+    public bool FindTransitionTransitive(TEvent @event, out Transition<TState, TEvent>? transition)
     {
       var state = this;
       while (state != null)

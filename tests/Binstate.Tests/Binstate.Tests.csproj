@@ -4,7 +4,7 @@
         <LangVersion>9</LangVersion>
         <Nullable>warnings</Nullable>
         <OutputType>Library</OutputType>
-        <TargetFrameworks>net5.0;netcoreapp3.1</TargetFrameworks>
+        <TargetFrameworks>net45;netcoreapp3.1</TargetFrameworks>
     </PropertyGroup>
 
     <ItemGroup>

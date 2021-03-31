@@ -16,6 +16,14 @@ ProjectSection(SolutionItems) = preProject
 	build\logo-big.png = build\logo-big.png
 EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{846F7656-28AE-4222-A7B9-815ACC03E132}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{09AD0273-F2D8-4A2B-B38A-79221289A129}"
+ProjectSection(SolutionItems) = preProject
+	.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+	.github\workflows\GitVersion.yml = .github\workflows\GitVersion.yml
+EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +32,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{A127DD60-A615-4E6A-87AB-77CDD5C5A24C} = {159800A0-47C2-4A48-927F-EB09CF9497AC}
 		{1815BD5A-2FF1-4213-860D-021E24FC40B8} = {903ABD44-0ABA-458A-A2A8-6E2114661153}
+		{09AD0273-F2D8-4A2B-B38A-79221289A129} = {846F7656-28AE-4222-A7B9-815ACC03E132}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A127DD60-A615-4E6A-87AB-77CDD5C5A24C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU

@@ -2,7 +2,9 @@ name: .NET
 
 on:
   push:
-    branches: [ master ]
+    branches: 
+      - master
+      - setup-git-actions
 #  pull_request:
 #    branches: [ master ]
 
@@ -14,6 +16,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2.3.4
+      with:
+       fetch-depth: 0
     
     - name: Install GitVersion
       uses: gittools/actions/gitversion/setup@v0.9.9

@@ -14,6 +14,7 @@ ProjectSection(SolutionItems) = preProject
 	build\GlobalAssemblyInfo.cs = build\GlobalAssemblyInfo.cs
 	build\icon.png = build\icon.png
 	build\logo-big.png = build\logo-big.png
+	GitVersion.yml = GitVersion.yml
 EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{846F7656-28AE-4222-A7B9-815ACC03E132}"

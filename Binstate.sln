@@ -20,8 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{846F
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{09AD0273-F2D8-4A2B-B38A-79221289A129}"
 ProjectSection(SolutionItems) = preProject
-	.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
 	.github\workflows\GitVersion.yml = .github\workflows\GitVersion.yml
+	.github\workflows\build-and-test.yml = .github\workflows\build-and-test.yml
 EndProjectSection
 EndProject
 Global

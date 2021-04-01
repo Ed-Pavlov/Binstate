@@ -4,6 +4,7 @@ assembly-file-versioning-scheme: MajorMinorPatch
 assembly-informational-format: '{Major}.{Minor}.{Patch}.{Sha}'
 mode: ContinuousDeployment
 increment: Patch
+source-branches: ['master']
 branches: 
    master:
      regex: ^master

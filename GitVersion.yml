@@ -5,8 +5,12 @@ assembly-informational-format: '{Major}.{Minor}.{Patch}.{Sha}'
 mode: ContinuousDeployment
 increment: Patch
 branches: 
-   - master
-   - setup-git-actions
+   master:
+     regex: ^master
+     mode: ContinuousDeployment
+   setup-git-actions:
+     regex: ^setup-git-actions
+     mode: ContinuousDeployment
 ignore:
   sha: []
 merge-message-formats: {}

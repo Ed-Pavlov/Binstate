@@ -6,9 +6,7 @@ using System.Runtime.InteropServices;
 [assembly: CLSCompliant(true)]
 [assembly: ComVisible(false)]
 
-[assembly: AssemblyTitle("Binstate")]
-[assembly: AssemblyProduct("Binstate")]
-[assembly: AssemblyCopyright("Copyright © 2020 Ed Pavlov")]
+
 [assembly: AssemblyDescription("Hierarchical state machine implementation")]
 
 [assembly: InternalsVisibleTo("Binstate.Tests, PublicKey=00240000048000009400000006020000002400" +

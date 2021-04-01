@@ -1,7 +1,6 @@
-next-version: 1.0.35
 assembly-versioning-scheme: MajorMinor
 assembly-file-versioning-scheme: MajorMinorPatch
-assembly-informational-format: '{InformationalVersion}'
+assembly-informational-format: '{Major}.{Minor}.{Patch}.{Sha}'
 mode: ContinuousDeployment
 increment: Patch
 branches: {}

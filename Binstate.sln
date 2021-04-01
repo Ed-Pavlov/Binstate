@@ -11,7 +11,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{F52DA9F2
 ProjectSection(SolutionItems) = preProject
 	build\binstate.public.snk = build\binstate.public.snk
 	build\Documentation.md = build\Documentation.md
-	build\GlobalAssemblyInfo.cs = build\GlobalAssemblyInfo.cs
 	build\icon.png = build\icon.png
 	build\logo-big.png = build\logo-big.png
 	GitVersion.yml = GitVersion.yml

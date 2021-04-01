@@ -11,6 +11,7 @@ branches:
   setup-git-actions:
     regex: ^setup-git-actions
     mode: ContinuousDeployment
+    source-branches: ['master']
 ignore:
   sha: []
 merge-message-formats: {}

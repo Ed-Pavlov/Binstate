@@ -32,6 +32,8 @@ jobs:
     - name: Use GitVersion
       id: gitversion # step id used as reference for output values
       uses: gittools/actions/gitversion/execute@v0.9.9
+    
+    - name: Debug info
       run: |
         echo "PreReleaseTag: ${{ steps.gitversion.outputs.preReleaseTag }}"
         echo "PreReleaseNumber: ${{ steps.gitversion.outputs.preReleaseNumber }}"

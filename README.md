@@ -1,5 +1,7 @@
 [![Nuget](https://img.shields.io/nuget/dt/Binstate)](https://www.nuget.org/packages/Binstate/)
-[![TeamCity](https://edpavlov.beta.teamcity.com/app/rest/builds/buildType:(id:Binstate_Build)/statusIcon.svg)](https://edpavlov.beta.teamcity.com/viewType.html?buildTypeId=Binstate_Build&guest=1)
+
+[![Build & Test](https://github.com/Ed-Pavlov/Binstate/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/Ed-Pavlov/Binstate/actions/workflows/build-and-test.yml)
+
 ___
 <p align="center">
  <a href="https://github.com/Ed-Pavlov/Binstate/releases">

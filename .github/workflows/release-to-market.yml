@@ -3,8 +3,7 @@ name: Release to Market
 on: workflow_dispatch
 
 env:
-  artifacts-dir: artifacts
-  nugets-dir: artifacts/nupkgs
+  nugets-dir: nupkgs
 
 jobs:
  
@@ -25,7 +24,7 @@ jobs:
       id: version
       uses: antifree/json-to-variables@v1.0.1
       with:
-        filename: versions.json
+        filename: version.json
         
     - name: Publish Nugets to nuget.org
       run: dotnet nuget push "${{ env.nugets-dir }}/*.nupkg" -k ${{ secrets.nuget_api_key }} -s https://api.nuget.org/v3/index.json

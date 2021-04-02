@@ -49,7 +49,7 @@ jobs:
     - name: Store Version
       uses: jsdaniell/create-json@1.1.2
       with:
-       name: versions.json
+       name: version.json
        json: |
          {
            "assembly-version": "${{ steps.gitversion.outputs.assemblySemVer }}",

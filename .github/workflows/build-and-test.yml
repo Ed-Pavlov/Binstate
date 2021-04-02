@@ -45,7 +45,7 @@ jobs:
     # Place nuget packages into env.artifacts-dir directory
     - name: Pack
       run: dotnet pack --no-build -c ${{env.configuration}} -o:${{env.artifacts-dir}}  -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
-      
+    
     - name: Store Version
       uses: jsdaniell/create-json@1.1.2
       with:
@@ -57,7 +57,7 @@ jobs:
            "nuget-version": ${{ steps.gitversion.outputs.nuGetVersionV2 }}, 
          }
        dir: ${{env.artifacts-dir}}
-       
+     
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2.2.2
       with:

@@ -8,11 +8,13 @@ env:
 jobs:
  
   publish:
+    runs-on: ubuntu-latest 
+    
     steps:
     - name: Download artifacts
       uses: actions/download-artifact@v2.0.8
-        with:
-        path: ${{env.artifacts-dir}}/*.nupkg
+      with:
+        name: Nuget
 
     - name: Publish
       run: dotnet nuget push "${{env.artifacts-dir}}/*.nupkg" -k ${{secrets.nuget_api_key}}

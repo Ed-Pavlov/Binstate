@@ -28,4 +28,4 @@ jobs:
         path: ${{env.artifacts-dir}}
         
     - name: Publish
-      run: dotnet nuget push "${{env.artifacts-dir}}/*.nupkg" -k ${{secrets.nuget_api_key}}
+      run: dotnet nuget push "${{env.artifacts-dir}}/*.nupkg" -k ${{secrets.nuget_api_key}} -s https://api.nuget.org/v3/index.json 

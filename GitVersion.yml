@@ -4,7 +4,11 @@ assembly-file-versioning-scheme: MajorMinorPatch
 assembly-informational-format: '{Major}.{Minor}.{Patch}.{Sha}'
 mode: ContinuousDeployment
 increment: Patch
-branches: {}
+branches:
+  master:
+    regex: ^master
+    tag: ''
+    is-release-branch: true
 ignore:
   sha: []
 merge-message-formats: {}

@@ -3,8 +3,8 @@ name: Release to Market
 on: workflow_dispatch
 
 env:
-  artifacts-dir: Artifacts
-  nugets-dir: ${{ artifacts-dir }}/nupkgs
+  artifacts-dir: artifacts
+  nugets-dir: artifacts/nupkgs
 
 jobs:
  

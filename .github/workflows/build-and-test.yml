@@ -10,8 +10,8 @@ on:
 
 env:
   configuration: Release
-  artifacts-dir: Artifacts
-  nugets-dir: ${{ artifacts-dir }}/nupkgs
+  artifacts-dir: artifacts
+  nugets-dir: artifacts/nupkgs
 
 jobs:
   build:

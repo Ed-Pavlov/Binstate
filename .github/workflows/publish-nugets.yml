@@ -18,14 +18,17 @@ jobs:
         github_token: ${{secrets.GITHUB_TOKEN}}
         workflow: build-and-test.yml         # Required, workflow file name or ID
         branch: master
-        # pr: ${{github.event.pull_request.number}} # Optional, will get head commit SHA
+        name: Artifacts
         
-        # Optional, uploaded artifact name,
-        # will download all artifacts if not specified
-        # and extract them in respective subdirectories
-        # https://github.com/actions/download-artifact#download-all-artifacts
-        name: Nuget
-        path: ${{env.artifacts-dir}}
+    - name: Read version
+      id: version
+      uses: antifree/json-to-variables@v1.0.1
+      with:
+        filename: artifact.json
+        prefix: ''
         
-    - name: Publish
-      run: dotnet nuget push "${{env.artifacts-dir}}/*.nupkg" -k ${{secrets.nuget_api_key}} -s https://api.nuget.org/v3/index.json 
+    - run: echo ${{steps.version.outputs.assembly-version}}
+     
+        
+#    - name: Publish
+#       run: dotnet nuget push "${{env.artifacts-dir}}/*.nupkg" -k ${{secrets.nuget_api_key}} -s https://api.nuget.org/v3/index.json 

@@ -38,16 +38,31 @@ jobs:
       with:
         dotnet-version: 5.0.x
         
-     #restore build and test as one command in order to not copy/paste the same arguments      
+    # Restore build and test as one command in order to not copy/paste the same arguments      
     - name: Restore, build, and run tests
       run: dotnet test -c ${{env.configuration}} -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
       
+    # Place nuget packages into env.artifacts-dir directory
     - name: Pack
       run: dotnet pack --no-build -c ${{env.configuration}} -o:${{env.artifacts-dir}}  -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
 
-    - name: Upload a Build Artifact
+  - name: Store Version
+     uses: jsdaniell/create-json@1.1.2
+     with:
+      name: artifact.json
+      json: |
+        {
+          "assembly-version": ${{ steps.gitversion.outputs.assemblySemVer }}, 
+          "assembly-file-version": ${{ steps.gitversion.outputs.assemblySemFileVer }}, 
+          "nuget-version": ${{ steps.gitversion.outputs.nuGetVersionV2 }}, 
+        }
+      dir: ${{env.artifacts-dir}}
+
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v2.2.2
       with:
-        name: Nuget
-        path: ${{env.artifacts-dir}}/*.nupkg
+        name: Artifacts
+        path: ${{env.artifacts-dir}}/
         retention-days: 3
+        
+    

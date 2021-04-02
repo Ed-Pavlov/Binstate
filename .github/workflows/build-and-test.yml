@@ -9,9 +9,14 @@ on:
 #    branches: [ master ]
 
 jobs:
+ 
   build:
 
     runs-on: windows-latest
+
+    env:
+      configuration: Release
+      artifacts-dir: nupkgs
 
     steps:
     - name: Checkout
@@ -67,13 +72,13 @@ jobs:
         
 #restore build and test as one command in order to not copy/paste the same arguments      
     - name: Restore, build, and run tests
-      run: dotnet test -c Release -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
+      run: dotnet test -c ${{env.configuration}} -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
       
     - name: Pack
-      run: dotnet pack --no-build -o:nupkgs -p:PackageVersion=${{ steps.gitversion.outputs.majorMinorPatch }}
+      run: dotnet pack --no-build -c ${{env.configuration}} -o:${{env.artifacts-dir}}  -p:PackageVersion=${{ steps.gitversion.outputs.majorMinorPatch }}
 
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v2.2.2
       with:
-        path: nupkgs/*.nupkg
+        path: ${{env.artifacts-dir}}/*.nupkg
         retention-days: 3

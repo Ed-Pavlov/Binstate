@@ -12,9 +12,9 @@ jobs:
     
     steps:
        # https://github.com/dawidd6/action-download-artifact
-     - name: Download artifact
-       uses: dawidd6/action-download-artifact@v2
-       with:
+    - name: Download artifact
+      uses: dawidd6/action-download-artifact@v2
+      with:
         github_token: ${{secrets.GITHUB_TOKEN}}
         workflow: build-and-test.yml         # Required, workflow file name or ID
         branch: master

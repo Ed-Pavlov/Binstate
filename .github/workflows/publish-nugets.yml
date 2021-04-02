@@ -11,10 +11,26 @@ jobs:
     runs-on: ubuntu-latest 
     
     steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v2.0.8
-      with:
+       # https://github.com/dawidd6/action-download-artifact
+     - name: Download artifact
+       uses: dawidd6/action-download-artifact@v2
+       with:
+        github_token: ${{secrets.GITHUB_TOKEN}}
+        workflow: build-and-test.yml         # Required, workflow file name or ID
+        branch: master
+        # pr: ${{github.event.pull_request.number}} # Optional, will get head commit SHA
+        
+        # Optional, uploaded artifact name,
+        # will download all artifacts if not specified
+        # and extract them in respective subdirectories
+        # https://github.com/actions/download-artifact#download-all-artifacts
         name: Nuget
+        path: ${{env.artifacts-dir}}
+      
+#    - name: Download artifacts
+#      uses: actions/download-artifact@v2.0.8
+#      with:
+#        name: Nuget
 
     - name: Publish
       run: dotnet nuget push "${{env.artifacts-dir}}/*.nupkg" -k ${{secrets.nuget_api_key}}

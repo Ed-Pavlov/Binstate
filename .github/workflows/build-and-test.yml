@@ -51,9 +51,9 @@ jobs:
        name: artifact.json
        json: |
          {
-           "assembly-version": ${{ steps.gitversion.outputs.assemblySemVer }}, 
-           "assembly-file-version": ${{ steps.gitversion.outputs.assemblySemFileVer }}, 
-           "nuget-version": ${{ steps.gitversion.outputs.nuGetVersionV2 }}, 
+           "assembly-version": "${{ steps.gitversion.outputs.assemblySemVer }}",
+           "assembly-file-version": "${{ steps.gitversion.outputs.assemblySemFileVer }}",
+           "nuget-version": "${{ steps.gitversion.outputs.nuGetVersionV2 }}"
          }
        dir: ${{env.artifacts-dir}}
      

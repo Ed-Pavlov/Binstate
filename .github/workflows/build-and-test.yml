@@ -10,7 +10,8 @@ on:
 
 env:
   configuration: Release
-  artifacts-dir: nupkgs
+  artifacts-dir: Artifacts
+  nugets-dir: ${{ artifacts-dir }}/nupkgs
 
 jobs:
   build:
@@ -41,21 +42,21 @@ jobs:
     - name: Restore, build, and run tests
       run: dotnet test -c ${{env.configuration}} -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
       
-    # Place nuget packages into env.artifacts-dir directory
+    # Place nuget packages into env.nugets-dir directory
     - name: Pack
-      run: dotnet pack --no-build -c ${{env.configuration}} -o:${{env.artifacts-dir}}  -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
+      run: dotnet pack --no-build -c ${{ env.configuration }} -o:${{ env.nugets-dir }}  -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
     
     - name: Store Version
       uses: jsdaniell/create-json@1.1.2
       with:
-       name: artifact.json
+       name: versions.json
        json: |
          {
            "assembly-version": "${{ steps.gitversion.outputs.assemblySemVer }}",
            "assembly-file-version": "${{ steps.gitversion.outputs.assemblySemFileVer }}",
            "nuget-version": "${{ steps.gitversion.outputs.nuGetVersionV2 }}"
          }
-       dir: ${{env.artifacts-dir}}
+       dir: ${{ env.artifacts-dir }}
      
     - name: Upload Artifacts
       uses: actions/upload-artifact@v2.2.2

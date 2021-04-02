@@ -2,7 +2,7 @@ next-version: 1.1
 assembly-versioning-scheme: MajorMinor
 assembly-file-versioning-scheme: MajorMinorPatch
 assembly-informational-format: '{Major}.{Minor}.{Patch}.{Sha}'
-mode: ContinuousDeployment
+mode: Mainline
 increment: Patch
 branches: {}
 ignore:

@@ -65,14 +65,9 @@ jobs:
       with:
         dotnet-version: 5.0.x
         
-    - name: Restore dependencies
-      run: dotnet restore
-      
-    - name: Build
-      run: dotnet build --no-restore -c Release -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
-      
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+#restore build and test as one command in order to not copy/paste the same arguments      
+    - name: Restore, build, and run tests
+      run: dotnet test -c Release -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
       
     - name: Pack
       run: dotnet pack --no-build -o:nupkgs -p:PackageVersion=${{ steps.gitversion.outputs.majorMinorPatch }}

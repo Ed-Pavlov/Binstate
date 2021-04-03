@@ -32,7 +32,7 @@ jobs:
     - name: Make Github Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ env.json_nuget-version }}
+        tag_name: v${{ env.json_nuget-version }}
         files: ${{ env.nugets-dir }}/*.nupkg
         fail_on_unmatched_files: true
       env:

@@ -2,7 +2,5 @@
 
 namespace Binstate.Tests
 {
-  public class TestException : Exception
-  {
-  }
+  public class TestException : Exception { }
 }

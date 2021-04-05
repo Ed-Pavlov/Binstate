@@ -7,9 +7,9 @@ namespace Binstate
   /// <summary>
   /// This class is used to configure and build a state machine.  
   /// </summary>
-  public class Builder<TState, TEvent> where TState: notnull where TEvent: notnull
+  public class Builder<TState, TEvent> where TState : notnull where TEvent : notnull
   {
-    private readonly Action<Exception> _onException;
+    private readonly Action<Exception>                                _onException;
     private readonly Dictionary<TState, Config<TState, TEvent>.State> _stateConfigs = new();
 
     /// <summary>
@@ -26,10 +26,11 @@ namespace Binstate
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
     public Config<TState, TEvent>.State DefineState(TState stateId)
     {
-      if (stateId is null) throw new ArgumentNullException(nameof(stateId));
+      if(stateId is null) throw new ArgumentNullException(nameof(stateId));
 
       var stateConfig = new Config<TState, TEvent>.State(stateId);
       _stateConfigs.Add(stateId, stateConfig);
+
       return stateConfig;
     }
 
@@ -40,10 +41,11 @@ namespace Binstate
     /// <remarks>Use returned syntax-sugar object to configure the new state.</remarks>
     public Config<TState, TEvent>.State GetOrDefineState(TState stateId)
     {
-      if (stateId is null) throw new ArgumentNullException(nameof(stateId));
+      if(stateId is null) throw new ArgumentNullException(nameof(stateId));
 
-      if(!_stateConfigs.TryGetValue(stateId, out var stateConfig)) 
+      if(!_stateConfigs.TryGetValue(stateId, out var stateConfig))
         stateConfig = DefineState(stateId);
+
       return stateConfig;
     }
 
@@ -61,42 +63,46 @@ namespace Binstate
     /// <exception cref="InvalidOperationException">Throws if there are any inconsistencies in the provided configuration.</exception>
     public StateMachine<TState, TEvent> Build<T>(TState initialStateId, T? initialStateArgument, bool enableLooseRelaying = false)
     {
-      if (initialStateId is null) throw new ArgumentNullException(nameof(initialStateId));
+      if(initialStateId is null) throw new ArgumentNullException(nameof(initialStateId));
 
-      if (!_stateConfigs.ContainsKey(initialStateId))
+      if(!_stateConfigs.ContainsKey(initialStateId))
         throw new ArgumentException($"No state '{initialStateId}' is defined");
-      
+
       var initialStateConfig = _stateConfigs[initialStateId];
 
       if(initialStateConfig.TransitionList.Count == 0)
         throw new ArgumentException("No transitions defined from the initial state");
-      
+
       // create all states
       var states = new Dictionary<TState, State<TState, TEvent>>();
-      foreach (var stateConfig in _stateConfigs.Values) 
+
+      foreach(var stateConfig in _stateConfigs.Values)
         CreateStateAndAddToMap(stateConfig, states);
 
       var initialState = states[initialStateId];
+
       if(Argument.IsSpecified<T>())
       {
-        if (initialState.EnterArgumentType is null)
+        if(initialState.EnterArgumentType is null)
           throw new InvalidOperationException("The enter action of the initial state doesn't require argument, but argument is provided.");
       }
       else
       {
-        if (initialState.EnterArgumentType is not null)
+        if(initialState.EnterArgumentType is not null)
           throw new InvalidOperationException("The enter action of the initial state requires argument, but no argument is provided.");
       }
-        
+
       ValidateTransitions(states);
+
       if(!enableLooseRelaying)
         ValidateSubstateEnterArgument(states);
 
       var stateMachine = new StateMachine<TState, TEvent>(states, _onException);
       stateMachine.SetInitialState(initialStateId, initialStateArgument);
+
       return stateMachine;
     }
-    
+
     /// <summary>
     /// Validates consistency and builds the state machine using provided configuration. 
     /// </summary>
@@ -108,62 +114,70 @@ namespace Binstate
     /// of state requires an argument but some not.
     /// </param>
     /// <exception cref="InvalidOperationException">Throws if there are any inconsistencies in the provided configuration.</exception>
-    public StateMachine<TState, TEvent> Build(TState initialStateId, bool enableLooseRelaying = false) => 
-      Build<Unit>(initialStateId, default, enableLooseRelaying);
+    public StateMachine<TState, TEvent> Build(TState initialStateId, bool enableLooseRelaying = false)
+      => Build<Unit>(initialStateId, default, enableLooseRelaying);
 
     private State<TState, TEvent> CreateStateAndAddToMap(Config<TState, TEvent>.State stateConfig, Dictionary<TState, State<TState, TEvent>> states)
     {
-      if (!states.TryGetValue(stateConfig.StateId, out var state)) // state could be already created during creating parent states
+      if(!states.TryGetValue(stateConfig.StateId, out var state)) // state could be already created during creating parent states
       {
         state = stateConfig.CreateState(
           stateConfig.ParentStateId.HasValue
             ? CreateStateAndAddToMap(_stateConfigs[stateConfig.ParentStateId.Value!], states) // recursive call to create the parent state;
             : null);
+
         states.Add(state.Id, state);
       }
+
       return state;
     }
 
     private static void ValidateSubstateEnterArgument(Dictionary<TState, State<TState, TEvent>> states)
     {
-      foreach (var value in states.Values)
+      foreach(var value in states.Values)
       {
         var state = value;
-        if (state.EnterArgumentType is not null)
+
+        if(state.EnterArgumentType is not null)
         {
           var parentState = state.ParentState;
-          while (parentState is not null) // it will check the same states several times, may be I'll optimize it later
-          {
-            if (parentState.EnterArgumentType is null)
+
+          while(parentState is not null) // it will check the same states several times, may be I'll optimize it later
+            if(parentState.EnterArgumentType is null)
+            {
               parentState = parentState.ParentState;
+            }
             else
             {
-              if (parentState.EnterArgumentType.IsAssignableFrom(state.EnterArgumentType))
+              if(parentState.EnterArgumentType.IsAssignableFrom(state.EnterArgumentType))
               {
-                state = parentState;
+                state       = parentState;
                 parentState = parentState.ParentState;
               }
               else
+              {
                 throw new InvalidOperationException(
                   $"Parent state '{parentState.Id}' enter action requires argument of type '{parentState.EnterArgumentType}' whereas it's child state '{state.Id}' requires "
-                  + $"argument of not assignable to the parent type '{state.EnterArgumentType}'");
+                + $"argument of not assignable to the parent type '{state.EnterArgumentType}'");
+              }
             }
-          }
         }
       }
     }
-    
+
     // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
     private void ValidateTransitions(Dictionary<TState, State<TState, TEvent>> states)
     {
-      foreach (var stateConfig in _stateConfigs.Values)
-        foreach (var transition in stateConfig.TransitionList.Values.Where(_ => _.IsStatic)) // do not check dynamic transitions because they are depends on the app state
-        {
-          transition.GetTargetStateId(out var targetStateId);
+      foreach(var stateConfig in _stateConfigs.Values)
+      foreach(var transition in
+        stateConfig.TransitionList.Values.Where(_ => _.IsStatic)) // do not check dynamic transitions because they are depends on the app state
+      {
+        transition.GetTargetStateId(out var targetStateId);
 
-          if (!states.ContainsKey(targetStateId!))
-            throw new InvalidOperationException($"The transition '{transition.Event}' from the state '{stateConfig.StateId}' references not defined state '{targetStateId}'");
-        }
+        if(!states.ContainsKey(targetStateId!))
+          throw new InvalidOperationException(
+            $"The transition '{transition.Event}' from the state '{stateConfig.StateId}' references not defined state '{targetStateId}'");
+      }
     }
   }
 }

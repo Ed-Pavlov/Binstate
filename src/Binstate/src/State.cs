@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 
 namespace Binstate
 {
-  internal class State<TState, TEvent> where TState: notnull where TEvent: notnull
+  internal class State<TState, TEvent> where TState : notnull where TEvent : notnull
   {
     private readonly IEnterActionInvoker? _enterAction;
-    private readonly Action? _exitAction;
+    private readonly Action?              _exitAction;
 
     private readonly Dictionary<TEvent, Transition<TState, TEvent>> _transitions;
 
@@ -34,26 +34,26 @@ namespace Binstate
     private volatile bool _isActive;
 
     public State(
-      TState id,
-      IEnterActionInvoker? enterAction,
-      Type? enterArgumentType,
-      Action? exitAction,
+      TState                                         id,
+      IEnterActionInvoker?                           enterAction,
+      Type?                                          enterArgumentType,
+      Action?                                        exitAction,
       Dictionary<TEvent, Transition<TState, TEvent>> transitions,
-      State<TState, TEvent>? parentState)
+      State<TState, TEvent>?                         parentState)
     {
-      Id = id ?? throw new ArgumentNullException(nameof(id));
-      _enterAction = enterAction;
+      Id                = id ?? throw new ArgumentNullException(nameof(id));
+      _enterAction      = enterAction;
       EnterArgumentType = enterArgumentType;
-      _exitAction = exitAction;
-      _transitions = transitions ?? throw new ArgumentNullException(nameof(transitions));
-      ParentState = parentState;
-      DepthInTree = parentState?.DepthInTree + 1 ?? 0;
+      _exitAction       = exitAction;
+      _transitions      = transitions ?? throw new ArgumentNullException(nameof(transitions));
+      ParentState       = parentState;
+      DepthInTree       = parentState?.DepthInTree + 1 ?? 0;
     }
 
     public readonly TState Id;
-    public readonly Type? EnterArgumentType;
+    public readonly Type?  EnterArgumentType;
 
-    public readonly int DepthInTree;
+    public readonly int                    DepthInTree;
     public readonly State<TState, TEvent>? ParentState;
 
     /// <summary>
@@ -63,33 +63,35 @@ namespace Binstate
     public bool IsActive
     {
       get => _isActive;
+
       set
       {
-        if (value) _entered.Reset();
+        if(value) _entered.Reset();
         _isActive = value;
       }
     }
 
     public void EnterSafe(IStateMachine<TEvent> stateMachine, Action<Exception> onException)
-    {
-      Enter(onException, enter =>
+      => Enter(
+        onException,
+        enter =>
         {
           var noParameterEnter = (NoParameterEnterActionActionInvoker<TEvent>) enter;
+
           return noParameterEnter.Invoke(stateMachine);
         });
-    }
 
     protected void Enter(Action<Exception> onException, Func<IEnterActionInvoker, Task?> invokeEnterAction)
     {
       try
       {
         _enterActionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
-        _entered.Set(); // it is safe to set the state as entered
+        _entered.Set();               // it is safe to set the state as entered
 
-        if (_enterAction is null) return;
+        if(_enterAction is null) return;
         _task = invokeEnterAction(_enterAction);
       }
-      catch (Exception exception)
+      catch(Exception exception)
       {
         onException(exception);
       }
@@ -116,12 +118,13 @@ namespace Binstate
         // wait till State.Enter function finishes
         // if enter action is blocking or no action: _enterFunctionFinished is set means it finishes
         _enterActionFinished.WaitOne();
+
         // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till action finishes
         _task?.Wait();
 
         _exitAction?.Invoke();
       }
-      catch (Exception exception)
+      catch(Exception exception)
       {
         onException(exception);
       }
@@ -131,9 +134,10 @@ namespace Binstate
     public bool FindTransitionTransitive(TEvent @event, out Transition<TState, TEvent>? transition)
     {
       var state = this;
-      while (state != null)
+
+      while(state != null)
       {
-        if (state._transitions.TryGetValue(@event, out transition))
+        if(state._transitions.TryGetValue(@event, out transition))
           return true;
 
         state = state.ParentState;
@@ -142,6 +146,7 @@ namespace Binstate
       // no transition found through all parents
       // ReSharper disable once RedundantAssignment // it's a R# fault in fact
       transition = default;
+
       return false;
     }
 

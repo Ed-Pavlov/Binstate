@@ -17,7 +17,7 @@ namespace Binstate
     /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception})"/>
     /// </exception>
     bool RaiseAsync(TEvent @event);
-    
+
     /// <summary>
     /// Passing the event with an argument to the state machine asynchronously. The arguments is needed if the 'enter' action of the
     /// target state requires one.
@@ -30,7 +30,7 @@ namespace Binstate
     /// </exception>
     bool RaiseAsync<T>(TEvent @event, T? argument);
   }
-  
+
   /// <summary>
   /// This interface is used in 'enter' actions to control execution and to execute 'auto transitions' 
   /// </summary>

@@ -3,7 +3,7 @@ namespace Binstate
   /// <summary>
   /// This class provides syntax-sugar to configure the state machine.
   /// </summary>
-  public static partial class Config<TState, TEvent> where TState: notnull where TEvent: notnull
+  public static partial class Config<TState, TEvent> where TState : notnull where TEvent : notnull
   {
     /// <summary>
     /// There are two types of the state in the system with and w/o parameter in the 'enter' action. In order to make a code type safe and avoid
@@ -20,14 +20,19 @@ namespace Binstate
 
     private class NoArgumentStateFactory : IStateFactory
     {
-      public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent>? parentState) => 
-        new(stateConfig.StateId, stateConfig.EnterActionInvoker, null, stateConfig.ExitAction, stateConfig.TransitionList, parentState);
+      public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent>? parentState)
+        => new(stateConfig.StateId, stateConfig.EnterActionInvoker, null, stateConfig.ExitAction, stateConfig.TransitionList, parentState);
     }
 
     private class StateFactory<TArgument> : IStateFactory
     {
-      public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent>? parentState) => 
-        new State<TState, TEvent, TArgument>(stateConfig.StateId, stateConfig.EnterActionInvoker, stateConfig.ExitAction, stateConfig.TransitionList, parentState);
+      public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent>? parentState)
+        => new State<TState, TEvent, TArgument>(
+          stateConfig.StateId,
+          stateConfig.EnterActionInvoker,
+          stateConfig.ExitAction,
+          stateConfig.TransitionList,
+          parentState);
     }
   }
 }

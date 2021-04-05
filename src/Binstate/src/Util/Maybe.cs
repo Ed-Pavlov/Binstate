@@ -6,12 +6,12 @@
 
     public Maybe(T? value)
     {
-      Value = value;
+      Value    = value;
       HasValue = true;
     }
 
     public bool HasValue { get; }
-    public T? Value { get; }
+    public T?   Value    { get; }
   }
 
   internal static class Maybe

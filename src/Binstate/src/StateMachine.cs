@@ -20,22 +20,26 @@ namespace Binstate
     /// </summary>
     private readonly Dictionary<TState, State<TState, TEvent>> _states;
 
-    private readonly AutoResetEvent _lock = new(true);
+    private readonly AutoResetEvent         _lock = new(true);
     private volatile State<TState, TEvent>? _activeState;
 
     internal StateMachine(Dictionary<TState, State<TState, TEvent>> states, Action<Exception> onException)
     {
-      _states = states;
+      _states      = states;
       _onException = onException;
     }
-    
+
     internal void SetInitialState<T>(TState initialStateId, T? initialStateArgument)
     {
       _activeState = GetStateById(initialStateId);
       var enterAction = ActivateStateNotGuarded(_activeState, new MixOf<T, Unit>(initialStateArgument.ToMaybe(), Maybe<Unit>.Nothing));
-      try {
+
+      try
+      {
         enterAction();
-      } catch (Exception exception) {
+      }
+      catch(Exception exception)
+      {
         _onException(exception);
       }
     }
@@ -43,7 +47,7 @@ namespace Binstate
     /// <inheritdoc />
     public bool Raise(TEvent @event)
     {
-      if (@event is null) throw new ArgumentNullException(nameof(@event));
+      if(@event is null) throw new ArgumentNullException(nameof(@event));
 
       return PerformTransitionSync<Unit, Unit>(@event, null, Maybe<Unit>.Nothing);
     }
@@ -51,7 +55,7 @@ namespace Binstate
     /// <inheritdoc />
     public bool Raise<T>(TEvent @event, T? argument)
     {
-      if (@event is null) throw new ArgumentNullException(nameof(@event));
+      if(@event is null) throw new ArgumentNullException(nameof(@event));
 
       return PerformTransitionSync(@event, argument, Maybe<Unit>.Nothing);
     }
@@ -59,7 +63,7 @@ namespace Binstate
     /// <inheritdoc />
     public Task<bool> RaiseAsync(TEvent @event)
     {
-      if (@event is null) throw new ArgumentNullException(nameof(@event));
+      if(@event is null) throw new ArgumentNullException(nameof(@event));
 
       return PerformTransitionAsync<Unit, Unit>(@event, default, Maybe<Unit>.Nothing);
     }
@@ -67,7 +71,7 @@ namespace Binstate
     /// <inheritdoc />
     public Task<bool> RaiseAsync<T>(TEvent @event, T? argument)
     {
-      if (@event is null) throw new ArgumentNullException(nameof(@event));
+      if(@event is null) throw new ArgumentNullException(nameof(@event));
 
       return PerformTransitionAsync(@event, argument, Maybe<Unit>.Nothing);
     }
@@ -82,12 +86,13 @@ namespace Binstate
     /// true: Raise method throws an exception
     /// false: state machine will pass default(TRelay) as an argument 
     /// </param>
-    public IStateMachine<TState, TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true) => 
-      new Relayer<TRelay>(this, relayArgumentIsRequired ? Maybe<TRelay>.Nothing : default(TRelay).ToMaybe());
-    
+    public IStateMachine<TState, TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true)
+      => new Relayer<TRelay>(this, relayArgumentIsRequired ? Maybe<TRelay>.Nothing : default(TRelay).ToMaybe());
+
     private bool PerformTransitionSync<TA, TRelay>(TEvent @event, TA? argument, Maybe<TRelay> backupRelayArgument)
     {
       var data = PrepareTransition(@event, argument, backupRelayArgument);
+
       return data != null && PerformTransition(data.Value);
     }
 
@@ -96,28 +101,27 @@ namespace Binstate
       var data = PrepareTransition(@event, argument, backupRelayArgument);
 
       return data is null
-        ? Task.FromResult(false)
-        : Task.Run(() => PerformTransition(data.Value));
+               ? Task.FromResult(false)
+               : Task.Run(() => PerformTransition(data.Value));
     }
 
-    private State<TState, TEvent> GetStateById(TState state) =>
-      _states.TryGetValue(state, out var result) ? result : throw new TransitionException($"State '{state}' is not defined");
+    private State<TState, TEvent> GetStateById(TState state)
+      => _states.TryGetValue(state, out var result) ? result : throw new TransitionException($"State '{state}' is not defined");
 
     private static State<TState, TEvent>? FindLeastCommonAncestor(State<TState, TEvent> left, State<TState, TEvent> right)
     {
-      if (ReferenceEquals(left, right)) return null; // no common ancestor with itself
+      if(ReferenceEquals(left, right)) return null; // no common ancestor with itself
 
       var l = left;
       var r = right;
-      
+
       var lDepth = l.DepthInTree;
       var rDepth = r.DepthInTree;
 
       // State<TState, TEvent>? left = l;
-      
-      while (lDepth != rDepth)
-      {
-        if (lDepth > rDepth)
+
+      while(lDepth != rDepth)
+        if(lDepth > rDepth)
         {
           lDepth--;
           l = l!.ParentState;
@@ -127,9 +131,8 @@ namespace Binstate
           rDepth--;
           r = r!.ParentState;
         }
-      }
 
-      while (!ReferenceEquals(l, r))
+      while(!ReferenceEquals(l, r))
       {
         l = l!.ParentState;
         r = r!.ParentState;
@@ -143,23 +146,24 @@ namespace Binstate
     /// of configuration.
     /// </summary>
     private static void ValidateStates<TA, TRelay>(
-      State<TState, TEvent> activeState,
-      TEvent @event,
-      State<TState, TEvent> targetState,
-      MixOf<TA, TRelay> argument,
+      State<TState, TEvent>  activeState,
+      TEvent                 @event,
+      State<TState, TEvent>  targetState,
+      MixOf<TA, TRelay>      argument,
       State<TState, TEvent>? commonAncestor)
     {
       var enterWithArgumentCount = 0;
 
-      var state = targetState; 
+      var state = targetState;
+
       while(state != commonAncestor)
       {
-        if (state!.EnterArgumentType != null)
+        if(state!.EnterArgumentType != null)
         {
-          if (!argument.HasAnyArgument)
+          if(!argument.HasAnyArgument)
             throw new TransitionException($"The enter action of the state '{state.Id}' is configured as required an argument but no argument was specified.");
 
-          if (!argument.IsMatch(state.EnterArgumentType))
+          if(!argument.IsMatch(state.EnterArgumentType))
             throw new TransitionException(
               $"The state '{state.Id}' requires argument of type '{state.EnterArgumentType}' but no argument of compatible type has passed nor relayed");
 
@@ -169,16 +173,18 @@ namespace Binstate
         state = state.ParentState;
       }
 
-      if (argument.HasAnyArgument && enterWithArgumentCount == 0)
+      if(argument.HasAnyArgument && enterWithArgumentCount == 0)
       {
         // we can allocate here, because it's an exceptional case
         var states = new List<State<TState, TEvent>>();
         state = targetState.ParentState;
-        while (state != commonAncestor)
+
+        while(state != commonAncestor)
         {
           states.Add(state!);
           state = state!.ParentState;
         }
+
         states.Reverse();
         states.Add(targetState);
 
@@ -186,7 +192,7 @@ namespace Binstate
 
         throw new TransitionException(
           $"Transition from the state '{activeState.Id}' by the event '{@event}' will activate following states [{statesToActivate}]. No one of them are defined with "
-          + "the enter action accepting an argument, but argument was passed or relayed");
+        + "the enter action accepting an argument, but argument was passed or relayed");
       }
     }
   }

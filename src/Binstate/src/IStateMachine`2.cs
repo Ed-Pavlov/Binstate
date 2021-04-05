@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 
 namespace Binstate
 {
+  // ReSharper disable once UnusedTypeParameter
   /// <summary>
   /// Interface implemented by <see cref="StateMachine{TState,TEvent}"/> itself and by object returned from
   /// <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}"/> method to introduce a little more flexibility for the client.
   /// </summary>
-  // ReSharper disable once UnusedTypeParameter
   public interface IStateMachine<TState, in TEvent>
   {
     /// <summary>

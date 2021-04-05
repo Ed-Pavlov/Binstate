@@ -9,27 +9,29 @@ namespace Binstate
 
     public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, Action? action)
     {
-      Event = @event;
+      Event            = @event;
       GetTargetStateId = getTargetStateId;
-      IsStatic = isStatic;
-      _action = action;
+      IsStatic         = isStatic;
+      _action          = action;
     }
-    
+
     /// <summary>
     /// Means a transition targets the predefined state in opposite to the calculated dynamically runtime
     /// </summary>
     public readonly bool IsStatic;
-    
+
     public TEvent Event { get; }
 
     public readonly GetState<TState> GetTargetStateId;
-    
+
     public void InvokeActionSafe(Action<Exception> onException)
     {
-      try {
+      try
+      {
         _action?.Invoke();
       }
-      catch (Exception exc) {  // transition action can throw "user" exception
+      catch(Exception exc)
+      { // transition action can throw "user" exception
         onException(exc);
       }
     }
@@ -38,11 +40,13 @@ namespace Binstate
     public override string ToString()
     {
       var stateName = "dynamic";
-      if (IsStatic)
+
+      if(IsStatic)
       {
         GetTargetStateId(out var state);
         stateName = state!.ToString();
       }
+
       return $"[{Event} -> {stateName}]";
     }
   }

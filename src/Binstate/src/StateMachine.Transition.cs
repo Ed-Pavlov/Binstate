@@ -19,31 +19,34 @@ namespace Binstate
       {
         _lock.WaitOne();
 
-        if (!_activeState!.FindTransitionTransitive(@event, out var transition)  // looks for a transition through all parent states
-          || !transition!.GetTargetStateId(out var stateId))
-        { 
+        if(!_activeState!.FindTransitionTransitive(@event, out var transition) // looks for a transition through all parent states
+        || !transition!.GetTargetStateId(out var stateId))
+        {
           // no transition by specified event is found or dynamic transition returns null as target state id
           _lock.Set();
+
           return null;
         }
 
         var targetState = GetStateById(stateId!);
 
-        var mixedArgument = PrepareRealArgument(argument, _activeState, backupRelayArgument);
+        var mixedArgument  = PrepareRealArgument(argument, _activeState, backupRelayArgument);
         var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);
         ValidateStates(_activeState, @event, targetState, mixedArgument, commonAncestor); // validate before changing any state of the state machine
 
         return new TransitionData<TArgument, TRelay>(_activeState, transition, targetState, mixedArgument, commonAncestor);
       }
-      catch (TransitionException)
+      catch(TransitionException)
       {
         _lock.Set();
+
         throw;
       }
-      catch (Exception exception)
+      catch(Exception exception)
       {
         _onException(exception);
         _lock.Set();
+
         return null;
       }
     }
@@ -52,20 +55,22 @@ namespace Binstate
     /// Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
     /// into the delegate passed to <see cref="Builder{TState,TEvent}(Action{Exception})"/> 
     /// </summary>
+
     // [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery", Justification = "foreach is more readable here")]
     private bool PerformTransition<TArgument, TRelay>(TransitionData<TArgument, TRelay> transitionData)
     {
       var currentActiveState = transitionData.CurrentActiveState;
-      var transition = transitionData.Transition;
-      var targetState = transitionData.TargetState;
-      var argument = transitionData.Argument;
-      var commonAncestor = transitionData.CommonAncestor;
+      var transition         = transitionData.Transition;
+      var targetState        = transitionData.TargetState;
+      var argument           = transitionData.Argument;
+      var commonAncestor     = transitionData.CommonAncestor;
 
       var enterActions = new List<Action>();
+
       try
       {
         // exit all active states which are not parent for the new state
-        while (currentActiveState != commonAncestor)
+        while(currentActiveState != commonAncestor)
         {
           currentActiveState!.ExitSafe(_onException); // currentActiveState can't become null earlier then be equal to commonAncestor
           currentActiveState = currentActiveState.ParentState;
@@ -76,7 +81,8 @@ namespace Binstate
 
         // and then activate new active states
         _activeState = targetState;
-        while (targetState != commonAncestor) // targetState can't become null earlier then be equal to commonAncestor
+
+        while(targetState != commonAncestor) // targetState can't become null earlier then be equal to commonAncestor
         {
           var enterAction = ActivateStateNotGuarded(targetState!, argument);
           enterActions.Add(enterAction);
@@ -90,7 +96,7 @@ namespace Binstate
 
       // call 'enter' actions out of the lock due to it can block execution
       // call them in reverse order, parent's 'enter' is called first, child's one last 
-      for (var i = enterActions.Count - 1; i >=0; i--) 
+      for(var i = enterActions.Count - 1; i >= 0; i--)
         enterActions[i]();
 
       return true; // just to reduce amount of code calling this method
@@ -103,63 +109,79 @@ namespace Binstate
     private Action ActivateStateNotGuarded<TArgument, TRelay>(State<TState, TEvent> state, MixOf<TArgument, TRelay> argument)
     {
       state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
-      
+
       var controller = new Controller(state, this);
 
       return state switch
-      {
-        IState<TState, TEvent, TArgument> passedArgumentState => () => passedArgumentState.EnterSafe(controller, argument.PassedArgument.Value, _onException),
-        IState<TState, TEvent, TRelay> relayedArgumentState => () => relayedArgumentState.EnterSafe(controller, argument.RelayedArgument.Value, _onException),
-        IState<TState, TEvent, ITuple<TArgument, TRelay>> bothArgumentsState => () => bothArgumentsState.EnterSafe(controller, CreateTuple(argument), _onException),
-        _ => () => state.EnterSafe(controller, _onException) // no arguments state
-      };
+             {
+               IState<TState, TEvent, TArgument> passedArgumentState => () => passedArgumentState.EnterSafe(
+                                                                          controller,
+                                                                          argument.PassedArgument.Value,
+                                                                          _onException),
+               IState<TState, TEvent, TRelay> relayedArgumentState => () => relayedArgumentState.EnterSafe(
+                                                                        controller,
+                                                                        argument.RelayedArgument.Value,
+                                                                        _onException),
+               IState<TState, TEvent, ITuple<TArgument, TRelay>> bothArgumentsState => () => bothArgumentsState.EnterSafe(
+                                                                                         controller,
+                                                                                         CreateTuple(argument),
+                                                                                         _onException),
+               _ => () => state.EnterSafe(controller, _onException) // no arguments state
+             };
     }
 
-    private static Tuple<TArgument, TRelay> CreateTuple<TArgument, TRelay>(MixOf<TArgument, TRelay> mixOf) =>
-      new(mixOf.PassedArgument.Value, mixOf.RelayedArgument.Value);
+    private static Tuple<TArgument, TRelay> CreateTuple<TArgument, TRelay>(MixOf<TArgument, TRelay> mixOf)
+      => new(mixOf.PassedArgument.Value, mixOf.RelayedArgument.Value);
 
-    private static MixOf<TArgument, TRelay> PrepareRealArgument<TArgument, TRelay>(TArgument argument, State<TState, TEvent>? sourceState, Maybe<TRelay> backupRelayArgument)
+    private static MixOf<TArgument, TRelay> PrepareRealArgument<TArgument, TRelay>(
+      TArgument              argument,
+      State<TState, TEvent>? sourceState,
+      Maybe<TRelay>          backupRelayArgument)
     {
-      if (!Argument.IsSpecified<TRelay>()) // no relaying argument
+      if(!Argument.IsSpecified<TRelay>()) // no relaying argument
         return Argument.IsSpecified<TArgument>() ? new MixOf<TArgument, TRelay>(argument.ToMaybe(), Maybe<TRelay>.Nothing) : MixOf<TArgument, TRelay>.Empty;
 
       var state = sourceState;
-      while (state != null)
+
+      while(state != null)
       {
-        if (state is State<TState, TEvent, TRelay> stateWithArgument)
-          return Argument.IsSpecified<TArgument>() ? stateWithArgument.CreateTuple(argument) : new MixOf<TArgument, TRelay>(Maybe<TArgument>.Nothing, stateWithArgument.Argument.ToMaybe());
+        if(state is State<TState, TEvent, TRelay> stateWithArgument)
+          return Argument.IsSpecified<TArgument>()
+                   ? stateWithArgument.CreateTuple(argument)
+                   : new MixOf<TArgument, TRelay>(Maybe<TArgument>.Nothing, stateWithArgument.Argument.ToMaybe());
 
         state = state.ParentState;
       }
-      
+
       if(backupRelayArgument.HasValue)
         return Argument.IsSpecified<TArgument>()
-          ? new MixOf<TArgument, TRelay>(argument.ToMaybe(), backupRelayArgument) 
-          : new MixOf<TArgument, TRelay>(Maybe<TArgument>.Nothing, backupRelayArgument);
-      
-      throw new TransitionException("Raise with relaying argument is called from the state w/o an attached value and a backup argument for relay is not provided");
+                 ? new MixOf<TArgument, TRelay>(argument.ToMaybe(), backupRelayArgument)
+                 : new MixOf<TArgument, TRelay>(Maybe<TArgument>.Nothing, backupRelayArgument);
+
+      throw new TransitionException(
+        "Raise with relaying argument is called from the state w/o an attached value and a backup argument for relay is not provided");
     }
 
     private readonly struct TransitionData<TArgument, TRelay>
     {
-      public readonly State<TState, TEvent> CurrentActiveState;
+      public readonly State<TState, TEvent>      CurrentActiveState;
       public readonly Transition<TState, TEvent> Transition;
-      public readonly State<TState, TEvent> TargetState;
-      public readonly MixOf<TArgument, TRelay> Argument;
-      public readonly State<TState, TEvent>? CommonAncestor;
+      public readonly State<TState, TEvent>      TargetState;
+      public readonly MixOf<TArgument, TRelay>   Argument;
+      public readonly State<TState, TEvent>?     CommonAncestor;
 
       public TransitionData(
-        State<TState, TEvent> currentActiveState,
+        State<TState, TEvent>      currentActiveState,
         Transition<TState, TEvent> transition,
-        State<TState, TEvent> targetState,
-        MixOf<TArgument, TRelay> argument,
-        State<TState, TEvent>? commonAncestor)
+        State<TState, TEvent>      targetState,
+        MixOf<TArgument, TRelay>   argument,
+        State<TState, TEvent>?     commonAncestor)
       {
         CurrentActiveState = currentActiveState;
-        Transition = transition;
-        TargetState = targetState;
-        Argument = argument;
-        CommonAncestor = commonAncestor;
+        Transition         = transition;
+        TargetState        = targetState;
+        Argument           = argument;
+        CommonAncestor     = commonAncestor;
       }
     }
   }

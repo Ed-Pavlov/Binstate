@@ -6,7 +6,7 @@ namespace Binstate
   internal class NoParameterEnterActionActionInvoker<TEvent> : IEnterActionInvoker
   {
     private readonly Func<IStateMachine<TEvent>, Task?> _action;
-    
+
     public NoParameterEnterActionActionInvoker(Func<IStateMachine<TEvent>, Task?> action) => _action = action;
 
     public Task? Invoke(IStateMachine<TEvent> stateMachine) => _action(stateMachine);

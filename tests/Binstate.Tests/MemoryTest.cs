@@ -9,30 +9,34 @@ namespace Binstate.Tests
   public class MemoryTest : StateMachineTestBase
   {
     [TestCaseSource(nameof(RaiseWays))]
-    [AssertTraffic(AllocatedObjectsCount = 0, Types = new []{typeof(ValueType1), typeof(ValueType2)})]
+    [AssertTraffic(AllocatedObjectsCount = 0, Types = new[] {typeof(ValueType1), typeof(ValueType2)})]
     public void should_not_boxing_passed_value_type_arguments(RaiseWay raiseWay)
     {
-      var expected1 = new ValueType1(389);
-      var expected2 = new ValueType2(659);
-      ValueType1 actual1 = default;
-      ValueType2 actual2 = default;
+      var                            expected1   = new ValueType1(389);
+      var                            expected2   = new ValueType2(659);
+      ValueType1                     actual1     = default;
+      ValueType2                     actual2     = default;
       ITuple<ValueType2, ValueType1> actualTuple = null;
-      
+
       // --arrange
       var builder = new Builder<string, int>(OnException);
 
       builder.DefineState(Initial).AddTransition(Event1, State1);
 
       builder.DefineState(State1)
-        .OnEnter<ValueType1>(value => { }).AddTransition(Event2, State2);
+             .OnEnter<ValueType1>(value => { })
+             .AddTransition(Event2, State2);
 
       builder.DefineState(Parent)
-        .OnEnter<ValueType2>(value => actual2 = value);
-      builder.DefineState(Child).AsSubstateOf(Parent)
-        .OnEnter<ValueType1>(value => actual1 = value);
-      
-      builder.DefineState(State2).AsSubstateOf(Child)
-        .OnEnter<ITuple<ValueType2, ValueType1>>(value => actualTuple = value);
+             .OnEnter<ValueType2>(value => actual2 = value);
+
+      builder.DefineState(Child)
+             .AsSubstateOf(Parent)
+             .OnEnter<ValueType1>(value => actual1 = value);
+
+      builder.DefineState(State2)
+             .AsSubstateOf(Child)
+             .OnEnter<ITuple<ValueType2, ValueType1>>(value => actualTuple = value);
 
       var target = builder.Build(Initial, true);
 
@@ -48,13 +52,13 @@ namespace Binstate.Tests
       actualTuple!.RelayedArgument.Value.Should().Be(expected1.Value);
       actualTuple.PassedArgument.Value.Should().Be(expected2.Value);
     }
-    
+
     private readonly struct ValueType1
     {
       public readonly int Value;
       public ValueType1(int value) => Value = value;
     }
-    
+
     private readonly struct ValueType2
     {
       public readonly int Value;

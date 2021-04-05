@@ -25,15 +25,17 @@ namespace Binstate
       /// </summary>
       public Transitions AddTransition(TEvent @event, TState stateId, Action? action = null)
       {
-        if (@event is null) throw new ArgumentNullException(nameof(@event));
-        if (stateId is null) throw new ArgumentNullException(nameof(stateId));
+        if(@event is null) throw new ArgumentNullException(nameof(@event));
+        if(stateId is null) throw new ArgumentNullException(nameof(stateId));
 
-        var getStateWrapper = new GetState<TState>((out TState? state) =>
+        var getStateWrapper = new GetState<TState>(
+          (out TState? state) =>
           {
             state = stateId;
+
             return true;
           });
-        
+
         return AddTransition(@event, getStateWrapper, true, action);
       }
 
@@ -50,13 +52,13 @@ namespace Binstate
 #pragma warning restore 1574,1584,1581,1580
       public Transitions AddTransition(TEvent @event, GetState<TState> getState)
       {
-        if (@event is null) throw new ArgumentNullException(nameof(@event));
-        if (getState is null) throw new ArgumentNullException(nameof(getState));
+        if(@event is null) throw new ArgumentNullException(nameof(@event));
+        if(getState is null) throw new ArgumentNullException(nameof(getState));
 
         return AddTransition(@event, getState, false, null);
       }
 
-#pragma warning disable 1574,1584,1581,1580      
+#pragma warning disable 1574,1584,1581,1580
       /// <summary>
       /// Defines transition from the currently configured state to the state calculated dynamically depending on other application state. 
       /// </summary>
@@ -70,12 +72,14 @@ namespace Binstate
 #pragma warning restore 1574,1584,1581,1580
       public Transitions AddTransition(TEvent @event, Func<TState?> getState)
       {
-        if (@event is null) throw new ArgumentNullException(nameof(@event));
-        if (getState is null) throw new ArgumentNullException(nameof(getState));
+        if(@event is null) throw new ArgumentNullException(nameof(@event));
+        if(getState is null) throw new ArgumentNullException(nameof(getState));
 
-        var getStateWrapper = new GetState<TState>((out TState? state) =>
+        var getStateWrapper = new GetState<TState>(
+          (out TState? state) =>
           {
             state = getState();
+
             return !EqualityComparer<TState?>.Default.Equals(state, default);
           });
 
@@ -86,13 +90,14 @@ namespace Binstate
       /// Defines transition from the state to itself when <param name="event"> is raised. Exit and enter actions are called in case of such transition.</param>
       /// </summary>
       public void AllowReentrancy(TEvent @event) => AddTransition(@event, StateId);
-      
+
       private Transitions AddTransition(TEvent @event, GetState<TState> getState, bool isStatic, Action? action)
       {
-        if (@event is null) throw new ArgumentNullException(nameof(@event));
-        if (getState is null) throw new ArgumentNullException(nameof(getState));
+        if(@event is null) throw new ArgumentNullException(nameof(@event));
+        if(getState is null) throw new ArgumentNullException(nameof(getState));
 
         TransitionList.Add(@event, new Transition<TState, TEvent>(@event, getState, isStatic, action));
+
         return this;
       }
     }

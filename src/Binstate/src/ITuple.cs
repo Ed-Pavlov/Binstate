@@ -13,11 +13,11 @@
     /// Passed argument value
     /// </summary>
     TPassed? PassedArgument { get; }
-    
+
     /// <summary>
     /// Relayed argument value
     /// </summary>
-    TRelay? RelayedArgument{ get; }
+    TRelay? RelayedArgument { get; }
   }
 
   /// <inheritdoc />
@@ -25,13 +25,13 @@
   {
     public Tuple(TPassed? passedArgument, TRelay? relayedArgument)
     {
-      PassedArgument = passedArgument;
+      PassedArgument  = passedArgument;
       RelayedArgument = relayedArgument;
     }
 
     /// <inheritdoc />
     public TPassed? PassedArgument { get; }
-    
+
     /// <inheritdoc />
     public TRelay? RelayedArgument { get; }
   }

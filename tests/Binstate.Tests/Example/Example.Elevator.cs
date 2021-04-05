@@ -16,36 +16,38 @@ namespace Binstate.Tests
         var builder = new Builder<States, Events>(Console.WriteLine);
 
         builder
-          .DefineState(States.Healthy)
-          .AddTransition(Events.Error, States.Error);
+         .DefineState(States.Healthy)
+         .AddTransition(Events.Error, States.Error);
 
         builder
-          .DefineState(States.Error)
-          .AddTransition(Events.Reset, States.Healthy)
-          .AllowReentrancy(Events.Error);
+         .DefineState(States.Error)
+         .AddTransition(Events.Reset, States.Healthy)
+         .AllowReentrancy(Events.Error);
 
         builder
-          .DefineState(States.OnFloor).AsSubstateOf(States.Healthy)
-          .OnEnter(AnnounceFloor)
-          .OnExit(() => Beep(2))
-          .AddTransition(Events.CloseDoor, States.DoorClosed)
-          .AddTransition(Events.OpenDoor, States.DoorOpen)
-          .AddTransition(Events.GoUp, States.MovingUp)
-          .AddTransition(Events.GoDown, States.MovingDown);
+         .DefineState(States.OnFloor)
+         .AsSubstateOf(States.Healthy)
+         .OnEnter(AnnounceFloor)
+         .OnExit(() => Beep(2))
+         .AddTransition(Events.CloseDoor, States.DoorClosed)
+         .AddTransition(Events.OpenDoor, States.DoorOpen)
+         .AddTransition(Events.GoUp, States.MovingUp)
+         .AddTransition(Events.GoDown, States.MovingDown);
 
         builder
-          .DefineState(States.Moving).AsSubstateOf(States.Healthy)
-          .OnEnter(CheckOverload)
-          .AddTransition(Events.Stop, States.OnFloor);
+         .DefineState(States.Moving)
+         .AsSubstateOf(States.Healthy)
+         .OnEnter(CheckOverload)
+         .AddTransition(Events.Stop, States.OnFloor);
 
         builder.DefineState(States.MovingUp).AsSubstateOf(States.Moving);
         builder.DefineState(States.MovingDown).AsSubstateOf(States.Moving);
 
         builder.DefineState(States.DoorClosed).AsSubstateOf(States.OnFloor);
         builder.DefineState(States.DoorOpen).AsSubstateOf(States.OnFloor);
-        
+
         _elevator = builder.Build(States.OnFloor);
-        
+
         // ready to work
       }
 
@@ -63,20 +65,11 @@ namespace Binstate.Tests
         _elevator.Raise(Events.OpenDoor);
       }
 
-      public void Error()
-      {
-        _elevator.Raise(Events.Error);
-      }
+      public void Error() => _elevator.Raise(Events.Error);
 
-      public void Stop()
-      {
-        _elevator.Raise(Events.Stop);
-      }
+      public void Stop() => _elevator.Raise(Events.Stop);
 
-      public void Reset()
-      {
-        _elevator.Raise(Events.Reset);
-      }
+      public void Reset() => _elevator.Raise(Events.Reset);
 
       private void AnnounceFloor()
       {
@@ -95,7 +88,7 @@ namespace Binstate.Tests
 
       private void CheckOverload(IStateMachine<Events> stateMachine)
       {
-        if (IsOverloaded())
+        if(IsOverloaded())
         {
           AnnounceOverload();
           stateMachine.RaiseAsync(Events.Stop);
@@ -103,30 +96,10 @@ namespace Binstate.Tests
       }
 
       private bool IsOverloaded() => false;
-      
-      private enum States
-      {
-        None,
-        Healthy,
-        OnFloor,
-        Moving,
-        MovingUp,
-        MovingDown,
-        DoorOpen,
-        DoorClosed,
-        Error
-      }
 
-      private enum Events
-      {
-        GoUp,
-        GoDown,
-        OpenDoor,
-        CloseDoor,
-        Stop,
-        Error,
-        Reset
-      }
+      private enum States { None, Healthy, OnFloor, Moving, MovingUp, MovingDown, DoorOpen, DoorClosed, Error }
+
+      private enum Events { GoUp, GoDown, OpenDoor, CloseDoor, Stop, Error, Reset }
     }
   }
 }

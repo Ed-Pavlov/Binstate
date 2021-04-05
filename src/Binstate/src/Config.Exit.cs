@@ -14,13 +14,14 @@ namespace Binstate
 
       /// <inheritdoc />
       protected Exit(TState stateId) : base(stateId) { }
-      
+
       /// <summary>
       /// Specifies the action to be called on exiting the currently configured state.
       /// </summary>
       public Transitions OnExit(Action exitAction)
       {
         ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
+
         return this;
       }
     }

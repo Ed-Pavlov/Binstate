@@ -1,18 +1,17 @@
 using System;
 
-namespace Binstate
+namespace Binstate;
+
+/// <inheritdoc />
+public class StateMachineException : Exception
 {
   /// <inheritdoc />
-  public class StateMachineException : Exception
-  {
-    /// <inheritdoc />
-    protected StateMachineException(string message) : base(message) { }
-  }
+  protected StateMachineException(string message) : base(message) { }
+}
 
+/// <inheritdoc />
+public class TransitionException : StateMachineException
+{
   /// <inheritdoc />
-  public class TransitionException : StateMachineException
-  {
-    /// <inheritdoc />
-    public TransitionException(string message) : base(message) { }
-  }
+  public TransitionException(string message) : base(message) { }
 }

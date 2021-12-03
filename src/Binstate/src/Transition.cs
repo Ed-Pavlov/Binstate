@@ -1,53 +1,52 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Binstate
+namespace Binstate;
+
+internal class Transition<TState, TEvent>
 {
-  internal class Transition<TState, TEvent>
+  private readonly Action? _action;
+
+  public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, Action? action)
   {
-    private readonly Action? _action;
+    Event            = @event;
+    GetTargetStateId = getTargetStateId;
+    IsStatic         = isStatic;
+    _action          = action;
+  }
 
-    public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, Action? action)
+  /// <summary>
+  /// Means a transition targets the predefined state in opposite to the calculated dynamically runtime
+  /// </summary>
+  public readonly bool IsStatic;
+
+  public TEvent Event { get; }
+
+  public readonly GetState<TState> GetTargetStateId;
+
+  public void InvokeActionSafe(Action<Exception> onException)
+  {
+    try
     {
-      Event            = @event;
-      GetTargetStateId = getTargetStateId;
-      IsStatic         = isStatic;
-      _action          = action;
+      _action?.Invoke();
+    }
+    catch(Exception exc)
+    { // transition action can throw "user" exception
+      onException(exc);
+    }
+  }
+
+  [ExcludeFromCodeCoverage]
+  public override string ToString()
+  {
+    var stateName = "dynamic";
+
+    if(IsStatic)
+    {
+      GetTargetStateId(out var state);
+      stateName = state!.ToString();
     }
 
-    /// <summary>
-    /// Means a transition targets the predefined state in opposite to the calculated dynamically runtime
-    /// </summary>
-    public readonly bool IsStatic;
-
-    public TEvent Event { get; }
-
-    public readonly GetState<TState> GetTargetStateId;
-
-    public void InvokeActionSafe(Action<Exception> onException)
-    {
-      try
-      {
-        _action?.Invoke();
-      }
-      catch(Exception exc)
-      { // transition action can throw "user" exception
-        onException(exc);
-      }
-    }
-
-    [ExcludeFromCodeCoverage]
-    public override string ToString()
-    {
-      var stateName = "dynamic";
-
-      if(IsStatic)
-      {
-        GetTargetStateId(out var state);
-        stateName = state!.ToString();
-      }
-
-      return $"[{Event} -> {stateName}]";
-    }
+    return $"[{Event} -> {stateName}]";
   }
 }

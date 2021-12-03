@@ -1,11 +1,10 @@
-﻿namespace Binstate
-{
-  internal interface IExitActionInvoker
-  {
-  }
+﻿namespace Binstate;
 
-  internal interface IExitActionInvoker<in TArgument> : IExitActionInvoker
-  {
-    void Invoke(TArgument argument);
-  }
+internal interface IExitActionInvoker
+{
+}
+
+internal interface IExitActionInvoker<in TArgument> : IExitActionInvoker
+{
+  void Invoke(TArgument argument);
 }

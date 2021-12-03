@@ -6,7 +6,7 @@ namespace Binstate;
 // ReSharper disable once UnusedTypeParameter
 /// <summary>
 /// Interface implemented by <see cref="StateMachine{TState,TEvent}"/> itself and by object returned from
-/// <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}"/> method to introduce a little more flexibility for the client.
+/// <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}()"/> method to introduce a little more flexibility for the client.
 /// </summary>
 public interface IStateMachine<TState, in TEvent>
 {

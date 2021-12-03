@@ -142,7 +142,7 @@ public static partial class Config<TState, TEvent>
 
     /// <summary>
     /// Specifies the action with two parameters, one passed using <see cref="StateMachine{TState,TEvent}.Raise{TArgument}"/>
-    /// and another relayed from the currently active state using <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}"/>
+    /// and another relayed from the currently active state using <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}()"/>
     /// to be called on entering the currently configured state for case when controlling the current state
     /// or transition to another one is not needed.
     /// This overload is used to provide blocking action. To provide async action use
@@ -161,7 +161,7 @@ public static partial class Config<TState, TEvent>
 #pragma warning disable 1574
     /// <summary>
     /// Specifies the action with two parameters, one passed using <see cref="StateMachine{TState,TEvent}.Raise{TArgument}"/>
-    /// and another relayed from the currently active state using <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}"/>
+    /// and another relayed from the currently active state using <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}()"/>
     /// to be called on entering the currently configured state.
     /// This overload is used to provide blocking action. To provide async action use
     /// <see cref="OnEnter{TArgument, TRelay}(Func{IStateMachine{TEvent}, TArgument, TRelay, Task})"/>
@@ -179,7 +179,7 @@ public static partial class Config<TState, TEvent>
 
     /// <summary>
     /// Specifies the action with two parameters, one passed using <see cref="StateMachine{TState,TEvent}.Raise{TArgument}"/>
-    /// and another relayed from the currently active state using <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}"/>
+    /// and another relayed from the currently active state using <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}()"/>
     /// to be called on entering the currently configured state for case when controlling the current state
     /// or transition to another one is not needed.
     /// This overload is used to provide non-blocking async action.
@@ -194,7 +194,7 @@ public static partial class Config<TState, TEvent>
 
     /// <summary>
     /// Specifies the action with two parameters, one passed using <see cref="StateMachine{TState,TEvent}.Raise{TArgument}"/>
-    /// and another relayed from the currently active state using <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}"/>
+    /// and another relayed from the currently active state using <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}()"/>
     /// to be called on entering the currently configured state.
     /// This overload is used to provide non-blocking async action.
     /// </summary>

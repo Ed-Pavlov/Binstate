@@ -5,7 +5,7 @@
 /// </summary>
 /// <typeparam name="TPassed">Type of argument passed to <see cref="IStateMachine{TState,TEvent}.Raise{T}"/> method </typeparam>
 /// <typeparam name="TRelay">Type of the argument attached to one of the currently active states
-/// and passed to <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}"/> method.
+/// and passed to <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}()"/> method.
 /// </typeparam>
 public interface ITuple<out TPassed, out TRelay>
 {

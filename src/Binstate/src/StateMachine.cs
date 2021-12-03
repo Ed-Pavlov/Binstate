@@ -86,9 +86,21 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
   /// true: Raise method throws an exception
   /// false: state machine will pass default(TRelay) as an argument 
   /// </param>
-  public IStateMachine<TState, TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true)
+  [Obsolete("Due to TRelay could not allow null value (default for reference types) but this method bypass nullability check.")]
+  public IStateMachine<TState, TEvent> Relaying<TRelay>(bool relayArgumentIsRequired)
     => new Relayer<TRelay?>(this, relayArgumentIsRequired ? Maybe<TRelay?>.Nothing : default(TRelay).ToMaybe()); //TODO: where is exception?
 
+  /// <summary>
+  /// Tell the state machine that it should get an argument attached to the currently active state (or any of parents) and pass it to the newly activated state
+  /// </summary>
+  /// <typeparam name="TRelay">The type of the argument. Should be exactly the same as the generic type passed into 
+  /// <see cref="Config{TState,TEvent}.Enter.OnEnter{T}(Action{T})"/> or one of it's overload when configured currently active state (of one of it's parent).
+  /// </typeparam>
+  /// <remarks>If the new state requires an argument but there is no argument attached to the currently active state and no argument is passed
+  /// to <see cref="Raise{T}"/></remarks> method, transition will fail.
+  public IStateMachine<TState, TEvent> Relaying<TRelay>()
+    => new Relayer<TRelay?>(this, Maybe<TRelay?>.Nothing);
+  
   private bool PerformTransitionSync<TA, TRelay>(TEvent @event, TA? argument, Maybe<TRelay> backupRelayArgument)
   {
     var data = PrepareTransition(@event, argument, backupRelayArgument);

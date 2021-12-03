@@ -21,7 +21,7 @@ namespace Binstate
     private class NoArgumentStateFactory : IStateFactory
     {
       public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent>? parentState)
-        => new(stateConfig.StateId, stateConfig.EnterActionInvoker, null, stateConfig.ExitAction, stateConfig.TransitionList, parentState);
+        => new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterActionInvoker, null, stateConfig.ExitActionInvoker, stateConfig.TransitionList, parentState);
     }
 
     private class StateFactory<TArgument> : IStateFactory
@@ -30,7 +30,7 @@ namespace Binstate
         => new State<TState, TEvent, TArgument>(
           stateConfig.StateId,
           stateConfig.EnterActionInvoker,
-          stateConfig.ExitAction,
+          stateConfig.ExitActionInvoker,
           stateConfig.TransitionList,
           parentState);
     }

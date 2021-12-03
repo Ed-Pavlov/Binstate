@@ -8,7 +8,7 @@ namespace Binstate
   internal class State<TState, TEvent> where TState : notnull where TEvent : notnull
   {
     private readonly IEnterActionInvoker? _enterAction;
-    private readonly Action?              _exitAction;
+    private readonly IExitActionInvoker?  _exitAction;
 
     private readonly Dictionary<TEvent, Transition<TState, TEvent>> _transitions;
 
@@ -37,7 +37,7 @@ namespace Binstate
       TState                                         id,
       IEnterActionInvoker?                           enterAction,
       Type?                                          enterArgumentType,
-      Action?                                        exitAction,
+      IExitActionInvoker?                            exitAction,
       Dictionary<TEvent, Transition<TState, TEvent>> transitions,
       State<TState, TEvent>?                         parentState)
     {
@@ -76,7 +76,7 @@ namespace Binstate
         onException,
         enter =>
         {
-          var noParameterEnter = (NoParameterEnterActionActionInvoker<TEvent>) enter;
+          var noParameterEnter = (NoParameterEnterActionActionInvoker<TEvent>)enter;
 
           return noParameterEnter.Invoke(stateMachine);
         });
@@ -101,12 +101,7 @@ namespace Binstate
       }
     }
 
-    /// <summary>
-    /// <see cref="ExitSafe"/> can be called earlier then <see cref="Config{TState,TEvent}.Enter"/> of the activated state,
-    /// see <see cref="StateMachine{TState,TEvent}.PerformTransition{TArgument, TRelay}"/> implementation for details.
-    /// In this case it should wait till <see cref="Config{TState,TEvent}.Enter"/> will be called and exited, before call exit action
-    /// </summary>
-    public void ExitSafe(Action<Exception> onException)
+    protected void Exit(Action<Exception> onException, Action<IExitActionInvoker> invokeExitAction)
     {
       try
       {
@@ -122,13 +117,28 @@ namespace Binstate
         // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till action finishes
         _task?.Wait();
 
-        _exitAction?.Invoke();
+        if(_exitAction is null) return;
+        invokeExitAction(_exitAction);
       }
       catch(Exception exception)
       {
         onException(exception);
       }
     }
+
+    /// <summary>
+    /// <see cref="ExitSafe"/> can be called earlier then <see cref="Config{TState,TEvent}.Enter"/> of the activated state,
+    /// see <see cref="StateMachine{TState,TEvent}.PerformTransition{TArgument, TRelay}"/> implementation for details.
+    /// In this case it should wait till <see cref="Config{TState,TEvent}.Enter"/> will be called and exited, before call exit action
+    /// </summary>
+    public virtual void ExitSafe(Action<Exception> onException)
+      => Exit(
+        onException,
+        exit =>
+        {
+          var noParameterExit = (NoParameterExitActionActionInvoker)exit;
+          noParameterExit.Invoke();
+        });
 
     // use [NotNullWhen(returnValue: true)] when upgrading to .netstandard 2.1 and update usages
     public bool FindTransitionTransitive(TEvent @event, out Transition<TState, TEvent>? transition)

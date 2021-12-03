@@ -23,7 +23,7 @@ namespace Binstate
       public bool RaiseAsync<T>(TEvent @event, T? argument) => RaiseAsyncInternal(@event, argument, Maybe<Unit>.Nothing);
 
       public IAutoTransition<TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true)
-        => new ControllerRelayer<TRelay>(this, relayArgumentIsRequired ? Maybe<TRelay>.Nothing : default(TRelay).ToMaybe());
+        => new ControllerRelayer<TRelay?>(this, relayArgumentIsRequired ? Maybe<TRelay?>.Nothing : default(TRelay).ToMaybe());
 
       /// <summary>
       /// Implementation shared between <see cref="Controller"/> itself and <see cref="ControllerRelayer{TRelay}"/>

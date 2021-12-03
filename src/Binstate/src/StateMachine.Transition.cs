@@ -114,18 +114,15 @@ namespace Binstate
 
       return state switch
              {
-               IState<TState, TEvent, TArgument> passedArgumentState => () => passedArgumentState.EnterSafe(
-                                                                          controller,
-                                                                          argument.PassedArgument.Value,
-                                                                          _onException),
-               IState<TState, TEvent, TRelay> relayedArgumentState => () => relayedArgumentState.EnterSafe(
-                                                                        controller,
-                                                                        argument.RelayedArgument.Value,
-                                                                        _onException),
-               IState<TState, TEvent, ITuple<TArgument, TRelay>> bothArgumentsState => () => bothArgumentsState.EnterSafe(
-                                                                                         controller,
-                                                                                         CreateTuple(argument),
-                                                                                         _onException),
+               IState<TState, TEvent, TArgument> passedArgumentState =>
+                 () => passedArgumentState.EnterSafe(controller, argument.PassedArgument.Value, _onException),
+               
+               IState<TState, TEvent, TRelay> relayedArgumentState =>
+                 () => relayedArgumentState.EnterSafe(controller, argument.RelayedArgument.Value, _onException),
+               
+               IState<TState, TEvent, ITuple<TArgument, TRelay>> bothArgumentsState =>
+                 () => bothArgumentsState.EnterSafe(controller, CreateTuple(argument), _onException),
+               
                _ => () => state.EnterSafe(controller, _onException) // no arguments state
              };
     }

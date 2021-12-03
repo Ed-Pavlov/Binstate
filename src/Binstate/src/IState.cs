@@ -9,6 +9,6 @@ namespace Binstate
   // ReSharper disable once UnusedTypeParameter
   internal interface IState<TState, out TEvent, in TArgument>
   {
-    void EnterSafe(IStateMachine<TEvent> stateMachine, TArgument? argument, Action<Exception> onException);
+    void EnterSafe(IStateMachine<TEvent> stateMachine, TArgument argument, Action<Exception> onException);
   }
 }

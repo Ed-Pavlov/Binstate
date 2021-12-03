@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
+using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
 
@@ -138,6 +140,62 @@ namespace Binstate.Tests
 
       // --assert
       actual.Should().BeEquivalentTo(enter, exit, enter);
+    }
+
+    [TestCaseSource(nameof(RaiseWays))]
+    public void should_pass_argument_to_exit_action(RaiseWay raiseWay)
+    {
+      const int expected = 398;
+
+      var onExit = A.Fake<Action<int>>();
+
+      // --arrange
+      var builder = new Builder<string, int>(OnException);
+
+      builder.DefineState(Initial).AddTransition(Event1, State1);
+      builder.DefineState(Final);
+
+      builder
+       .DefineState(State1)
+       .OnEnter<int>(_ => {})
+       .OnExit(onExit)
+       .AddTransition(Event1, Final);
+
+      var target = builder.Build(Initial);
+      target.Raise(Event1, expected);
+
+      // --act
+      target.Raise(raiseWay, Event1); // exit State1
+      
+      // --assert
+      A.CallTo(() => onExit(expected)).MustHaveHappenedOnceExactly();
+    }
+    
+    [TestCaseSource(nameof(RaiseWays))]
+    public void should_call_on_exit_wo_argument_if_specified(RaiseWay raiseWay)
+    {
+      var onExit = A.Fake<Action>();
+
+      // --arrange
+      var builder = new Builder<string, int>(OnException);
+
+      builder.DefineState(Initial).AddTransition(Event1, State1);
+      builder.DefineState(Final);
+
+      builder
+       .DefineState(State1)
+       .OnEnter<int>(_ => {})
+       .OnExit(onExit)
+       .AddTransition(Event1, Final);
+
+      var target = builder.Build(Initial);
+      target.Raise(Event1, 3987);
+
+      // --act
+      target.Raise(raiseWay, Event1); // exit State1
+      
+      // --assert
+      A.CallTo(() => onExit()).MustHaveHappenedOnceExactly();
     }
   }
 }

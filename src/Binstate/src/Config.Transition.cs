@@ -23,7 +23,7 @@ namespace Binstate
       /// <summary>
       /// Defines transition from the currently configured state to the <paramref name="stateId"> specified state</paramref> when <paramref name="event"> event is raised</paramref> 
       /// </summary>
-      public Transitions AddTransition(TEvent @event, TState stateId, Action? action = null)
+      public virtual Transitions AddTransition(TEvent @event, TState stateId, Action? action = null)
       {
         if(@event is null) throw new ArgumentNullException(nameof(@event));
         if(stateId is null) throw new ArgumentNullException(nameof(stateId));
@@ -50,7 +50,7 @@ namespace Binstate
       /// Otherwise consider using <see cref="AddTransition(TEvent,Func{TState})"/> method as more simple.
       /// </remarks>
 #pragma warning restore 1574,1584,1581,1580
-      public Transitions AddTransition(TEvent @event, GetState<TState> getState)
+      public virtual Transitions AddTransition(TEvent @event, GetState<TState> getState)
       {
         if(@event is null) throw new ArgumentNullException(nameof(@event));
         if(getState is null) throw new ArgumentNullException(nameof(getState));
@@ -70,7 +70,7 @@ namespace Binstate
       /// <see cref="AddTransition(TEvent,GetState{TState})"/> method.
       /// </remarks>
 #pragma warning restore 1574,1584,1581,1580
-      public Transitions AddTransition(TEvent @event, Func<TState?> getState)
+      public virtual Transitions AddTransition(TEvent @event, Func<TState?> getState)
       {
         if(@event is null) throw new ArgumentNullException(nameof(@event));
         if(getState is null) throw new ArgumentNullException(nameof(getState));
@@ -89,7 +89,7 @@ namespace Binstate
       /// <summary>
       /// Defines transition from the state to itself when <param name="event"> is raised. Exit and enter actions are called in case of such transition.</param>
       /// </summary>
-      public void AllowReentrancy(TEvent @event) => AddTransition(@event, StateId);
+      public virtual void AllowReentrancy(TEvent @event) => AddTransition(@event, StateId);
 
       private Transitions AddTransition(TEvent @event, GetState<TState> getState, bool isStatic, Action? action)
       {

@@ -85,7 +85,7 @@ namespace Binstate
       /// </see>.
       /// </summary>
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-      public Exit OnEnter<TArgument>(Action<TArgument?> enterAction)
+      public Exit<TArgument> OnEnter<TArgument>(Action<TArgument?> enterAction)
       {
         if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
@@ -101,7 +101,7 @@ namespace Binstate
       /// </summary>
       /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
 #pragma warning restore 1574
-      public Exit OnEnter<TArgument>(Action<IStateMachine<TEvent>, TArgument?> enterAction)
+      public Exit<TArgument> OnEnter<TArgument>(Action<IStateMachine<TEvent>, TArgument?> enterAction)
       {
         if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
@@ -109,7 +109,7 @@ namespace Binstate
         EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(enterAction);
         _stateFactory      = new StateFactory<TArgument>();
 
-        return this;
+        return new Exit<TArgument>(this);
       }
 
       /// <summary>

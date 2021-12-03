@@ -1,87 +1,93 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <LangVersion>9</LangVersion>
-        <Nullable>enable</Nullable>
-        <SignAssembly>true</SignAssembly>
-        <AssemblyOriginatorKeyFile>..\..\build\binstate.public.snk</AssemblyOriginatorKeyFile>
-        <PublicSign>true</PublicSign>
-        <TargetFrameworks>net45;net461;netstandard2.0</TargetFrameworks>
+  <PropertyGroup>
+    <LangVersion>9</LangVersion>
+    <Nullable>enable</Nullable>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\..\build\binstate.public.snk</AssemblyOriginatorKeyFile>
+    <PublicSign>true</PublicSign>
+    <TargetFrameworks>net45;net461;netstandard2.0</TargetFrameworks>
 
-					   <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
-    </PropertyGroup>
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
+  </PropertyGroup>
 
-    <PropertyGroup Label="nuspec">
-        <IsPackable>true</IsPackable>
-        <MinClientVersion>2.8</MinClientVersion>
-        <PackageVersion>0.0.0</PackageVersion>
-        <PackageProjectUrl>https://github.com/Ed-Pavlov/Binstate</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/Ed-Pavlov/Binstate</RepositoryUrl>
-        <Authors>Ed Pavlov</Authors>
-        <copyright>Copyright © 2020 Ed Pavlov</copyright>
-        <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
-        <PackageIcon>icon.png</PackageIcon>
-        <PackageTags>.NET StateMachine state-machine FSM HSM hierarchical-state-machine</PackageTags>
-        <description>Binstate is a lightweight but yet powerful implementation of the state machine for .NET. Threadsafe. Supports async methods. Supports hierarchically nested states.</description>
-    </PropertyGroup>
-    
-    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-        <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
-        <DocumentationFile>bin\Debug\Binstate.xml</DocumentationFile>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    </PropertyGroup>
+  <PropertyGroup Label="nuspec">
+    <IsPackable>true</IsPackable>
+    <MinClientVersion>2.8</MinClientVersion>
+    <PackageVersion>0.0.0</PackageVersion>
+    <PackageProjectUrl>https://github.com/Ed-Pavlov/Binstate</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Ed-Pavlov/Binstate</RepositoryUrl>
+    <Authors>Ed Pavlov</Authors>
+    <copyright>Copyright © 2020 Ed Pavlov</copyright>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageIcon>icon.png</PackageIcon>
+    <PackageTags>.NET StateMachine state-machine FSM HSM hierarchical-state-machine</PackageTags>
+    <description>Binstate is a lightweight but yet powerful implementation of the state machine for .NET. Threadsafe. Supports async methods. Supports hierarchically nested states.</description>
+  </PropertyGroup>
 
-    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
-        <DocumentationFile>bin\Release\Binstate.xml</DocumentationFile>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    </PropertyGroup>
-	
-    <ItemGroup>
-      <Compile Update="src\Config.Transition.cs">
-        <DependentUpon>Config.cs</DependentUpon>
-      </Compile>
-      <Compile Update="src\Config.Enter.cs">
-        <DependentUpon>Config.cs</DependentUpon>
-      </Compile>
-      <Compile Update="src\Config.Exit.cs">
-        <DependentUpon>Config.cs</DependentUpon>
-      </Compile>
-      <Compile Update="src\Config.State.cs">
-        <DependentUpon>Config.cs</DependentUpon>
-      </Compile>
-      <Compile Update="src\StateMachine.Controller.cs">
-        <DependentUpon>StateMachine.cs</DependentUpon>
-      </Compile>
-      <Compile Update="src\StateMachine.Transition.cs">
-        <DependentUpon>StateMachine.cs</DependentUpon>
-      </Compile>
-      <Compile Update="src\State'3.cs">
-        <DependentUpon>State.cs</DependentUpon>
-      </Compile>
-      <Compile Update="src\StateMachine.RelayArgument.cs">
-        <DependentUpon>StateMachine.cs</DependentUpon>
-      </Compile>
-      <Compile Update="src\IState.cs">
-        <DependentUpon>State.cs</DependentUpon>
-      </Compile>
-      <Compile Update="src\EnterActionInvoker.Factory.cs">
-        <DependentUpon>EnterActionInvoker.cs</DependentUpon>
-      </Compile>
-      <Compile Update="src\IEnterActionInvoker.cs">
-        <DependentUpon>EnterActionInvoker.cs</DependentUpon>
-      </Compile>
-      <Compile Include="..\..\build\GlobalAssemblyInfo.cs">
-        <Link>build\GlobalAssemblyInfo.cs</Link>
-      </Compile>
-    </ItemGroup>
-	
-    <ItemGroup>
-      <None Include="..\..\build\binstate.public.snk">
-        <Link>build\binstate.public.snk</Link>
-      </None>
-      <Content Include="..\..\build\icon.png" Pack="true" PackagePath="">
-        <Link>build\icon.png</Link>
-      </Content>
-    </ItemGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
+    <DocumentationFile>bin\Debug\Binstate.xml</DocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
+    <DocumentationFile>bin\Release\Binstate.xml</DocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Update="src\Config.Transition.cs">
+      <DependentUpon>Config.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\Config.Enter.cs">
+      <DependentUpon>Config.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\Config.Exit.cs">
+      <DependentUpon>Config.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\Config.State.cs">
+      <DependentUpon>Config.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\StateMachine.Controller.cs">
+      <DependentUpon>StateMachine.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\StateMachine.Transition.cs">
+      <DependentUpon>StateMachine.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\State'3.cs">
+      <DependentUpon>State.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\StateMachine.RelayArgument.cs">
+      <DependentUpon>StateMachine.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\IState.cs">
+      <DependentUpon>State.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\EnterActionInvoker.Factory.cs">
+      <DependentUpon>EnterActionInvoker.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\IEnterActionInvoker.cs">
+      <DependentUpon>EnterActionInvoker.cs</DependentUpon>
+    </Compile>
+    <Compile Include="..\..\build\GlobalAssemblyInfo.cs">
+      <Link>build\GlobalAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Update="src\IExitActionInvoker.cs">
+      <DependentUpon>ExitActionInvoker.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\ExitActionInvoker.Factory.cs">
+      <DependentUpon>ExitActionInvoker.cs</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\build\binstate.public.snk">
+      <Link>build\binstate.public.snk</Link>
+    </None>
+    <Content Include="..\..\build\icon.png" Pack="true" PackagePath="">
+      <Link>build\icon.png</Link>
+    </Content>
+  </ItemGroup>
 </Project>

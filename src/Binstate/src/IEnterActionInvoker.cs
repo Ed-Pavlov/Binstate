@@ -6,8 +6,6 @@ namespace Binstate
   /// Interface of the invoker of the enter action is used to be able to assign both generic and plain invoker instances to the one variable.
   /// See <see cref="State{TState,TEvent}.EnterSafe"/> implementation for details.
   /// </summary>
-
-  // ReSharper disable once UnusedTypeParameter
   internal interface IEnterActionInvoker { }
 
   /// <summary>

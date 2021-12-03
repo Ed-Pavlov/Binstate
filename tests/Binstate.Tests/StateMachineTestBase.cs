@@ -11,6 +11,7 @@ namespace Binstate.Tests
     protected const int    Event2  = 2;
     protected const string State1  = "state1";
     protected const string State2  = "state2";
+    protected const string Final   = nameof(Final);
     protected const string Root    = "Root";
     protected const string Parent  = "Parent";
     protected const string Child   = "Child";

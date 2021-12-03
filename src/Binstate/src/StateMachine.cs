@@ -29,7 +29,7 @@ namespace Binstate
       _onException = onException;
     }
 
-    internal void SetInitialState<T>(TState initialStateId, T? initialStateArgument)
+    internal void SetInitialState<T>(TState initialStateId, T initialStateArgument)
     {
       _activeState = GetStateById(initialStateId);
       var enterAction = ActivateStateNotGuarded(_activeState, new MixOf<T, Unit>(initialStateArgument.ToMaybe(), Maybe<Unit>.Nothing));
@@ -87,7 +87,7 @@ namespace Binstate
     /// false: state machine will pass default(TRelay) as an argument 
     /// </param>
     public IStateMachine<TState, TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true)
-      => new Relayer<TRelay>(this, relayArgumentIsRequired ? Maybe<TRelay>.Nothing : default(TRelay).ToMaybe());
+      => new Relayer<TRelay?>(this, relayArgumentIsRequired ? Maybe<TRelay?>.Nothing : default(TRelay).ToMaybe());
 
     private bool PerformTransitionSync<TA, TRelay>(TEvent @event, TA? argument, Maybe<TRelay> backupRelayArgument)
     {

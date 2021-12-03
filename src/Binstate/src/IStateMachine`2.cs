@@ -32,7 +32,7 @@ public interface IStateMachine<TState, in TEvent>
   /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
   /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
   /// </exception>
-  bool Raise<T>(TEvent @event, T? argument);
+  bool Raise<T>(TEvent @event, T argument);
 
   /// <summary>
   /// Raises the event asynchronously. Finishing can be controller by returned <see cref="Task"/>, entering and exiting actions (if defined) of the current
@@ -56,5 +56,5 @@ public interface IStateMachine<TState, in TEvent>
   /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
   /// using the delegate passed into <see cref="Builder{TState,TEvent}(Action{Exception})"/>
   /// </exception>
-  Task<bool> RaiseAsync<T>(TEvent @event, T? argument);
+  Task<bool> RaiseAsync<T>(TEvent @event, T argument);
 }

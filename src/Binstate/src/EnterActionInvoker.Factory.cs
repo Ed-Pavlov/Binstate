@@ -15,13 +15,14 @@ internal static class EnterActionInvokerFactory<TEvent>
 
   public static NoParameterEnterActionActionInvoker<TEvent> Create(Func<IStateMachine<TEvent>, Task?> action) => new(action);
 
-  public static EnterActionInvoker<TEvent, TArg> Create<TArg>(Action<IStateMachine<TEvent>, TArg?> action)
-    => new((stateMachine, arg) =>
-           {
-             action(stateMachine, arg);
+  public static EnterActionInvoker<TEvent, TArg> Create<TArg>(Action<IStateMachine<TEvent>, TArg> action)
+    => new EnterActionInvoker<TEvent, TArg>(
+      (stateMachine, arg) =>
+      {
+        action(stateMachine, arg);
 
-             return null;
-           });
+        return null;
+      });
 
-  public static EnterActionInvoker<TEvent, TArgument> Create<TArgument>(Func<IStateMachine<TEvent>, TArgument?, Task?> action) => new(action);
+  public static EnterActionInvoker<TEvent, TArgument> Create<TArgument>(Func<IStateMachine<TEvent>, TArgument, Task?> action) => new(action);
 }

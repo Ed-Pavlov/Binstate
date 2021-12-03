@@ -20,7 +20,7 @@ public partial class StateMachine<TState, TEvent> where TState : notnull where T
 
     public bool RaiseAsync(TEvent @event) => RaiseAsync<Unit>(@event, default);
 
-    public bool RaiseAsync<T>(TEvent @event, T? argument) => RaiseAsyncInternal(@event, argument, Maybe<Unit>.Nothing);
+    public bool RaiseAsync<T>(TEvent @event, T argument) => RaiseAsyncInternal(@event, argument, Maybe<Unit>.Nothing);
 
     public IAutoTransition<TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true)
       => new ControllerRelayer<TRelay?>(this, relayArgumentIsRequired ? Maybe<TRelay?>.Nothing : default(TRelay).ToMaybe());
@@ -52,7 +52,7 @@ public partial class StateMachine<TState, TEvent> where TState : notnull where T
 
       public bool RaiseAsync(TEvent @event) => RaiseAsync<Unit>(@event, default);
 
-      public bool RaiseAsync<T>(TEvent @event, T? argument)
+      public bool RaiseAsync<T>(TEvent @event, T argument)
       {
         if(@event is null) throw new ArgumentNullException(nameof(@event));
 

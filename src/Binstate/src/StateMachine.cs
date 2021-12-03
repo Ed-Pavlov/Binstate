@@ -49,11 +49,11 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
   {
     if(@event is null) throw new ArgumentNullException(nameof(@event));
 
-    return PerformTransitionSync<Unit, Unit>(@event, null, Maybe<Unit>.Nothing);
+    return PerformTransitionSync(@event, Unit.Default, Maybe<Unit>.Nothing);
   }
 
   /// <inheritdoc />
-  public bool Raise<T>(TEvent @event, T? argument)
+  public bool Raise<T>(TEvent @event, T argument)
   {
     if(@event is null) throw new ArgumentNullException(nameof(@event));
 
@@ -69,7 +69,7 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
   }
 
   /// <inheritdoc />
-  public Task<bool> RaiseAsync<T>(TEvent @event, T? argument)
+  public Task<bool> RaiseAsync<T>(TEvent @event, T argument)
   {
     if(@event is null) throw new ArgumentNullException(nameof(@event));
 
@@ -87,7 +87,7 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
   /// false: state machine will pass default(TRelay) as an argument 
   /// </param>
   public IStateMachine<TState, TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true)
-    => new Relayer<TRelay?>(this, relayArgumentIsRequired ? Maybe<TRelay?>.Nothing : default(TRelay).ToMaybe());
+    => new Relayer<TRelay?>(this, relayArgumentIsRequired ? Maybe<TRelay?>.Nothing : default(TRelay).ToMaybe()); //TODO: where is exception?
 
   private bool PerformTransitionSync<TA, TRelay>(TEvent @event, TA? argument, Maybe<TRelay> backupRelayArgument)
   {
@@ -117,8 +117,6 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
 
     var lDepth = l.DepthInTree;
     var rDepth = r.DepthInTree;
-
-    // State<TState, TEvent>? left = l;
 
     while(lDepth != rDepth)
       if(lDepth > rDepth)

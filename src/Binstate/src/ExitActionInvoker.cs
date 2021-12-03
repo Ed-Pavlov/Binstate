@@ -14,7 +14,7 @@ internal class NoParameterExitActionActionInvoker : IExitActionInvoker
 /// <summary>
 /// Generic version of the invoker of exit action introduced to avoid boxing in case of Value Type parameter
 /// </summary>
-internal class ExitActionInvoker<TArgument> : IExitActionInvoker<TArgument>
+internal class ExitActionInvoker<TArgument> : IExitActionInvoker
 {
   private readonly Action<TArgument> _action;
 

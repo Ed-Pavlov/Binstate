@@ -17,9 +17,9 @@ internal class NoParameterEnterActionActionInvoker<TEvent> : IEnterActionInvoker
 /// </summary>
 internal class EnterActionInvoker<TEvent, TArgument> : IEnterActionInvoker<TEvent, TArgument>
 {
-  private readonly Func<IStateMachine<TEvent>, TArgument?, Task?> _action;
+  private readonly Func<IStateMachine<TEvent>, TArgument, Task?> _action;
 
-  public EnterActionInvoker(Func<IStateMachine<TEvent>, TArgument?, Task?> action) => _action = action;
+  public EnterActionInvoker(Func<IStateMachine<TEvent>, TArgument, Task?> action) => _action = action;
 
-  public Task? Invoke(IStateMachine<TEvent> isInState, TArgument? argument) => _action(isInState, argument);
+  public Task? Invoke(IStateMachine<TEvent> isInState, TArgument argument) => _action(isInState, argument);
 }

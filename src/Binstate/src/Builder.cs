@@ -61,7 +61,7 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
   /// of state requires an argument but some not.
   /// </param>
   /// <exception cref="InvalidOperationException">Throws if there are any inconsistencies in the provided configuration.</exception>
-  public StateMachine<TState, TEvent> Build<T>(TState initialStateId, T? initialStateArgument, bool enableLooseRelaying = false)
+  public StateMachine<TState, TEvent> Build<T>(TState initialStateId, T initialStateArgument, bool enableLooseRelaying = false)
   {
     if(initialStateId is null) throw new ArgumentNullException(nameof(initialStateId));
 

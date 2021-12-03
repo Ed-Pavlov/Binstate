@@ -28,7 +28,7 @@ public interface IAutoTransition<in TEvent>
   /// All users exception from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
   /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception})"/>
   /// </exception>
-  bool RaiseAsync<T>(TEvent @event, T? argument);
+  bool RaiseAsync<T>(TEvent @event, T argument);
 }
 
 /// <summary>

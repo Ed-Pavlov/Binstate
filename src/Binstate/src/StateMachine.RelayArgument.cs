@@ -21,11 +21,11 @@ public partial class StateMachine<TState, TEvent>
     {
       if(@event is null) throw new ArgumentNullException(nameof(@event));
 
-      return _owner.PerformTransitionSync<Unit, TRelay>(@event, null, _backupValue);
+      return _owner.PerformTransitionSync(@event, Unit.Default, _backupValue);
     }
 
     /// <inheritdoc />
-    public bool Raise<T>(TEvent @event, T? argument)
+    public bool Raise<T>(TEvent @event, T argument)
     {
       if(@event is null) throw new ArgumentNullException(nameof(@event));
 
@@ -41,7 +41,7 @@ public partial class StateMachine<TState, TEvent>
     }
 
     /// <inheritdoc />
-    public Task<bool> RaiseAsync<T>(TEvent @event, T? argument)
+    public Task<bool> RaiseAsync<T>(TEvent @event, T argument)
     {
       if(@event is null) throw new ArgumentNullException(nameof(@event));
 

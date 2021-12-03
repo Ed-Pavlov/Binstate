@@ -65,9 +65,9 @@ public static partial class Config<TState, TEvent>
     /// <param name="event"></param>
     /// <param name="getState">If getState returns 'default' value of the type used as <typeparamref name="TState"/> no transition performed.</param>
     /// <remarks>
-    /// Use this overload if you use a reference type (class) as a <typeparamref name="TState"/> or the default value of the value type doesn't represent a valid State id.
-    /// if you use a value type (e.g. enum) as a <typeparamref name="TState"/> and the default value of the value type as a valid State id you must use
-    /// <see cref="AddTransition(TEvent,GetState{TState})"/> method.
+    /// Use this overload if you use a reference type (class) as a <typeparamref name="TState"/> or the default value of the value type doesn't represent
+    /// a valid State id. If you use a value type (e.g. enum) as a <typeparamref name="TState"/> and the default value of the value type is a valid State id
+    /// you must use <see cref="AddTransition(TEvent,GetState{TState})"/> method.
     /// </remarks>
 #pragma warning restore 1574,1584,1581,1580
     public virtual Transitions AddTransition(TEvent @event, Func<TState?> getState)

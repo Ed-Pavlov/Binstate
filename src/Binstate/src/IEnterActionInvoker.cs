@@ -17,5 +17,5 @@ internal interface IEnterActionInvoker { }
 // ReSharper disable once TypeParameterCanBeVariant
 internal interface IEnterActionInvoker<TEvent, in TArgument> : IEnterActionInvoker
 {
-  Task? Invoke(IStateMachine<TEvent> isInState, TArgument? argument);
+  Task? Invoke(IStateMachine<TEvent> isInState, TArgument argument);
 }

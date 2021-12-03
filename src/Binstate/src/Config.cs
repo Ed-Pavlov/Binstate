@@ -21,7 +21,13 @@ public static partial class Config<TState, TEvent> where TState : notnull where 
   private class NoArgumentStateFactory : IStateFactory
   {
     public State<TState, TEvent> CreateState(Enter stateConfig, State<TState, TEvent>? parentState)
-      => new State<TState, TEvent>(stateConfig.StateId, stateConfig.EnterActionInvoker, null, stateConfig.ExitActionInvoker, stateConfig.TransitionList, parentState);
+      => new State<TState, TEvent>(
+        stateConfig.StateId,
+        stateConfig.EnterActionInvoker,
+        null,
+        stateConfig.ExitActionInvoker,
+        stateConfig.TransitionList,
+        parentState);
   }
 
   private class StateFactory<TArgument> : IStateFactory

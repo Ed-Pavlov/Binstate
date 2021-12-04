@@ -2,16 +2,16 @@ name: Build & Test
 
 on:
   push:
-    branches: 
-      - master
-      - 'feature/**'
+    branches:
+    - master
+    - 'feature/**'
 #  pull_request:
 #    branches: [ master ]
 
 env:
   configuration: Release
   artifacts-dir: artifacts
-  nugets-dir: artifacts/nupkgs
+  nugets-dir:    artifacts/nupkgs
 
 jobs:
   build:
@@ -19,48 +19,59 @@ jobs:
     runs-on: windows-latest
     
     steps:
-    - name: Checkout
+    -
+      name: Checkout
       uses: actions/checkout@v2.3.4
       with:
-       fetch-depth: 0
-    
-    - name: Install GitVersion
+        fetch-depth: 0
+
+    -
+      name: Install GitVersion
       uses: gittools/actions/gitversion/setup@v0.9.9
       with:
         versionSpec: '5.x'
-    
-    - name: Use GitVersion
-      id: gitversion # step id used as reference for output values
+
+    -
+      name: Use GitVersion
+      id:   gitversion # step id used as reference for output values
       uses: gittools/actions/gitversion/execute@v0.9.9
-    
-    - name: Setup .NET
+
+    -
+      name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 6.0.x
-        
+
     # Restore build and test as one command in order to not copy/paste the same arguments      
-    - name: Restore, build, and run tests
-      run: dotnet test -c ${{env.configuration}} -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
-      
+    -
+      name: Restore, build, and run tests
+      run:  dotnet test -c ${{env.configuration}} -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
+
+    -
+      name: Show directories
+      run:  dir
+
     # Place nuget packages into env.nugets-dir directory
-    - name: Pack
-      run: dotnet pack --no-build -c ${{ env.configuration }} -o:${{ env.nugets-dir }}  -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
-    
-    - name: Store Version
+    -
+      name: Pack
+      run:  dotnet pack --no-build -c ${{ env.configuration }} -o:${{ env.nugets-dir }}  -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
+    -
+      name: Store Version
       uses: jsdaniell/create-json@1.1.2
       with:
-       name: version.json
-       json: |
-         {
-           "assembly-version": "${{ steps.gitversion.outputs.assemblySemVer }}",
-           "assembly-file-version": "${{ steps.gitversion.outputs.assemblySemFileVer }}",
-           "nuget-version": "${{ steps.gitversion.outputs.nuGetVersionV2 }}"
-         }
-       dir: ${{ env.artifacts-dir }}
-     
-    - name: Upload Artifacts
+        name: version.json
+        json: |
+              {
+              "assembly-version": "${{ steps.gitversion.outputs.assemblySemVer }}",
+              "assembly-file-version": "${{ steps.gitversion.outputs.assemblySemFileVer }}",
+              "nuget-version": "${{ steps.gitversion.outputs.nuGetVersionV2 }}"
+              }
+        dir:  ${{ env.artifacts-dir }}
+
+    -
+      name: Upload Artifacts
       uses: actions/upload-artifact@v2.2.2
       with:
-        name: Artifacts
-        path: ${{env.artifacts-dir}}/
+        name:           Artifacts
+        path:           ${{env.artifacts-dir}}/
         retention-days: 3

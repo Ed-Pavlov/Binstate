@@ -26,7 +26,7 @@ public static partial class Config<TState, TEvent>
     /// This overload is used to provide blocking action. To provide async action use <see cref="OnEnter(Func{IStateMachine{TEvent}, Task})"/>.
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public Exit OnEnter(Action enterAction)
+    public IExit OnEnter(Action enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
@@ -39,7 +39,7 @@ public static partial class Config<TState, TEvent>
     /// This overload is used to provide blocking action. To provide async action use <see cref="OnEnter(Func{IStateMachine{TEvent}, Task})"/>.
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public Exit OnEnter(Action<IStateMachine<TEvent>> enterAction)
+    public IExit OnEnter(Action<IStateMachine<TEvent>> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
@@ -55,7 +55,7 @@ public static partial class Config<TState, TEvent>
     /// This overload is used to provide non-blocking async action.
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public Exit OnEnter(Func<Task> enterAction)
+    public IExit OnEnter(Func<Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
@@ -67,7 +67,7 @@ public static partial class Config<TState, TEvent>
     /// This overload is used to provide non-blocking async action.
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public Exit OnEnter(Func<IStateMachine<TEvent>, Task> enterAction)
+    public IExit OnEnter(Func<IStateMachine<TEvent>, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
@@ -85,7 +85,7 @@ public static partial class Config<TState, TEvent>
     /// </see>.
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public Exit<TArgument> OnEnter<TArgument>(Action<TArgument> enterAction)
+    public IExit<TArgument> OnEnter<TArgument>(Action<TArgument> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
@@ -101,7 +101,7 @@ public static partial class Config<TState, TEvent>
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
 #pragma warning restore 1574
-    public Exit<TArgument> OnEnter<TArgument>(Action<IStateMachine<TEvent>, TArgument> enterAction)
+    public IExit<TArgument> OnEnter<TArgument>(Action<IStateMachine<TEvent>, TArgument> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
@@ -118,7 +118,7 @@ public static partial class Config<TState, TEvent>
     /// This overload is used to provide non-blocking async action.
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public Exit OnEnter<TArgument>(Func<TArgument, Task> enterAction)
+    public IExit OnEnter<TArgument>(Func<TArgument, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
@@ -130,7 +130,7 @@ public static partial class Config<TState, TEvent>
     /// This overload is used to provide non-blocking async action.
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public Exit OnEnter<TArgument>(Func<IStateMachine<TEvent>, TArgument, Task> enterAction)
+    public IExit OnEnter<TArgument>(Func<IStateMachine<TEvent>, TArgument, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
@@ -149,7 +149,7 @@ public static partial class Config<TState, TEvent>
     /// <see cref="OnEnter{TArgument, TRelay}(Func{TArgument, TRelay, Task})"/>
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public Exit OnEnter<TArgument, TRelay>(Action<TArgument, TRelay> enterAction)
+    public IExit OnEnter<TArgument, TRelay>(Action<TArgument, TRelay> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
@@ -168,7 +168,7 @@ public static partial class Config<TState, TEvent>
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
 #pragma warning restore 1574
-    public Exit OnEnter<TArgument, TRelay>(Action<IStateMachine<TEvent>, TArgument, TRelay> enterAction)
+    public IExit OnEnter<TArgument, TRelay>(Action<IStateMachine<TEvent>, TArgument, TRelay> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
@@ -185,7 +185,7 @@ public static partial class Config<TState, TEvent>
     /// This overload is used to provide non-blocking async action.
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public Exit OnEnter<TArgument, TRelay>(Func<TArgument, TRelay, Task> enterAction)
+    public IExit OnEnter<TArgument, TRelay>(Func<TArgument, TRelay, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
@@ -199,7 +199,7 @@ public static partial class Config<TState, TEvent>
     /// This overload is used to provide non-blocking async action.
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public Exit OnEnter<TArgument, TRelay>(Func<IStateMachine<TEvent>, TArgument, TRelay, Task> enterAction)
+    public IExit OnEnter<TArgument, TRelay>(Func<IStateMachine<TEvent>, TArgument, TRelay, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 

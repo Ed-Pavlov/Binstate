@@ -69,6 +69,27 @@
     <Compile Include="..\..\build\GlobalAssemblyInfo.cs">
       <Link>build\GlobalAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Update="src\Config.Exit`1.cs">
+      <DependentUpon>Config.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\Config.ITransitions.cs">
+      <DependentUpon>Config.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\Config.IExit.cs">
+      <DependentUpon>Config.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\GetState.cs">
+      <DependentUpon>Config.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\Config.ITransitions`1.cs">
+      <DependentUpon>Config.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\Config.IExit`1.cs">
+      <DependentUpon>Config.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\Config.ITransitions.cs">
+      <DependentUpon>Config.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

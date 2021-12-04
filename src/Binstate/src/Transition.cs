@@ -5,9 +5,9 @@ namespace Binstate;
 
 internal class Transition<TState, TEvent>
 {
-  private readonly Action? _action;
+  private readonly IActionInvoker? _action;
 
-  public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, Action? action)
+  public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, IActionInvoker? action)
   {
     Event            = @event;
     GetTargetStateId = getTargetStateId;

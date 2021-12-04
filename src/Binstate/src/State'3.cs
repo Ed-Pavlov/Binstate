@@ -22,7 +22,7 @@ internal class State<TState, TEvent, TArgument> : State<TState, TEvent>, IState<
   public State(
     TState                                         id,
     IEnterActionInvoker?                           enterAction,
-    IExitActionInvoker?                            exitAction,
+    IActionInvoker?                            exitAction,
     Dictionary<TEvent, Transition<TState, TEvent>> transitions,
     State<TState, TEvent>?                         parentState) : base(id, enterAction, typeof(TArgument), exitAction, transitions, parentState) { }
 
@@ -43,7 +43,7 @@ internal class State<TState, TEvent, TArgument> : State<TState, TEvent>, IState<
       onException,
       exit =>
       {
-        if(exit is ExitActionInvoker<TArgument> typedExitAction)
+        if(exit is ActionInvoker<TArgument> typedExitAction)
           typedExitAction.Invoke(Argument);
         else
           base.ExitSafe(onException);

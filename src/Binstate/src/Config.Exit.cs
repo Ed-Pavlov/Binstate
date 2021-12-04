@@ -10,7 +10,7 @@ public static partial class Config<TState, TEvent>
   /// </summary>
   public class Exit : Transitions
   {
-    internal IExitActionInvoker? ExitActionInvoker;
+    internal IActionInvoker? ExitActionInvoker;
 
     /// <inheritdoc />
     protected Exit(TState stateId) : base(stateId) { }
@@ -21,7 +21,7 @@ public static partial class Config<TState, TEvent>
     public virtual Transitions OnExit(Action exitAction)
     {
       if(exitAction == null) throw new ArgumentNullException(nameof(exitAction));
-      ExitActionInvoker = ExitActionInvokerFactory.Create(exitAction);
+      ExitActionInvoker = new ActionInvoker(exitAction);
       return this;
     }
   }
@@ -56,7 +56,7 @@ public static partial class Config<TState, TEvent>
     public Transitions OnExit(Action<T> exitAction)
     {
       if(exitAction == null) throw new ArgumentNullException(nameof(exitAction));
-      _state.ExitActionInvoker = ExitActionInvokerFactory.Create(exitAction);
+      _state.ExitActionInvoker = new ActionInvoker<T>(exitAction);
       return this;
     }
   }

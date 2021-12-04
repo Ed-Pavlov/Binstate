@@ -36,7 +36,8 @@ public static partial class Config<TState, TEvent>
           return true;
         });
 
-      return AddTransition(@event, getStateWrapper, true, action);
+      var actionInvoker = action is null ? null : new ActionInvoker(action);
+      return AddTransition(@event, getStateWrapper, true, actionInvoker);
     }
 
 #pragma warning disable 1574,1584,1581,1580
@@ -91,7 +92,7 @@ public static partial class Config<TState, TEvent>
     /// </summary>
     public virtual void AllowReentrancy(TEvent @event) => AddTransition(@event, StateId);
 
-    private Transitions AddTransition(TEvent @event, GetState<TState> getState, bool isStatic, Action? action)
+    private Transitions AddTransition(TEvent @event, GetState<TState> getState, bool isStatic, IActionInvoker? action)
     {
       if(@event is null) throw new ArgumentNullException(nameof(@event));
       if(getState is null) throw new ArgumentNullException(nameof(getState));

@@ -8,7 +8,7 @@ namespace Binstate;
 internal class State<TState, TEvent> where TState : notnull where TEvent : notnull
 {
   private readonly IEnterActionInvoker? _enterAction;
-  private readonly IExitActionInvoker?  _exitAction;
+  private readonly IActionInvoker?  _exitAction;
 
   private readonly Dictionary<TEvent, Transition<TState, TEvent>> _transitions;
 
@@ -37,7 +37,7 @@ internal class State<TState, TEvent> where TState : notnull where TEvent : notnu
     TState                                         id,
     IEnterActionInvoker?                           enterAction,
     Type?                                          enterArgumentType,
-    IExitActionInvoker?                            exitAction,
+    IActionInvoker?                            exitAction,
     Dictionary<TEvent, Transition<TState, TEvent>> transitions,
     State<TState, TEvent>?                         parentState)
   {
@@ -101,7 +101,7 @@ internal class State<TState, TEvent> where TState : notnull where TEvent : notnu
     }
   }
 
-  protected void Exit(Action<Exception> onException, Action<IExitActionInvoker> invokeExitAction)
+  protected void Exit(Action<Exception> onException, Action<IActionInvoker> invokeExitAction)
   {
     try
     {
@@ -136,7 +136,7 @@ internal class State<TState, TEvent> where TState : notnull where TEvent : notnu
       onException,
       exit =>
       {
-        var noParameterExit = (NoParameterExitActionActionInvoker)exit;
+        var noParameterExit = (ActionInvoker)exit;
         noParameterExit.Invoke();
       });
 

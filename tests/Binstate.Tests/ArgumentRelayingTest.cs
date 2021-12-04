@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
 
 namespace Binstate.Tests;
 
+[SuppressMessage("ReSharper", "RedundantTypeArgumentsOfMethod")]
 public class ArgumentRelayingTest : StateMachineTestBase
 {
   [TestCaseSource(nameof(RaiseWays))]
@@ -81,7 +84,9 @@ public class ArgumentRelayingTest : StateMachineTestBase
 
     // --act
     const bool relayArgumentIsRequired = false;
+#pragma warning disable CS0618
     stateMachine.Relaying<string>(relayArgumentIsRequired).Raise(raiseWay, Event1);
+#pragma warning restore CS0618
 
     // --assert
     actual.Should().BeNull();
@@ -146,10 +151,10 @@ public class ArgumentRelayingTest : StateMachineTestBase
   [TestCaseSource(nameof(RaiseWays))]
   public void should_pass_both_passed_and_relayed_arguments_with_variance_conversion(RaiseWay raiseWay)
   {
-    var          expectedRelayedValue = new MemoryStream();
     const string expectedPassedValue  = "stringValue";
-
-    ITuple<object, IDisposable> actual = null;
+    
+    var expectedRelayedValue = new MemoryStream();
+    var onEnter              = A.Fake<Action<ITuple<object, IDisposable>>>();
 
     // --arrange
     var builder = new Builder<string, int>(OnException);
@@ -161,7 +166,7 @@ public class ArgumentRelayingTest : StateMachineTestBase
            .AddTransition(Event2, State2);
 
     builder.DefineState(State2)
-           .OnEnter<ITuple<object, IDisposable>>(value => actual = value);
+           .OnEnter<ITuple<object, IDisposable>>(onEnter);
 
     var target = builder.Build(Initial);
 
@@ -171,20 +176,20 @@ public class ArgumentRelayingTest : StateMachineTestBase
     target.Relaying<Stream>().Raise(raiseWay, Event2, expectedPassedValue); // pass and relay arguments to State2 
 
     // --assert
-    actual.Should().NotBeNull();
-    actual!.PassedArgument.Should().Be(expectedPassedValue);
-    actual.RelayedArgument.Should().Be(expectedRelayedValue);
+
+    var expectedTuple = Tuple.Of<object, IDisposable>(expectedPassedValue, expectedRelayedValue);
+    A.CallTo(() => onEnter(expectedTuple)).MustHaveHappenedOnceExactly();
   }
 
   [TestCaseSource(nameof(RaiseWays))]
   public void should_pass_relayed_passed_and_tuple_arguments_depending_on_enter_type(RaiseWay raiseWay)
   {
-    var          expectedRelayed = new MemoryStream();
     const string expectedPassed  = "stringValue";
+    var          expectedRelayed = new MemoryStream();
 
-    IDisposable                 actualRelayed = null;
-    object                      actualPassed  = null;
-    ITuple<object, IDisposable> actualTuple   = null;
+    var onEnterChild  = A.Fake<Action<IDisposable>>();
+    var onEnterRoot   = A.Fake<Action<object>>();
+    var onEnterParent = A.Fake<Action<ITuple<object, IDisposable>>>();
 
     // --arrange
     var builder = new Builder<string, int>(OnException);
@@ -196,15 +201,15 @@ public class ArgumentRelayingTest : StateMachineTestBase
            .AddTransition(Event2, Child);
 
     builder.DefineState(Root)
-           .OnEnter<object>(value => actualPassed = value);
+           .OnEnter<object>(onEnterRoot);
 
     builder.DefineState(Parent)
            .AsSubstateOf(Root)
-           .OnEnter<ITuple<object, IDisposable>>(value => actualTuple = value);
+           .OnEnter<ITuple<object, IDisposable>>(onEnterParent);
 
     builder.DefineState(Child)
            .AsSubstateOf(Parent)
-           .OnEnter<IDisposable>(value => actualRelayed = value);
+           .OnEnter<IDisposable>(onEnterChild);
 
     var target = builder.Build(Initial, true);
     target.Raise(raiseWay, Event1, expectedRelayed); // attach MemoryStream to State1
@@ -213,10 +218,9 @@ public class ArgumentRelayingTest : StateMachineTestBase
     target.Relaying<MemoryStream>().Raise(raiseWay, Event2, expectedPassed); // pass string and relay MemoryStream to Child
 
     // --assert
-    actualPassed.Should().Be(expectedPassed);
-    actualRelayed.Should().Be(expectedRelayed);
-    actualTuple!.PassedArgument.Should().Be(expectedPassed);
-    actualTuple.RelayedArgument.Should().Be(expectedRelayed);
+    A.CallTo(() => onEnterRoot(expectedPassed)).MustHaveHappenedOnceExactly();
+    A.CallTo(() => onEnterChild(expectedRelayed)).MustHaveHappenedOnceExactly();
+    A.CallTo(() => onEnterParent(Tuple.Of<object, IDisposable>(expectedPassed, expectedRelayed))).MustHaveHappenedOnceExactly();
   }
 
   [TestCaseSource(nameof(RaiseWays))]

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
+// ReSharper disable RedundantTypeArgumentsOfMethod
 
 namespace Binstate.Tests;
 
@@ -38,14 +40,14 @@ public class ArgumentPassingTest : StateMachineTestBase
   [TestCaseSource(nameof(RaiseWays))]
   public void should_pass_argument_if_argument_is_differ_but_assignable_to_enter_action_argument(RaiseWay raiseWay)
   {
-    IDisposable actual   = null;
-    var         expected = new MemoryStream();
+    var expected = new MemoryStream();
+    var onEnter  = A.Fake<Action<IDisposable>>();
 
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
     builder.DefineState(Initial).AddTransition(Event1, State1);
-    builder.DefineState(State1).OnEnter<IDisposable>((sm, value) => actual = value);
+    builder.DefineState(State1).OnEnter<IDisposable>(onEnter);
 
     var target = builder.Build(Initial);
 
@@ -53,23 +55,23 @@ public class ArgumentPassingTest : StateMachineTestBase
     target.Raise(raiseWay, Event1, expected);
 
     // --assert
-    actual.Should().BeSameAs(expected);
+    A.CallTo(() => onEnter(expected)).MustHaveHappenedOnceExactly();
   }
 
   [TestCaseSource(nameof(RaiseWays))]
   public void should_pass_argument_if_parent_and_child_argument_are_differ_but_assignable_and_enter_with_no_argument_on_the_pass(RaiseWay raiseWay)
   {
-    IDisposable actualDisposable = null;
-    Stream      actualStream     = null;
-    var         expected         = new MemoryStream();
+    var onEnterRoot  = A.Fake<Action<IDisposable>>();
+    var onEnterChild = A.Fake<Action<Stream>>();
+    var expected     = new MemoryStream();
 
     // --arrange
     var builder = new Builder<string, string>(OnException);
 
     builder.DefineState(Initial).AddTransition(Child, Child);
-    builder.DefineState(Root).OnEnter<IDisposable>(value => actualDisposable = value);
+    builder.DefineState(Root).OnEnter<IDisposable>(onEnterRoot);
     builder.DefineState(Parent).AsSubstateOf(Root).OnEnter(sm => { });
-    builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<Stream>(value => actualStream = value);
+    builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<Stream>(onEnterChild);
 
     var target = builder.Build(Initial);
 
@@ -77,8 +79,8 @@ public class ArgumentPassingTest : StateMachineTestBase
     target.Raise(raiseWay, Child, expected);
 
     // --assert
-    actualStream.Should().BeSameAs(expected);
-    actualDisposable.Should().BeSameAs(expected);
+    A.CallTo(() => onEnterRoot(expected)).MustHaveHappenedOnceExactly();
+    A.CallTo(() => onEnterChild(expected)).MustHaveHappenedOnceExactly();
   }
 
   [TestCaseSource(nameof(RaiseWays))]

@@ -2,9 +2,15 @@
     <PropertyGroup>
         <IsPackable>false</IsPackable>
         <LangVersion>default</LangVersion>
-        <Nullable>warnings</Nullable>
+        <Nullable>enable</Nullable>
         <OutputType>Library</OutputType>
         <TargetFramework>net6.0</TargetFramework>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+      <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>

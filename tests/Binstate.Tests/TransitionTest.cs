@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
 
@@ -343,10 +344,10 @@ public class TransitionTest : StateMachineTestBase
   [TestCaseSource(nameof(RaiseWays))]
   public void should_catch_user_action_exception_and_report(RaiseWay raiseWay)
   {
-    Exception reportedException = null;
+    var onException = A.Fake<Action<Exception>>();
 
     // --arrange
-    var builder = new Builder<string, string>(exc => reportedException = exc);
+    var builder = new Builder<string, string>(onException);
 
     builder.DefineState(Initial)
            .AddTransition(State1, State1, () => throw new TestException());
@@ -360,7 +361,7 @@ public class TransitionTest : StateMachineTestBase
 
     // --assert
     actual.Should().BeTrue();
-    reportedException.Should().BeOfType<TestException>();
+    A.CallTo(() => onException(An<Exception>.That.Matches(exc => exc is TestException))).MustHaveHappenedOnceExactly();
   }
 
   [Test]
@@ -382,10 +383,10 @@ public class TransitionTest : StateMachineTestBase
   [TestCaseSource(nameof(RaiseWays))]
   public void should_not_perform_transition_if_dynamic_transition_throws_exception(RaiseWay raiseWay)
   {
-    Exception actual = null;
+    var onException = A.Fake<Action<Exception>>();
 
     // --arrange
-    var builder = new Builder<string, int>(exc => actual = exc);
+    var builder = new Builder<string, int>(onException);
 
     builder
      .DefineState(Initial)
@@ -398,6 +399,6 @@ public class TransitionTest : StateMachineTestBase
 
     // --assert
     result.Should().BeFalse();
-    actual.Should().BeOfType<TestException>();
+    A.CallTo(() => onException(An<Exception>.That.Matches(exc => exc is TestException))).MustHaveHappenedOnceExactly();
   }
 }

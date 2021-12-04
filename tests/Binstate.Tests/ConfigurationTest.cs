@@ -16,7 +16,7 @@ public class ConfigurationTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
     // --act
-    Action target = () => builder.DefineState(Initial).AsSubstateOf(null);
+    Action target = () => builder.DefineState(Initial).AsSubstateOf(null!);
 
     // --assert
     target.Should().ThrowExactly<ArgumentNullException>().WithMessage("*parentStateId*");
@@ -29,7 +29,7 @@ public class ConfigurationTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
     // --act
-    Action target = () => builder.DefineState(null);
+    Action target = () => builder.DefineState(null!);
 
     // --assert
     target.Should().ThrowExactly<ArgumentNullException>().WithMessage("*stateId*");
@@ -42,7 +42,7 @@ public class ConfigurationTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
     // --act
-    Action target = () => builder.GetOrDefineState(null);
+    Action target = () => builder.GetOrDefineState(null!);
 
     // --assert
     target.Should().ThrowExactly<ArgumentNullException>().WithMessage("*stateId*");
@@ -56,7 +56,7 @@ public class ConfigurationTest : StateMachineTestBase
     builder.DefineState(Initial).AllowReentrancy(Event1);
 
     // --act
-    Action target = () => builder.Build(null);
+    Action target = () => builder.Build(null!);
 
     // --assert
     target.Should().ThrowExactly<ArgumentNullException>().WithMessage("*initialStateId*");
@@ -72,23 +72,23 @@ public class ConfigurationTest : StateMachineTestBase
 #pragma warning disable 8625
 
     // --act
-    Action target01 = () => config.OnEnter((Action) null);
-    Action target02 = () => config.OnEnter((Func<Task>) null);
+    Action target01 = () => config.OnEnter((Action) null!);
+    Action target02 = () => config.OnEnter((Func<Task>) null!);
 
-    Action target03 = () => config.OnEnter((Action<object>) null);
-    Action target04 = () => config.OnEnter((Func<object, Task>) null);
+    Action target03 = () => config.OnEnter((Action<object>) null!);
+    Action target04 = () => config.OnEnter((Func<object, Task>) null!);
 
-    Action target05 = () => config.OnEnter((Action<object, object>) null);
-    Action target06 = () => config.OnEnter((Func<object, object, Task>) null);
+    Action target05 = () => config.OnEnter((Action<object, object>) null!);
+    Action target06 = () => config.OnEnter((Func<object, object, Task>) null!);
 
-    Action target07 = () => config.OnEnter((Action<IStateMachine<string>>) null);
-    Action target08 = () => config.OnEnter((Func<IStateMachine<string>, Task>) null);
+    Action target07 = () => config.OnEnter((Action<IStateMachine<string>>) null!);
+    Action target08 = () => config.OnEnter((Func<IStateMachine<string>, Task>) null!);
 
-    Action target09 = () => config.OnEnter((Action<IStateMachine<string>, object>) null);
-    Action target10 = () => config.OnEnter((Func<IStateMachine<string>, object, Task>) null);
+    Action target09 = () => config.OnEnter((Action<IStateMachine<string>, object>) null!);
+    Action target10 = () => config.OnEnter((Func<IStateMachine<string>, object, Task>) null!);
 
-    Action target11 = () => config.OnEnter((Action<IStateMachine<string>, object, object>) null);
-    Action target12 = () => config.OnEnter((Func<IStateMachine<string>, object, object, Task>) null);
+    Action target11 = () => config.OnEnter((Action<IStateMachine<string>, object, object>) null!);
+    Action target12 = () => config.OnEnter((Func<IStateMachine<string>, object, object, Task>) null!);
 #pragma warning restore 8625
 
     // --assert
@@ -142,10 +142,9 @@ public class ConfigurationTest : StateMachineTestBase
   [Test]
   public void add_transition_should_check_arguments_for_null()
   {
-    static bool GetState(out string _)
+    static bool GetState(out string? _)
     {
       _ = null;
-
       return false;
     }
 
@@ -156,11 +155,11 @@ public class ConfigurationTest : StateMachineTestBase
     // --act
 #pragma warning disable 8625
     Action target1 = () => config.AddTransition(null, Initial);
-    Action target2 = () => config.AddTransition(Initial, null, null);
+    Action target2 = () => config.AddTransition(Initial, null, null!);
     Action target3 = () => config.AddTransition(null, () => "func");
-    Action target4 = () => config.AddTransition(Initial, (Func<string>) null);
+    Action target4 = () => config.AddTransition(Initial, (Func<string>) null!);
     Action target5 = () => config.AddTransition(null, GetState);
-    Action target6 = () => config.AddTransition(Initial, (GetState<string>) null);
+    Action target6 = () => config.AddTransition(Initial, (GetState<string>) null!);
 #pragma warning restore 8625
 
     // --assert

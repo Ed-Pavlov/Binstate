@@ -1,7 +1,5 @@
-using System;
 using System.Net;
 using System.Threading.Tasks;
-using Binstate;
 
 // ReSharper disable All
 
@@ -64,9 +62,9 @@ public partial class Example
       }
     }
 
-    private async Task<HttpWebResponse> HttGetRequest() => null;
+    private async Task<HttpWebResponse> HttGetRequest() => null!;
 
-    private string GetOpponentName(HttpWebResponse _) => null;
+    private string GetOpponentName(HttpWebResponse _) => null!;
     private bool   IsGameFinished()                   => false;
   }
 }

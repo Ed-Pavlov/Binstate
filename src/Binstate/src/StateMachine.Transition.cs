@@ -60,6 +60,7 @@ public partial class StateMachine<TState, TEvent>
   private bool PerformTransition<TArgument, TRelay>(TransitionData<TArgument, TRelay> transitionData)
   {
     var currentActiveState = transitionData.CurrentActiveState;
+    var prevActiveState    = currentActiveState;
     var transition         = transitionData.Transition;
     var targetState        = transitionData.TargetState;
     var argument           = transitionData.Argument;
@@ -77,14 +78,14 @@ public partial class StateMachine<TState, TEvent>
       }
 
       // invoke action attached to the transition itself
-      transition.InvokeActionSafe(_onException);
+      prevActiveState.CallTransitionActionSafe(transition, _onException);
 
       // and then activate new active states
       _activeState = targetState;
 
-      while(targetState != commonAncestor) // targetState can't become null earlier then be equal to commonAncestor
+      while(targetState != commonAncestor)
       {
-        var enterAction = ActivateStateNotGuarded(targetState!, argument);
+        var enterAction = ActivateStateNotGuarded(targetState!, argument); // targetState can't become null earlier then be equal to commonAncestor
         enterActions.Add(enterAction);
         targetState = targetState!.ParentState;
       }

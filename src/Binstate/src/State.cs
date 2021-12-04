@@ -8,7 +8,7 @@ namespace Binstate;
 internal class State<TState, TEvent> where TState : notnull where TEvent : notnull
 {
   private readonly IEnterActionInvoker? _enterAction;
-  private readonly IActionInvoker?  _exitAction;
+  private readonly IActionInvoker?      _exitAction;
 
   private readonly Dictionary<TEvent, Transition<TState, TEvent>> _transitions;
 
@@ -37,7 +37,7 @@ internal class State<TState, TEvent> where TState : notnull where TEvent : notnu
     TState                                         id,
     IEnterActionInvoker?                           enterAction,
     Type?                                          enterArgumentType,
-    IActionInvoker?                            exitAction,
+    IActionInvoker?                                exitAction,
     Dictionary<TEvent, Transition<TState, TEvent>> transitions,
     State<TState, TEvent>?                         parentState)
   {
@@ -80,6 +80,22 @@ internal class State<TState, TEvent> where TState : notnull where TEvent : notnu
 
         return noParameterEnter.Invoke(stateMachine);
       });
+
+  /// <summary>
+  /// <see cref="ExitSafe"/> can be called earlier then <see cref="Config{TState,TEvent}.Enter"/> of the activated state,
+  /// see <see cref="StateMachine{TState,TEvent}.PerformTransition{TArgument, TRelay}"/> implementation for details.
+  /// In this case it should wait till <see cref="Config{TState,TEvent}.Enter"/> will be called and exited, before call exit action
+  /// </summary>
+  public virtual void ExitSafe(Action<Exception> onException)
+    => Exit(
+      onException,
+      exit =>
+      {
+        var noParameterExit = (ActionInvoker)exit;
+        noParameterExit.Invoke();
+      });
+
+  public virtual void CallTransitionActionSafe(Transition<TState, TEvent> transition, Action<Exception> onException) => transition.InvokeActionSafe(onException);
 
   protected void Enter(Action<Exception> onException, Func<IEnterActionInvoker, Task?> invokeEnterAction)
   {
@@ -125,20 +141,6 @@ internal class State<TState, TEvent> where TState : notnull where TEvent : notnu
       onException(exception);
     }
   }
-
-  /// <summary>
-  /// <see cref="ExitSafe"/> can be called earlier then <see cref="Config{TState,TEvent}.Enter"/> of the activated state,
-  /// see <see cref="StateMachine{TState,TEvent}.PerformTransition{TArgument, TRelay}"/> implementation for details.
-  /// In this case it should wait till <see cref="Config{TState,TEvent}.Enter"/> will be called and exited, before call exit action
-  /// </summary>
-  public virtual void ExitSafe(Action<Exception> onException)
-    => Exit(
-      onException,
-      exit =>
-      {
-        var noParameterExit = (ActionInvoker)exit;
-        noParameterExit.Invoke();
-      });
 
   // use [NotNullWhen(returnValue: true)] when upgrading to .netstandard 2.1 and update usages
   public bool FindTransitionTransitive(TEvent @event, out Transition<TState, TEvent>? transition)

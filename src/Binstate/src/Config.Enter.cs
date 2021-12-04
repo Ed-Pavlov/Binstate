@@ -149,7 +149,7 @@ public static partial class Config<TState, TEvent>
     /// <see cref="OnEnter{TArgument, TRelay}(Func{TArgument, TRelay, Task})"/>
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public IExit OnEnter<TArgument, TRelay>(Action<TArgument, TRelay> enterAction)
+    public IExit<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Action<TArgument, TRelay> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
@@ -168,7 +168,7 @@ public static partial class Config<TState, TEvent>
     /// </summary>
     /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
 #pragma warning restore 1574
-    public IExit OnEnter<TArgument, TRelay>(Action<IStateMachine<TEvent>, TArgument, TRelay> enterAction)
+    public IExit<ITuple<TArgument, TRelay>>  OnEnter<TArgument, TRelay>(Action<IStateMachine<TEvent>, TArgument, TRelay> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 

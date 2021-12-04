@@ -24,6 +24,21 @@ internal class Transition<TState, TEvent>
 
   public readonly GetState<TState> GetTargetStateId;
 
+  public void InvokeActionSafe<T>(T argument, Action<Exception> onException)
+  {
+    if(_action is null) return;
+    try
+    {
+      if(_action is IActionInvoker<T> invoker)
+        invoker.Invoke(argument);
+      else
+        _action.Invoke();
+    }
+    catch(Exception exc)
+    { // transition action can throw "user" exception
+      onException(exc);
+    }
+  }
   public void InvokeActionSafe(Action<Exception> onException)
   {
     try

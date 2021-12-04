@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
@@ -11,19 +12,19 @@ public class TransitionTest : StateMachineTestBase
   [TestCaseSource(nameof(RaiseWays))]
   public void should_call_action_on_transition_between_exit_and_enter(RaiseWay raiseWay)
   {
-    const string exit       = "Exit";
-    const string transition = "Transition";
-    var          actual     = new List<string>();
+    var onExitInitial = A.Fake<Action>();
+    var onTransit     = A.Fake<Action>();
+    var onEnterState1 = A.Fake<Action>();
 
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
     builder.DefineState(Initial)
-           .OnExit(() => actual.Add(exit))
-           .AddTransition(Event1, State1, () => actual.Add(transition));
+           .OnExit(onExitInitial)
+           .AddTransition(Event1, State1, onTransit);
 
     builder.DefineState(State1)
-           .OnEnter(() => actual.Add(State1));
+           .OnEnter(onEnterState1);
 
     var target = builder.Build(Initial);
 
@@ -31,7 +32,42 @@ public class TransitionTest : StateMachineTestBase
     target.Raise(raiseWay, Event1);
 
     // --assert
-    actual.Should().BeEquivalentTo(exit, transition, State1);
+    A.CallTo(() => onExitInitial())
+     .MustHaveHappenedOnceExactly()
+     .Then(A.CallTo(() => onTransit()).MustHaveHappenedOnceExactly())
+     .Then(A.CallTo(() => onEnterState1()).MustHaveHappenedOnceExactly());
+  }
+
+  [TestCaseSource(nameof(RaiseWays))]
+  public void should_call_action_w_argument_on_transition_between_exit_and_enter(RaiseWay raiseWay)
+  {
+    var expected = new MemoryStream();
+
+    var onExitInitial = A.Fake<Action>();
+    var onTransit     = A.Fake<Action<IDisposable>>();
+    var onEnterState1 = A.Fake<Action>();
+
+    // --arrange
+    var builder = new Builder<string, int>(OnException);
+
+    builder.DefineState(Initial)
+           .OnEnter<IDisposable>(_ => { })
+           .OnExit(onExitInitial)
+           .AddTransition(Event1, State1, onTransit);
+
+    builder.DefineState(State1)
+           .OnEnter(onEnterState1);
+
+    var target = builder.Build(Initial, expected);
+
+    // --act
+    target.Raise(raiseWay, Event1);
+
+    // --assert
+    A.CallTo(() => onExitInitial())
+     .MustHaveHappenedOnceExactly()
+     .Then(A.CallTo(() => onTransit(expected)).MustHaveHappenedOnceExactly())
+     .Then(A.CallTo(() => onEnterState1()).MustHaveHappenedOnceExactly());
   }
 
   [TestCaseSource(nameof(RaiseWays))]

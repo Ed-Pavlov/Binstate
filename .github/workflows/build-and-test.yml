@@ -36,7 +36,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 5.0.x
+        dotnet-version: 6.0.x
         
     # Restore build and test as one command in order to not copy/paste the same arguments      
     - name: Restore, build, and run tests
@@ -64,5 +64,3 @@ jobs:
         name: Artifacts
         path: ${{env.artifacts-dir}}/
         retention-days: 3
-        
-    

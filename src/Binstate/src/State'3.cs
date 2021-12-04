@@ -22,7 +22,7 @@ internal class State<TState, TEvent, TArgument> : State<TState, TEvent>, IState<
   public State(
     TState                                         id,
     IEnterActionInvoker?                           enterAction,
-    IActionInvoker?                            exitAction,
+    IActionInvoker?                                exitAction,
     Dictionary<TEvent, Transition<TState, TEvent>> transitions,
     State<TState, TEvent>?                         parentState) : base(id, enterAction, typeof(TArgument), exitAction, transitions, parentState) { }
 
@@ -34,7 +34,8 @@ internal class State<TState, TEvent, TArgument> : State<TState, TEvent>, IState<
         if(Binstate.Argument.IsSpecified<TArgument>())
           Argument = argument; // remember an argument passed into enter action if any
 
-        var typedEnter = (IEnterActionInvoker<TEvent, TArgument>) enter;
+        var typedEnter = (IEnterActionInvoker<TEvent, TArgument>)enter;
+
         return typedEnter.Invoke(stateMachine, argument);
       });
 
@@ -48,6 +49,9 @@ internal class State<TState, TEvent, TArgument> : State<TState, TEvent>, IState<
         else
           base.ExitSafe(onException);
       });
+
+  public override void CallTransitionActionSafe(Transition<TState, TEvent> transition, Action<Exception> onException)
+    => transition.InvokeActionSafe(Argument, onException);
 
   public MixOf<TA, TArgument> CreateTuple<TA>(TA argument) => new(argument.ToMaybe(), Argument.ToMaybe());
 }

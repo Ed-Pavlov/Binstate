@@ -12,9 +12,12 @@ public static partial class Config<TState, TEvent>
     /// <inheritdoc />
     public Exit(Exit configureExit) : base(configureExit) => _configureExit = configureExit;
 
-
     /// <inheritdoc cref="Exit.OnExit" />
-    public ITransitions OnExit(Action exitAction) => _configureExit.OnExit(exitAction);
+    public ITransitions<T> OnExit(Action exitAction)
+    {
+      _configureExit.OnExit(exitAction);
+      return this;
+    }
 
 
     /// <summary>

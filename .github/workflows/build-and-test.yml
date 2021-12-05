@@ -44,12 +44,16 @@ jobs:
 
     # Restore build and test as one command in order to not copy/paste the same arguments      
     -
-      name: Restore, build, and run tests
-      run:  dotnet test -c ${{env.configuration}} -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
+      name: Restore and build
+      run:  dotnet build --packages Packages -c ${{env.configuration}} -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
 
     -
-      name: Show directories
-      run:  dir
+      name: Run tests
+      run:  dotnet test --no-build
+
+    -
+      name: Run dotMemory tests
+      run:  Packages\jetbrains.dotmemoryunit\3.1.20200127.214830\lib\tools\dotMemoryUnit.exe C:\Program Files\dotnet\dotnet.exe -- test --no-build --filter TestCategory=MemoryTest
 
     # Place nuget packages into env.nugets-dir directory
     -

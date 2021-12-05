@@ -1,13 +1,13 @@
-assembly-versioning-scheme: MajorMinor
+assembly-versioning-scheme:      MajorMinor
 assembly-file-versioning-scheme: MajorMinorPatch
-assembly-informational-format: '{Major}.{Minor}.{Patch}.{Sha}'
-mode: Mainline
-increment: Patch
-branches: {}
+assembly-informational-format:   '{Major}.{Minor}.{Patch}.{Sha}'
+mode:                            Mainline
+increment:                       Patch
+branches: { }
 #  master:
 #    regex: ^master
 #    tag: ''
 #    is-release-branch: true
 ignore:
-  sha: []
-merge-message-formats: {}
+  sha: [ ]
+merge-message-formats: { }

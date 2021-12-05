@@ -91,13 +91,15 @@ public class EnterExitActionsTest : StateMachineTestBase
         {
           Thread.Sleep(299);
           actual.Add(enter1);
-        })
+        }
+      )
      .OnExit(
         () =>
         {
           Thread.Sleep(382);
           actual.Add(exit1);
-        })
+        }
+      )
      .AddTransition(Event2, State2);
 
     builder.DefineState(State2)
@@ -157,7 +159,7 @@ public class EnterExitActionsTest : StateMachineTestBase
 
     builder
      .DefineState(State1)
-     .OnEnter<int>(_ => {})
+     .OnEnter<int>(_ => { })
      .OnExit(onExit)
      .AddTransition(Event1, Final);
 
@@ -166,11 +168,11 @@ public class EnterExitActionsTest : StateMachineTestBase
 
     // --act
     target.Raise(raiseWay, Event1); // exit State1
-      
+
     // --assert
     A.CallTo(() => onExit(expected)).MustHaveHappenedOnceExactly();
   }
-    
+
   [TestCaseSource(nameof(RaiseWays))]
   public void should_call_on_exit_wo_argument_if_specified(RaiseWay raiseWay)
   {
@@ -184,7 +186,7 @@ public class EnterExitActionsTest : StateMachineTestBase
 
     builder
      .DefineState(State1)
-     .OnEnter<int>(_ => {})
+     .OnEnter<int>(_ => { })
      .OnExit(onExit)
      .AddTransition(Event1, Final);
 
@@ -193,7 +195,7 @@ public class EnterExitActionsTest : StateMachineTestBase
 
     // --act
     target.Raise(raiseWay, Event1); // exit State1
-      
+
     // --assert
     A.CallTo(() => onExit()).MustHaveHappenedOnceExactly();
   }

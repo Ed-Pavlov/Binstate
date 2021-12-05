@@ -4,6 +4,7 @@ using System.IO;
 using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
+
 // ReSharper disable RedundantTypeArgumentsOfMethod
 
 namespace Binstate.Tests;
@@ -137,7 +138,8 @@ public class ArgumentPassingTest : StateMachineTestBase
           .ThrowExactly<TransitionException>()
           .WithMessage(
              $"Transition from the state '{Initial}' by the event '{Event1}' will activate following states [{Parent}->{Child}]. No one of them are defined with the enter "
-           + "action accepting an argument, but argument was passed or relayed");
+           + "action accepting an argument, but argument was passed or relayed"
+           );
   }
 
   [TestCaseSource(nameof(RaiseWays))]

@@ -4,24 +4,14 @@ namespace Binstate;
 
 public static partial class Config<TState, TEvent>
 {
-  /// <summary>
-  /// This class is used to configure composite states. 
-  /// </summary>
-  public class State : Enter
+  internal class State : Enter, IState
   {
-    internal Maybe<TState> ParentStateId = Maybe<TState>.Nothing;
+    internal State(StateConfig stateConfig) : base(stateConfig) { }
 
-    internal State(TState stateId) : base(stateId) { }
-
-    /// <summary>
-    /// Defines the currently configured state as a substate of a composite state 
-    /// </summary>
-    public Enter AsSubstateOf(TState parentStateId)
+    public IEnter AsSubstateOf(TState parentStateId)
     {
       if(parentStateId is null) throw new ArgumentNullException(nameof(parentStateId));
-
-      ParentStateId = parentStateId.ToMaybe();
-
+      StateConfig.ParentStateId = parentStateId.ToMaybe();
       return this;
     }
   }

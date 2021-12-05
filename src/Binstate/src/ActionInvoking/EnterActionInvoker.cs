@@ -3,17 +3,17 @@ using System.Threading.Tasks;
 
 namespace Binstate;
 
-internal class NoParameterEnterActionActionInvoker<TEvent> : IEnterActionInvoker
+internal class EnterActionInvoker<TEvent> : IEnterActionInvoker
 {
   private readonly Func<IStateMachine<TEvent>, Task?> _action;
 
-  public NoParameterEnterActionActionInvoker(Func<IStateMachine<TEvent>, Task?> action) => _action = action;
+  public EnterActionInvoker(Func<IStateMachine<TEvent>, Task?> action) => _action = action;
 
   public Task? Invoke(IStateMachine<TEvent> stateMachine) => _action(stateMachine);
 }
 
 /// <summary>
-/// Generic version of the invoker of enter action introduced to avoid boxing in case of Value Type parameter
+///   Generic version of the invoker of enter action introduced to avoid boxing in case of Value Type parameter
 /// </summary>
 internal class EnterActionInvoker<TEvent, TArgument> : IEnterActionInvoker<TEvent, TArgument>
 {

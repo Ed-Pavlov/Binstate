@@ -5,24 +5,37 @@ namespace Binstate;
 
 internal static class EnterActionInvokerFactory<TEvent>
 {
-  public static NoParameterEnterActionActionInvoker<TEvent> Create(Action<IStateMachine<TEvent>> action)
-    => new(stateMachine =>
-           {
-             action(stateMachine);
+  /// <summary>
+  ///   Synchronous w/o argument
+  /// </summary>
+  public static EnterActionInvoker<TEvent> Create(Action<IStateMachine<TEvent>> action) => new EnterActionInvoker<TEvent>(
+    stateMachine =>
+    {
+      action(stateMachine);
+      return null;
+    }
+  );
 
-             return null;
-           });
+  /// <summary>
+  ///   Synchronous w/ argument
+  /// </summary>
+  public static EnterActionInvoker<TEvent, TArg> Create<TArg>(Action<IStateMachine<TEvent>, TArg> action) => new EnterActionInvoker<TEvent, TArg>(
+    (stateMachine, arg) =>
+    {
+      action(stateMachine, arg);
 
-  public static NoParameterEnterActionActionInvoker<TEvent> Create(Func<IStateMachine<TEvent>, Task?> action) => new(action);
+      return null;
+    }
+  );
 
-  public static EnterActionInvoker<TEvent, TArg> Create<TArg>(Action<IStateMachine<TEvent>, TArg> action)
-    => new EnterActionInvoker<TEvent, TArg>(
-      (stateMachine, arg) =>
-      {
-        action(stateMachine, arg);
+  /// <summary>
+  ///   Async w/o argument
+  /// </summary>
+  public static EnterActionInvoker<TEvent> Create(Func<IStateMachine<TEvent>, Task?> action) => new EnterActionInvoker<TEvent>(action);
 
-        return null;
-      });
-
-  public static EnterActionInvoker<TEvent, TArgument> Create<TArgument>(Func<IStateMachine<TEvent>, TArgument, Task?> action) => new(action);
+  /// <summary>
+  ///   Async w/ argument
+  /// </summary>
+  public static EnterActionInvoker<TEvent, TArgument> Create<TArgument>(Func<IStateMachine<TEvent>, TArgument, Task?> action)
+    => new EnterActionInvoker<TEvent, TArgument>(action);
 }

@@ -11,7 +11,7 @@ public class BoxingTest : StateMachineTestBase
   [TestCaseSource(nameof(RaiseWays))]
   [Category(MemoryTest)]
   [DotMemoryUnit(FailIfRunWithoutSupport = false)]
-  [AssertTraffic(AllocatedObjectsCount = 0, Types = new[] { typeof(ValueType1), typeof(ValueType2) })]
+  [AssertTraffic(AllocatedObjectsCount = 0, Types = new[] { typeof(ValueType1), typeof(ValueType2), })]
   public void should_not_boxing_passed_value_type_arguments(RaiseWay raiseWay)
   {
     // don't use FakeItEasy due to it boxes value types during comparison
@@ -58,7 +58,8 @@ public class BoxingTest : StateMachineTestBase
               .Where(_ => _.Type.Is<ValueType1>() | _.Type.Is<ValueType2>())
               .AllocatedMemory.ObjectsCount
               .Should()
-              .Be(0));
+              .Be(0)
+    );
 
 
     // dont' use actual.Should().Be(expected); due to this method leads boxing
@@ -71,7 +72,7 @@ public class BoxingTest : StateMachineTestBase
   [Test]
   [Category(MemoryTest)]
   [DotMemoryUnit(FailIfRunWithoutSupport = false)]
-  [AssertTraffic(AllocatedObjectsCount = 0, Types = new[] { typeof(ValueType1) })]
+  [AssertTraffic(AllocatedObjectsCount = 0, Types = new[] { typeof(ValueType1), })]
   public void should_not_box_value_type_instance_passed_by_reflection()
   {
     // don't use FakeItEasy due to it boxes value types during comparison
@@ -87,7 +88,7 @@ public class BoxingTest : StateMachineTestBase
     var genericMethod = method.MakeGenericMethod(source.GetType().GetGenericArguments()[0]);
 
     // --act
-    genericMethod.Invoke(null, new object[] { source, target });
+    genericMethod.Invoke(null, new object[] { source, target, });
 
     // --assert
     target.Should().BeOfType<Target<ValueType1>>().Which.Arg.Value.Should().Be(expected.Value);
@@ -106,6 +107,7 @@ public class BoxingTest : StateMachineTestBase
   }
 
   private class Source { }
+
   private class Source<T> : Source
   {
     public readonly T Arg;
@@ -113,6 +115,7 @@ public class BoxingTest : StateMachineTestBase
   }
 
   private class Target { }
+
   private class Target<T> : Target
   {
     public T? Arg;

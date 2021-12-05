@@ -3,7 +3,7 @@
 namespace Binstate;
 
 /// <summary>
-/// Generic version of the invoker of an action introduced to avoid boxing in case of Value Type parameter
+///   Generic version of the invoker of an action introduced to avoid boxing in case of Value Type parameter
 /// </summary>
 internal class ActionInvoker<TArgument> : IActionInvoker<TArgument>
 {

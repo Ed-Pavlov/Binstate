@@ -31,20 +31,20 @@ public partial class Example
 
     builder
      .DefineState(ringing)
-     .AddTransition(hungUp, offHook)
+     .AddTransition(hungUp,        offHook)
      .AddTransition(callConnected, connected);
 
     builder
      .DefineState(connected)
-     .AddTransition(leftMessage, offHook)
-     .AddTransition(hungUp, offHook)
+     .AddTransition(leftMessage,  offHook)
+     .AddTransition(hungUp,       offHook)
      .AddTransition(placedOnHold, onHold);
 
     builder
      .DefineState(onHold)
      .OnEnter(PlayMusic)
-     .AddTransition(takenOffHold, connected)
-     .AddTransition(hungUp, offHook)
+     .AddTransition(takenOffHold,           connected)
+     .AddTransition(hungUp,                 offHook)
      .AddTransition(phoneHurledAgainstWall, phoneDestroyed);
 
     builder
@@ -53,15 +53,15 @@ public partial class Example
     var stateMachine = builder.Build(offHook);
   }
 
-  private static Task PlayMusic(IStateMachine<string> stateMachine)
-    => Task.Run(
-      () =>
+  private static Task PlayMusic(IStateMachine<string> stateMachine) => Task.Run(
+    () =>
+    {
+      while(stateMachine.InMyState)
       {
-        while(stateMachine.InMyState)
-        {
-          // play music
-        }
-      });
+        // play music
+      }
+    }
+  );
 
   private static void OnException(Exception exception) { }
 }

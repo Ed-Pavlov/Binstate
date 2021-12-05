@@ -151,8 +151,8 @@ public class ArgumentRelayingTest : StateMachineTestBase
   [TestCaseSource(nameof(RaiseWays))]
   public void should_pass_both_passed_and_relayed_arguments_with_variance_conversion(RaiseWay raiseWay)
   {
-    const string expectedPassedValue  = "stringValue";
-    
+    const string expectedPassedValue = "stringValue";
+
     var expectedRelayedValue = new MemoryStream();
     var onEnter              = A.Fake<Action<ITuple<object, IDisposable>>>();
 
@@ -249,7 +249,8 @@ public class ArgumentRelayingTest : StateMachineTestBase
           .ThrowExactly<TransitionException>()
           .WithMessage(
              $"Transition from the state '{State1}' by the event '{Event2}' will activate following states [{State2}]. No one of them are defined "
-           + "with the enter action accepting an argument, but argument was passed or relayed");
+           + "with the enter action accepting an argument, but argument was passed or relayed"
+           );
   }
 
   [Test]

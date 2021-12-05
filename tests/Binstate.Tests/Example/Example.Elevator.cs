@@ -30,9 +30,9 @@ public partial class Example
        .OnEnter(AnnounceFloor)
        .OnExit(() => Beep(2))
        .AddTransition(Events.CloseDoor, States.DoorClosed)
-       .AddTransition(Events.OpenDoor, States.DoorOpen)
-       .AddTransition(Events.GoUp, States.MovingUp)
-       .AddTransition(Events.GoDown, States.MovingDown);
+       .AddTransition(Events.OpenDoor,  States.DoorOpen)
+       .AddTransition(Events.GoUp,      States.MovingUp)
+       .AddTransition(Events.GoDown,    States.MovingDown);
 
       builder
        .DefineState(States.Moving)
@@ -97,8 +97,8 @@ public partial class Example
 
     private bool IsOverloaded() => false;
 
-    private enum States { None, Healthy, OnFloor, Moving, MovingUp, MovingDown, DoorOpen, DoorClosed, Error }
+    private enum States { None, Healthy, OnFloor, Moving, MovingUp, MovingDown, DoorOpen, DoorClosed, Error, }
 
-    private enum Events { GoUp, GoDown, OpenDoor, CloseDoor, Stop, Error, Reset }
+    private enum Events { GoUp, GoDown, OpenDoor, CloseDoor, Stop, Error, Reset, }
   }
 }

@@ -29,13 +29,13 @@ public partial class Example
        .DefineState(WaitingForGame)
        .OnEnter(WaitForGame)
        .AddTransition(GameStarted, TrackingGame)
-       .AddTransition(Terminate, Terminated);
+       .AddTransition(Terminate,   Terminated);
 
       builder
        .DefineState(TrackingGame)
        .OnEnter<string>(TrackGame)
        .AddTransition(GameFinished, WaitingForGame)
-       .AddTransition(Terminate, Terminated);
+       .AddTransition(Terminate,    Terminated);
     }
 
     private async Task WaitForGame(IStateMachine<string> stateMachine)

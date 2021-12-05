@@ -5,47 +5,36 @@ namespace Binstate;
 
 public static partial class Config<TState, TEvent>
 {
-  /// <inheritdoc />
-  public class Transitions : ITransitions
+  internal class Transitions : ITransitionsEx
   {
-    internal readonly TState StateId;
+    public readonly StateConfig StateConfig;
 
-    /// <summary> Protected ctor </summary>
-    protected Transitions(TState stateId) => StateId = stateId ?? throw new ArgumentNullException(nameof(stateId));
-
-    internal readonly Dictionary<TEvent, Transition<TState, TEvent>> TransitionList = new();
+    protected Transitions(StateConfig stateConfig) => StateConfig = stateConfig;
 
     /// <summary>
-    /// Defines transition from the currently configured state to the <paramref name="stateId"> specified state</paramref> when <paramref name="event"> event is raised</paramref> 
+    ///   Defines transition from the currently configured state to the <paramref name="stateId"> specified state </paramref> when <paramref name="event"> event is raised </paramref>
     /// </summary>
-    public virtual ITransitions AddTransition(TEvent @event, TState stateId, Action? action = null)
+    public ITransitions AddTransition(TEvent @event, TState stateId, Action? action = null)
     {
       if(@event is null) throw new ArgumentNullException(nameof(@event));
       if(stateId is null) throw new ArgumentNullException(nameof(stateId));
 
-      var getStateWrapper = new GetState<TState>(
-        (out TState? state) =>
-        {
-          state = stateId;
-
-          return true;
-        });
-
-      var actionInvoker = action is null ? null : new ActionInvoker(action);
-      return AddTransition(@event, getStateWrapper, true, actionInvoker);
+      AddTransitionToList(@event, StaticGetState(stateId), true, action);
+      return this;
     }
 
     /// <inheritdoc />
-    public virtual ITransitions AddTransition(TEvent @event, GetState<TState> getState)
+    public ITransitions AddTransition(TEvent @event, GetState<TState> getState)
     {
       if(@event is null) throw new ArgumentNullException(nameof(@event));
       if(getState is null) throw new ArgumentNullException(nameof(getState));
 
-      return AddTransition(@event, getState, false, null);
+      AddTransitionToList(@event, getState, false, null);
+      return this;
     }
 
     /// <inheritdoc />
-    public virtual ITransitions AddTransition(TEvent @event, Func<TState?> getState)
+    public ITransitions AddTransition(TEvent @event, Func<TState?> getState)
     {
       if(@event is null) throw new ArgumentNullException(nameof(@event));
       if(getState is null) throw new ArgumentNullException(nameof(getState));
@@ -54,20 +43,32 @@ public static partial class Config<TState, TEvent>
         (out TState? state) =>
         {
           state = getState();
+          return ! EqualityComparer<TState?>.Default.Equals(state, default);
+        }
+      );
 
-          return !EqualityComparer<TState?>.Default.Equals(state, default);
-        });
-
-      return AddTransition(@event, getStateWrapper, false, null);
-    }
-
-    /// <inheritdoc />
-    public virtual void AllowReentrancy(TEvent @event) => AddTransition(@event, StateId);
-
-    private Transitions AddTransition(TEvent @event, GetState<TState> getState, bool isStatic, IActionInvoker? action)
-    {
-      TransitionList.Add(@event, new Transition<TState, TEvent>(@event, getState, isStatic, action));
+      AddTransitionToList(@event, getStateWrapper, false, null);
       return this;
     }
+
+    public void AllowReentrancy(TEvent @event) => AddTransition(@event, StateConfig.StateId);
+
+    public ITransitions<T> AddTransition<T>(TEvent @event, TState stateId, Action<T> action)
+    {
+      StateConfig.Factory = new StateFactory<T>();
+
+      var transitions = new Transitions<T>(StateConfig);
+      return transitions.AddTransition(@event, stateId, action); // delegate call
+    }
+
+    protected static GetState<TState> StaticGetState(TState stateId)
+      => (out TState? state) =>
+      {
+        state = stateId;
+        return true;
+      };
+
+    protected void AddTransitionToList(TEvent @event, GetState<TState> getState, bool isStatic, object? action)
+      => StateConfig.TransitionList.Add(@event, new Transition<TState, TEvent>(@event, getState, isStatic, action));
   }
 }

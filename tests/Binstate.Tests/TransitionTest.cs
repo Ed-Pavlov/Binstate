@@ -131,7 +131,8 @@ public class TransitionTest : StateMachineTestBase
           first = false;
 
           return state;
-        });
+        }
+      );
 
     builder
      .DefineState(State1)
@@ -413,7 +414,7 @@ public class TransitionTest : StateMachineTestBase
     Action target = () => config.AddTransition(Event1, State2);
 
     // --assert
-    target.Should().ThrowExactly<ArgumentException>().WithMessage($"An item with the same key has already been added*");
+    target.Should().ThrowExactly<ArgumentException>().WithMessage("An item with the same key has already been added*");
   }
 
   [TestCaseSource(nameof(RaiseWays))]

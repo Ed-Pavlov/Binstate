@@ -6,21 +6,22 @@ namespace Binstate;
 public partial class StateMachine<TState, TEvent>
 {
   /// <summary>
-  /// Performing transition is split into two parts, the first one is "read only", preparing and checking all the data, can throw an exception. 
+  ///   Performing transition is split into two parts, the first one is "read only", preparing and checking all the data, can throw an exception.
   /// </summary>
-  /// <returns>Returns null if:
-  /// no transition found by specified <paramref name="event"/> from the current state
-  /// dynamic transition returns 'null'
+  /// <returns>
+  ///   Returns null if:
+  ///   no transition found by specified <paramref name="event" /> from the current state
+  ///   dynamic transition returns 'null'
   /// </returns>
-  /// <exception cref="TransitionException">Throws if passed argument doesn't match the 'enter' action of the target state.</exception>
+  /// <exception cref="TransitionException"> Throws if passed argument doesn't match the 'enter' action of the target state. </exception>
   private TransitionData<TArgument, TRelay>? PrepareTransition<TArgument, TRelay>(TEvent @event, TArgument argument, Maybe<TRelay> backupRelayArgument)
   {
     try
     {
       _lock.WaitOne();
 
-      if(!_activeState!.FindTransitionTransitive(@event, out var transition) // looks for a transition through all parent states
-      || !transition!.GetTargetStateId(out var stateId))
+      if(! _activeState!.FindTransitionTransitive(@event, out var transition) // looks for a transition through all parent states
+      || ! transition!.GetTargetStateId(out var stateId))
       {
         // no transition by specified event is found or dynamic transition returns null as target state id
         _lock.Set();
@@ -52,10 +53,9 @@ public partial class StateMachine<TState, TEvent>
   }
 
   /// <summary>
-  /// Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
-  /// into the delegate passed to <see cref="Builder{TState,TEvent}(Action{Exception})"/> 
+  ///   Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
+  ///   into the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{System.Exception})" />
   /// </summary>
-
   // [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery", Justification = "foreach is more readable here")]
   private bool PerformTransition<TArgument, TRelay>(TransitionData<TArgument, TRelay> transitionData)
   {
@@ -96,7 +96,7 @@ public partial class StateMachine<TState, TEvent>
     }
 
     // call 'enter' actions out of the lock due to it can block execution
-    // call them in reverse order, parent's 'enter' is called first, child's one last 
+    // call them in reverse order, parent's 'enter' is called first, child's one last
     for(var i = enterActions.Count - 1; i >= 0; i--)
       enterActions[i]();
 
@@ -104,39 +104,42 @@ public partial class StateMachine<TState, TEvent>
   }
 
   /// <summary>
-  /// Doesn't acquire lock itself, caller should care about safe context 
+  ///   Doesn't acquire lock itself, caller should care about safe context
   /// </summary>
-  /// <returns>Returns 'enter' action of the state</returns>
-  private Action ActivateStateNotGuarded<TArgument, TRelay>(State<TState, TEvent> state, MixOf<TArgument, TRelay> argument)
+  /// <returns> Returns 'enter' action of the state </returns>
+  private Action ActivateStateNotGuarded<TArgument, TRelay>(IState<TState, TEvent> state, MixOf<TArgument, TRelay> argument)
   {
     state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
 
     var controller = new Controller(state, this);
 
     return state switch
-           {
-             IState<TState, TEvent, TArgument> passedArgumentState =>
-               () => passedArgumentState.EnterSafe(controller, argument.PassedArgument.Value, _onException),
-               
-             IState<TState, TEvent, TRelay> relayedArgumentState =>
-               () => relayedArgumentState.EnterSafe(controller, argument.RelayedArgument.Value, _onException),
-               
-             IState<TState, TEvent, ITuple<TArgument, TRelay>> bothArgumentsState =>
-               () => bothArgumentsState.EnterSafe(controller, CreateTuple(argument), _onException),
-               
-             _ => () => state.EnterSafe(controller, _onException) // no arguments state
-           };
+    {
+      IState<TState, TEvent, TArgument> passedArgumentState =>
+        () => passedArgumentState.EnterSafe(controller, argument.PassedArgument.Value, _onException),
+
+      IState<TState, TEvent, TRelay> relayedArgumentState =>
+        () => relayedArgumentState.EnterSafe(controller, argument.RelayedArgument.Value, _onException),
+
+      IState<TState, TEvent, ITuple<TArgument, TRelay>> bothArgumentsState =>
+        () => bothArgumentsState.EnterSafe(controller, CreateTuple(argument), _onException),
+
+      IState<TState, TEvent, Unit> relayedArgumentState =>
+        () => relayedArgumentState.EnterSafe(controller, default, _onException),
+
+      _ => throw new ArgumentOutOfRangeException(),
+    };
   }
 
   private static Tuple<TArgument, TRelay> CreateTuple<TArgument, TRelay>(MixOf<TArgument, TRelay> mixOf)
-    => new(mixOf.PassedArgument.Value, mixOf.RelayedArgument.Value);
+    => new Tuple<TArgument, TRelay>(mixOf.PassedArgument.Value, mixOf.RelayedArgument.Value);
 
   private static MixOf<TArgument, TRelay> PrepareRealArgument<TArgument, TRelay>(
-    TArgument              argument,
-    State<TState, TEvent>? sourceState,
-    Maybe<TRelay>          backupRelayArgument)
+  TArgument               argument,
+  IState<TState, TEvent>? sourceState,
+  Maybe<TRelay>           backupRelayArgument)
   {
-    if(!Argument.IsSpecified<TRelay>()) // no relaying argument
+    if(! Argument.IsSpecified<TRelay>()) // no relaying argument
       return Argument.IsSpecified<TArgument>() ? new MixOf<TArgument, TRelay>(argument.ToMaybe(), Maybe<TRelay>.Nothing) : MixOf<TArgument, TRelay>.Empty;
 
     var state = sourceState;
@@ -153,27 +156,28 @@ public partial class StateMachine<TState, TEvent>
 
     if(backupRelayArgument.HasValue)
       return Argument.IsSpecified<TArgument>()
-               ? new MixOf<TArgument, TRelay>(argument.ToMaybe(), backupRelayArgument)
+               ? new MixOf<TArgument, TRelay>(argument.ToMaybe(),       backupRelayArgument)
                : new MixOf<TArgument, TRelay>(Maybe<TArgument>.Nothing, backupRelayArgument);
 
     throw new TransitionException(
-      "Raise with relaying argument is called from the state w/o an attached value and a backup argument for relay is not provided");
+      "Raise with relaying argument is called from the state w/o an attached value and a backup argument for relay is not provided"
+    );
   }
 
   private readonly struct TransitionData<TArgument, TRelay>
   {
-    public readonly State<TState, TEvent>      CurrentActiveState;
+    public readonly IState<TState, TEvent>     CurrentActiveState;
     public readonly Transition<TState, TEvent> Transition;
-    public readonly State<TState, TEvent>      TargetState;
+    public readonly IState<TState, TEvent>     TargetState;
     public readonly MixOf<TArgument, TRelay>   Argument;
-    public readonly State<TState, TEvent>?     CommonAncestor;
+    public readonly IState<TState, TEvent>?    CommonAncestor;
 
     public TransitionData(
-      State<TState, TEvent>      currentActiveState,
-      Transition<TState, TEvent> transition,
-      State<TState, TEvent>      targetState,
-      MixOf<TArgument, TRelay>   argument,
-      State<TState, TEvent>?     commonAncestor)
+    IState<TState, TEvent>     currentActiveState,
+    Transition<TState, TEvent> transition,
+    IState<TState, TEvent>     targetState,
+    MixOf<TArgument, TRelay>   argument,
+    IState<TState, TEvent>?    commonAncestor)
     {
       CurrentActiveState = currentActiveState;
       Transition         = transition;

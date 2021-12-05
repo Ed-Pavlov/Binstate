@@ -7,8 +7,8 @@ public partial class StateMachine<TState, TEvent>
 {
   private sealed class Relayer<TRelay> : IStateMachine<TState, TEvent>
   {
-    private readonly StateMachine<TState, TEvent> _owner;
     private readonly Maybe<TRelay>                _backupValue;
+    private readonly StateMachine<TState, TEvent> _owner;
 
     internal Relayer(StateMachine<TState, TEvent> owner, Maybe<TRelay> backupValue)
     {

@@ -18,24 +18,25 @@ public abstract class StateMachineTestBase
 
   protected static void OnException(Exception exception) => Assert.Fail(exception.Message);
 
-  public static IEnumerable<RaiseWay> RaiseWays() => new[] {RaiseWay.Raise, RaiseWay.RaiseAsync};
+  public static IEnumerable<RaiseWay> RaiseWays() => new[] { RaiseWay.Raise, RaiseWay.RaiseAsync, };
 }
 
-public enum RaiseWay { Raise, RaiseAsync }
+public enum RaiseWay { Raise, RaiseAsync, }
 
 public static class Extension
 {
-  public static bool Raise<TState, TEvent>(this IStateMachine<TState, TEvent> stateMachine, RaiseWay way, TEvent @event)
-    => Call(way, () => stateMachine.Raise(@event), () => stateMachine.RaiseAsync(@event).Result);
+  public static bool Raise<TState, TEvent>(this IStateMachine<TState, TEvent> stateMachine, RaiseWay way, TEvent @event) => Call(
+    way, () => stateMachine.Raise(@event), () => stateMachine.RaiseAsync(@event).Result
+  );
 
-  public static bool Raise<TState, TEvent, TA>(this IStateMachine<TState, TEvent> stateMachine, RaiseWay way, TEvent @event, TA arg)
-    => Call(way, () => stateMachine.Raise(@event, arg), () => stateMachine.RaiseAsync(@event, arg).Result);
+  public static bool Raise<TState, TEvent, TA>(this IStateMachine<TState, TEvent> stateMachine, RaiseWay way, TEvent @event, TA arg) => Call(
+    way, () => stateMachine.Raise(@event, arg), () => stateMachine.RaiseAsync(@event, arg).Result
+  );
 
-  private static bool Call(RaiseWay way, Func<bool> syncAction, Func<bool> asyncAction)
-    => way switch
-       {
-         RaiseWay.Raise      => syncAction(),
-         RaiseWay.RaiseAsync => asyncAction(),
-         _                   => throw new InvalidOperationException()
-       };
+  private static bool Call(RaiseWay way, Func<bool> syncAction, Func<bool> asyncAction) => way switch
+  {
+    RaiseWay.Raise      => syncAction(),
+    RaiseWay.RaiseAsync => asyncAction(),
+    _                   => throw new InvalidOperationException(),
+  };
 }

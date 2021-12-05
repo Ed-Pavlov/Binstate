@@ -1,40 +1,43 @@
 name: Release to Market
 
-on: workflow_dispatch
+on:   workflow_dispatch
 
 env:
   nugets-dir: nupkgs
 
 jobs:
- 
+
   publish:
-    runs-on: ubuntu-latest 
-    
+    runs-on: ubuntu-latest
+
     steps:
-       # https://github.com/dawidd6/action-download-artifact
-    - name: Download artifact
+    # https://github.com/dawidd6/action-download-artifact
+    -
+      name: Download artifact
       uses: dawidd6/action-download-artifact@v2
       with:
         github_token: ${{secrets.GITHUB_TOKEN}}
-        workflow: build-and-test.yml         # Required, workflow file name or ID
-        branch: master
-        name: Artifacts
-        
-    - name: Read version
-      id: version
+        workflow:     build-and-test.yml         # Required, workflow file name or ID
+        branch:       master
+        name:         Artifacts
+
+    -
+      name: Read version
+      id:   version
       uses: antifree/json-to-variables@v1.0.1
       with:
         filename: version.json
-        
-    - name: Publish Nugets to nuget.org
-      run: dotnet nuget push "${{ env.nugets-dir }}/*.nupkg" -k ${{ secrets.nuget_api_key }} -s https://api.nuget.org/v3/index.json
-      
-    - name: Make Github Release
+
+    -
+      name: Publish Nugets to nuget.org
+      run:  dotnet nuget push "${{ env.nugets-dir }}/*.nupkg" -k ${{ secrets.nuget_api_key }} -s https://api.nuget.org/v3/index.json
+
+    -
+      name: Make Github Release
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: v${{ env.json_nuget-version }}
-        files: ${{ env.nugets-dir }}/*.nupkg
+        tag_name:                v${{ env.json_nuget-version }}
+        files:                   ${{ env.nugets-dir }}/*.nupkg
         fail_on_unmatched_files: true
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-

@@ -53,7 +53,7 @@ jobs:
 
     -
       name: Run dotMemory tests
-      run:  Packages\jetbrains.dotmemoryunit\3.1.20200127.214830\lib\tools\dotMemoryUnit.exe C:\Program Files\dotnet\dotnet.exe -- test --no-build --filter TestCategory=MemoryTest
+      run:  Packages\jetbrains.dotmemoryunit\3.1.20200127.214830\lib\tools\dotMemoryUnit.exe "C:\Program Files\dotnet\dotnet.exe" -- test --no-build --filter TestCategory=MemoryTest
 
     # Place nuget packages into env.nugets-dir directory
     -

@@ -52,7 +52,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent, 
   public TArgument Argument
   {
     get => _argument ?? throw new InvalidOperationException("Argument is not set");
-    private set => _argument = value;
+    set => _argument = value;
   }
 
   public Dictionary<TEvent, Transition<TState, TEvent>> Transitions { get; }
@@ -64,7 +64,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent, 
 
   /// <summary>
   ///   This property is set from protected by lock part of the code so it's no need synchronization
-  ///   see <see cref="StateMachine{TState,TEvent}.ActivateStateNotGuarded{TArgument,TRelay}" /> implementation for details.
+  ///   see <see cref="StateMachine{TState,TEvent}.ActivateStateNotGuarded" /> implementation for details.
   /// </summary>
   public bool IsActive
   {
@@ -77,41 +77,68 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent, 
     }
   }
 
-  public void EnterSafe(IStateMachine<TEvent> stateMachine, TArgument argument, Action<Exception> onException)
-    => Enter(
-      onException,
-      enterAction =>
-      {
-        Argument = argument; // remember an argument passed into enter action if any
+  public void EnterSafe(IStateController<TEvent> stateController, Action<Exception> onException)
+  {
+    try
+    {
+      _enterActionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
+      _entered.Set();               // it is safe to set the state as entered
 
-        //TODO: looks like I can have only one "invoker" which will ignore "Unit" argument, try to discard this complex part
-        return enterAction switch
-        {
-          EnterActionInvoker<TEvent> action             => action.Invoke(stateMachine),
-          IEnterActionInvoker<TEvent, TArgument> action => action.Invoke(stateMachine, Argument),
-          _                                             => throw new ArgumentOutOfRangeException(),
-        };
-      }
-    );
+      if(_enterAction is null) return;
+
+      //TODO: looks like I can have only one "invoker" which will ignore "Unit" argument, try to discard this complex part
+      _task = _enterAction switch
+      {
+        EnterActionInvoker<TEvent> action             => action.Invoke(stateController),
+        IEnterActionInvoker<TEvent, TArgument> action => action.Invoke(stateController, Argument), // Argument is set externally
+        _                                             => throw new ArgumentOutOfRangeException(),
+      };
+    }
+    catch(Exception exception)
+    {
+      onException(exception);
+    }
+    finally
+    {
+      _enterActionFinished.Set();
+    }
+  }
 
   /// <summary>
   ///   <see cref="ExitSafe" /> can be called earlier then <see cref="Config{TState,TEvent}.Enter" /> of the activated state,
-  ///   see <see cref="StateMachine{TState,TEvent}.PerformTransition{TArgument, TRelay}" /> implementation for details.
+  ///   see <see cref="StateMachine{TState,TEvent}.PerformTransition" /> implementation for details.
   ///   In this case it should wait till <see cref="Config{TState,TEvent}.Enter" /> will be called and exited, before call exit action
   /// </summary>
   public void ExitSafe(Action<Exception> onException)
-    => Exit(
-      onException,
-      exitAction =>
-      {
-        if(exitAction is Action action)
-          action();
-        else if(exitAction is Action<TArgument> actionT)
-          actionT(Argument);
-        else
-          throw new ArgumentOutOfRangeException();
-      }
-    );
+  {
+    try
+    {
+      IsActive = false; // signal that current state is no more active and blocking enter action can finish
+
+      // if action is set as active but enter action still is not called, wait for it
+      _entered.WaitOne();
+
+      // wait till State.Enter function finishes
+      // if enter action is blocking or no action: _enterFunctionFinished is set means it finishes
+      _enterActionFinished.WaitOne();
+
+      // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till action finishes
+      _task?.Wait();
+
+      if(_exitAction is null)
+      {}
+      else if(_exitAction is Action<TArgument> actionT)
+        actionT(Argument);
+      else if(_exitAction is Action action)
+        action();
+      else
+        throw new ArgumentOutOfRangeException();
+    }
+    catch(Exception exception)
+    {
+      onException(exception);
+    }
+  }
 
   public void CallTransitionActionSafe(Transition<TState, TEvent> transition, Action<Exception> onException)
     => transition.InvokeActionSafe(Argument, onException);
@@ -134,51 +161,6 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent, 
     transition = default;
 
     return false;
-  }
-
-  private void Enter(Action<Exception> onException, Func<IEnterActionInvoker, Task?> invokeEnterAction)
-  {
-    try
-    {
-      _enterActionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
-      _entered.Set();               // it is safe to set the state as entered
-
-      if(_enterAction is null) return;
-      _task = invokeEnterAction(_enterAction);
-    }
-    catch(Exception exception)
-    {
-      onException(exception);
-    }
-    finally
-    {
-      _enterActionFinished.Set();
-    }
-  }
-
-  private void Exit(Action<Exception> onException, Action<object> invokeExitAction)
-  {
-    try
-    {
-      IsActive = false; // signal that current state is no more active and blocking enter action can finish
-
-      // if action is set as active but enter action still is not called, wait for it
-      _entered.WaitOne();
-
-      // wait till State.Enter function finishes
-      // if enter action is blocking or no action: _enterFunctionFinished is set means it finishes
-      _enterActionFinished.WaitOne();
-
-      // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till action finishes
-      _task?.Wait();
-
-      if(_exitAction is null) return;
-      invokeExitAction(_exitAction);
-    }
-    catch(Exception exception)
-    {
-      onException(exception);
-    }
   }
 
   public MixOf<TA, TArgument> CreateTuple<TA>(TA argument) => new MixOf<TA, TArgument>(argument.ToMaybe(), Argument.ToMaybe());

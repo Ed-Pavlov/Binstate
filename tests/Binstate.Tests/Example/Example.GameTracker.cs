@@ -38,27 +38,27 @@ public partial class Example
        .AddTransition(Terminate,    Terminated);
     }
 
-    private async Task WaitForGame(IStateMachine<string> stateMachine)
+    private async Task WaitForGame(IStateController<string> stateController)
     {
-      while(stateMachine.InMyState)
+      while(stateController.InMyState)
       {
         var result       = await HttGetRequest();
         var opponentName = GetOpponentName(result);
 
         if(opponentName != null)
-          stateMachine.RaiseAsync(GameStarted, opponentName);
+          stateController.RaiseAsync(GameStarted, opponentName);
       }
     }
 
-    private async Task TrackGame(IStateMachine<string> stateMachine, string opponentName)
+    private async Task TrackGame(IStateController<string> stateController, string opponentName)
     {
-      while(stateMachine.InMyState)
+      while(stateController.InMyState)
       {
         await Task.Delay(100); // do some work
 
         // track game
         if(IsGameFinished())
-          stateMachine.RaiseAsync(GameFinished);
+          stateController.RaiseAsync(GameFinished);
       }
     }
 

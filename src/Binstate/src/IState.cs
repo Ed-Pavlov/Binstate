@@ -5,13 +5,22 @@ namespace Binstate;
 
 /// <summary>
 /// </summary>
-public interface IState { }
+internal interface IState { }
+
+/// <summary>
+///
+/// </summary>
+/// <typeparam name="TArgument"></typeparam>
+internal interface IState<TArgument>
+{
+  TArgument Argument { get; set; }
+}
 
 /// <summary>
 /// </summary>
 /// <typeparam name="TState"> </typeparam>
 /// <typeparam name="TEvent"> </typeparam>
-public interface IState<TState, TEvent> : IState
+internal interface IState<TState, TEvent> : IState
 {
   /// <summary>
   /// </summary>
@@ -19,7 +28,7 @@ public interface IState<TState, TEvent> : IState
 
   /// <summary>
   ///   This property is set from protected by lock part of the code so it's no need synchronization
-  ///   see <see cref="StateMachine{TState,TEvent}.ActivateStateNotGuarded{TArgument,TRelay}" /> implementation for details.
+  ///   see <see cref="StateMachine{TState,TEvent}.ActivateStateNotGuarded" /> implementation for details.
   /// </summary>
   bool IsActive { get; set; }
 
@@ -36,8 +45,14 @@ public interface IState<TState, TEvent> : IState
   TState Id { get; }
 
   /// <summary>
+  /// </summary>
+  /// <param name="stateController"> </param>
+  /// <param name="onException"> </param>
+  void EnterSafe(IStateController<TEvent> stateController, Action<Exception> onException);
+
+  /// <summary>
   ///   <see cref="State{TState,TEvent,TArgument}.ExitSafe" /> can be called earlier then <see cref="Config{TState,TEvent}.Enter" /> of the activated state,
-  ///   see <see cref="StateMachine{TState,TEvent}.PerformTransition{TArgument, TRelay}" /> implementation for details.
+  ///   see <see cref="StateMachine{TState,TEvent}.PerformTransition" /> implementation for details.
   ///   In this case it should wait till <see cref="Config{TState,TEvent}.Enter" /> will be called and exited, before call exit action
   /// </summary>
   void ExitSafe(Action<Exception> onException);
@@ -59,12 +74,6 @@ public interface IState<TState, TEvent> : IState
 /// <summary>
 ///   This interface is used to make <typeparamref name="TArgument" /> contravariant.
 /// </summary>
-public interface IState<TState, TEvent, in TArgument> : IState<TState, TEvent>
+internal interface IState<TState, TEvent, TArgument> : IState<TState, TEvent>, IState<TArgument>
 {
-  /// <summary>
-  /// </summary>
-  /// <param name="stateMachine"> </param>
-  /// <param name="argument"> </param>
-  /// <param name="onException"> </param>
-  void EnterSafe(IStateMachine<TEvent> stateMachine, TArgument argument, Action<Exception> onException);
 }

@@ -61,7 +61,7 @@ public class HierarchicalStateMachineTest : StateMachineTestBase
   {
     var actual = new List<string>();
 
-    async Task EnterAsync(IStateMachine<string> stateMachine, string state)
+    async Task EnterAsync(IStateController<string> stateMachine, string state)
     {
       while(stateMachine.InMyState)
         await Task.Delay(1);
@@ -120,7 +120,7 @@ public class HierarchicalStateMachineTest : StateMachineTestBase
   {
     var actual = new List<string>();
 
-    async Task EnterAsync(IStateMachine<string> stateMachine, string state)
+    async Task EnterAsync(IStateController<string> stateMachine, string state)
     {
       while(stateMachine.InMyState)
         await Task.Delay(1);
@@ -173,7 +173,7 @@ public class HierarchicalStateMachineTest : StateMachineTestBase
   {
     var actual = new List<string>();
 
-    async Task RootEnterAsync(IStateMachine<string> stateMachine)
+    async Task RootEnterAsync(IStateController<string> stateMachine)
     {
       actual.Add(Root);
 

@@ -49,7 +49,9 @@ public class BoxingTest : StateMachineTestBase
     // --act
     target.Raise(raiseWay, Event1, expected1); // pass to State1
 
+#pragma warning disable CS0618
     target.Relaying<ValueType1>().Raise(raiseWay, Event2, expected2); // pass everywhere
+#pragma warning restore CS0618
 
     // --assert
     dotMemory.Check(

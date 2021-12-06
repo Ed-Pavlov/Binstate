@@ -19,7 +19,7 @@ public class MultiThreadingTest : StateMachineTestBase
     var actual  = new List<string>();
     var entered = new ManualResetEvent(false);
 
-    void BlockingEnter(IStateMachine<int> machine)
+    void BlockingEnter(IStateController<int> machine)
     {
       entered.Set();
       while(machine.InMyState) Thread.Sleep(100);
@@ -58,7 +58,7 @@ public class MultiThreadingTest : StateMachineTestBase
     // --arrange
     var entered = new ManualResetEvent(false);
 
-    async Task AsyncEnter(IStateMachine<int> stateMachine)
+    async Task AsyncEnter(IStateController<int> stateMachine)
     {
       entered.Set();
       while(stateMachine.InMyState) await Task.Delay(546);

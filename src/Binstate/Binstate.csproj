@@ -1,14 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <LangVersion>default</LangVersion>
-    <Nullable>enable</Nullable>
+    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\build\binstate.public.snk</AssemblyOriginatorKeyFile>
     <PublicSign>true</PublicSign>
-
-    <GenerateAssemblyDescriptionAttribute>false</GenerateAssemblyDescriptionAttribute>
-
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
@@ -27,15 +26,19 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors/>
     <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
     <DocumentationFile>bin\Debug\Binstate.xml</DocumentationFile>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors/>
     <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
     <DocumentationFile>bin\Release\Binstate.xml</DocumentationFile>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
   <ItemGroup>
@@ -55,9 +58,6 @@
       <DependentUpon>StateMachine.cs</DependentUpon>
     </Compile>
     <Compile Update="src\StateMachine.Transition.cs">
-      <DependentUpon>StateMachine.cs</DependentUpon>
-    </Compile>
-    <Compile Update="src\StateMachine.RelayArgument.cs">
       <DependentUpon>StateMachine.cs</DependentUpon>
     </Compile>
     <Compile Update="src\IState.cs">

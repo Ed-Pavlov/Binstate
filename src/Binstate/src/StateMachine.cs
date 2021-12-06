@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,12 +21,13 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
   /// </summary>
   private readonly Dictionary<TState, IState<TState, TEvent>> _states;
 
-  private volatile IState<TState, TEvent>? _activeState;
+  private volatile IState<TState, TEvent> _activeState;
 
-  internal StateMachine(Dictionary<TState, IState<TState, TEvent>> states, Action<Exception> onException)
+  internal StateMachine(Dictionary<TState, IState<TState, TEvent>> states, Action<Exception> onException, TState initialStateId)
   {
     _states      = states;
     _onException = onException;
+    _activeState = GetStateById(initialStateId);
   }
 
   /// <inheritdoc />
@@ -35,7 +35,7 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
   {
     if(@event is null) throw new ArgumentNullException(nameof(@event));
 
-    return PerformTransitionSync(@event, Unit.Default, Maybe<Unit>.Nothing);
+    return PerformTransitionSync(@event, Unit.Default, false);
   }
 
   /// <inheritdoc />
@@ -43,7 +43,7 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
   {
     if(@event is null) throw new ArgumentNullException(nameof(@event));
 
-    return PerformTransitionSync(@event, argument, Maybe<Unit>.Nothing);
+    return PerformTransitionSync(@event, argument, true);
   }
 
   /// <inheritdoc />
@@ -51,7 +51,7 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
   {
     if(@event is null) throw new ArgumentNullException(nameof(@event));
 
-    return PerformTransitionAsync<Unit, Unit>(@event, default, Maybe<Unit>.Nothing);
+    return PerformTransitionAsync<Unit>(@event, default, false);
   }
 
   /// <inheritdoc />
@@ -59,14 +59,13 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
   {
     if(@event is null) throw new ArgumentNullException(nameof(@event));
 
-    return PerformTransitionAsync(@event, argument, Maybe<Unit>.Nothing);
+    return PerformTransitionAsync(@event, argument, true);
   }
 
-  internal void SetInitialState<T>(TState initialStateId, T initialStateArgument)
+  internal void EnterInitialState<T>(T initialStateArgument)
   {
-    _activeState = GetStateById(initialStateId);
-    var enterAction = ActivateStateNotGuarded(_activeState, new MixOf<T, Unit>(initialStateArgument.ToMaybe(), Maybe<Unit>.Nothing));
-
+    var argumentsBag = new ArgumentsBag { { _activeState, () => ( (IState<T>)_activeState ).Argument = initialStateArgument }, };
+    var enterAction  = ActivateStateNotGuarded(_activeState, argumentsBag);
     try
     {
       enterAction();
@@ -89,34 +88,22 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
   ///   true: Raise method throws an exception
   ///   false: state machine will pass default(TRelay) as an argument
   /// </param>
-  [Obsolete("Due to TRelay could not allow null value (default for reference types) but this method bypass nullability check.")]
-  public IStateMachine<TState, TEvent> Relaying<TRelay>(bool relayArgumentIsRequired)
-    => new Relayer<TRelay?>(this, relayArgumentIsRequired ? Maybe<TRelay?>.Nothing : default(TRelay).ToMaybe()); //TODO: where is exception?
+  [Obsolete(
+    "Since version 1.2 relaying arguments from the currently active states to states require them performs automatically."
+  + "This method is not needed and adds nothing to the behaviour of the state machine."
+  )]
+  public IStateMachine<TState, TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true) => this;
 
-  /// <summary>
-  ///   Tell the state machine that it should get an argument attached to the currently active state (or any of parents) and pass it to the newly activated state
-  /// </summary>
-  /// <typeparam name="TRelay">
-  ///   The type of the argument. Should be exactly the same as the generic type passed into
-  ///   <see cref="Config{TState,TEvent}.Enter.OnEnter{T}(Action{T})" /> or one of it's overload when configured currently active state (of one of it's parent).
-  /// </typeparam>
-  /// <remarks>
-  ///   If the new state requires an argument but there is no argument attached to the currently active state and no argument is passed
-  ///   to <see cref="Raise{T}" />
-  /// </remarks>
-  /// method, transition will fail.
-  public IStateMachine<TState, TEvent> Relaying<TRelay>() => new Relayer<TRelay?>(this, Maybe<TRelay?>.Nothing);
-
-  private bool PerformTransitionSync<TA, TRelay>(TEvent @event, TA? argument, Maybe<TRelay> backupRelayArgument)
+  private bool PerformTransitionSync<TArgument>(TEvent @event, TArgument argument, bool argumentHasPriority)
   {
-    var data = PrepareTransition(@event, argument, backupRelayArgument);
+    var data = PrepareTransition(@event, argument, argumentHasPriority);
 
     return data != null && PerformTransition(data.Value);
   }
 
-  private Task<bool> PerformTransitionAsync<TA, TRelay>(TEvent @event, TA? argument, Maybe<TRelay> backupRelayArgument)
+  private Task<bool> PerformTransitionAsync<TArgument>(TEvent @event, TArgument argument, bool argumentHasPriority)
   {
-    var data = PrepareTransition(@event, argument, backupRelayArgument);
+    var data = PrepareTransition(@event, argument, argumentHasPriority);
 
     return data is null
              ? Task.FromResult(false)
@@ -155,64 +142,5 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
     }
 
     return l;
-  }
-
-  /// <summary>
-  ///   Validates that all 'enter' actions match (not)passed argument. Throws the exception if not, because it is not runtime problem, but the problem
-  ///   of configuration.
-  /// </summary>
-  private static void ValidateStates<TA, TRelay>(
-  IState<TState, TEvent>  activeState,
-  TEvent                  @event,
-  IState<TState, TEvent>  targetState,
-  MixOf<TA, TRelay>       argument,
-  IState<TState, TEvent>? commonAncestor)
-  {
-    var enterWithArgumentCount = 0;
-
-    var state = targetState;
-
-    while(state != commonAncestor)
-    {
-      if(state is null) throw new InvalidOperationException("state can't became null before it became commonAncestor");
-
-      if(state.IsRequireArgument())
-      {
-        if(! argument.HasAnyArgument)
-          throw new TransitionException($"The enter action of the state '{state.Id}' is configured as required an argument but no argument was specified.");
-
-        if(! argument.IsMatch(state.GetArgumentType()))
-          throw new TransitionException(
-            $"The state '{state.Id}' requires argument of type '{state.GetArgumentType()}' but no argument of compatible type has passed nor relayed"
-          );
-
-        enterWithArgumentCount++;
-      }
-
-      state = state.ParentState;
-    }
-
-    if(argument.HasAnyArgument && enterWithArgumentCount == 0)
-    {
-      // we can allocate here, because it's an exceptional case
-      var states = new List<IState<TState, TEvent>>();
-      state = targetState.ParentState;
-
-      while(state != commonAncestor)
-      {
-        states.Add(state!);
-        state = state!.ParentState;
-      }
-
-      states.Reverse();
-      states.Add(targetState);
-
-      var statesToActivate = string.Join("->", states.Select(_ => _.Id!.ToString()));
-
-      throw new TransitionException(
-        $"Transition from the state '{activeState.Id}' by the event '{@event}' will activate following states [{statesToActivate}]. No one of them are defined with "
-      + "the enter action accepting an argument, but argument was passed or relayed"
-      );
-    }
   }
 }

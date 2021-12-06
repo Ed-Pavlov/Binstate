@@ -101,7 +101,7 @@ public class TransitionTest : StateMachineTestBase
 
     builder.Build(Initial);
 
-    static void OnEnterInitialState(IStateMachine<string> stateMachine)
+    static void OnEnterInitialState(IStateController<string> stateMachine)
     {
       // --act
       var actual = stateMachine.RaiseAsync("WrongEvent");
@@ -313,7 +313,7 @@ public class TransitionTest : StateMachineTestBase
 
     builder.Build(Initial);
 
-    static void OnEnterInitialState(IStateMachine<string> stateMachine)
+    static void OnEnterInitialState(IStateController<string> stateMachine)
     {
       // --act
       var actual = stateMachine.RaiseAsync(State1);
@@ -340,7 +340,7 @@ public class TransitionTest : StateMachineTestBase
 
     builder.Build(initialStateId);
 
-    static void OnEnterInitialState(IStateMachine<int> stateMachine)
+    static void OnEnterInitialState(IStateController<int> stateMachine)
     {
       // --act
       var actual = stateMachine.RaiseAsync(Event1);

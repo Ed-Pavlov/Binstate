@@ -86,12 +86,12 @@ public partial class Example
       /* beep */
     }
 
-    private void CheckOverload(IStateMachine<Events> stateMachine)
+    private void CheckOverload(IStateController<Events> stateController)
     {
       if(IsOverloaded())
       {
         AnnounceOverload();
-        stateMachine.RaiseAsync(Events.Stop);
+        stateController.RaiseAsync(Events.Stop);
       }
     }
 

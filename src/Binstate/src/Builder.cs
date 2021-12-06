@@ -96,9 +96,8 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
     if(! enableLooseRelaying)
       ValidateSubstateEnterArgument(states);
 
-    var stateMachine = new StateMachine<TState, TEvent>(states, _onException);
-    stateMachine.SetInitialState(initialStateId, initialStateArgument);
-
+    var stateMachine = new StateMachine<TState, TEvent>(states, _onException, initialStateId);
+    stateMachine.EnterInitialState(initialStateArgument);
     return stateMachine;
   }
 

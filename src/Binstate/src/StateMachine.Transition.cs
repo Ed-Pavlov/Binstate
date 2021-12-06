@@ -14,13 +14,13 @@ public partial class StateMachine<TState, TEvent>
   ///   dynamic transition returns 'null'
   /// </returns>
   /// <exception cref="TransitionException"> Throws if passed argument doesn't match the 'enter' action of the target state. </exception>
-  private TransitionData<TArgument, TRelay>? PrepareTransition<TArgument, TRelay>(TEvent @event, TArgument argument, Maybe<TRelay> backupRelayArgument)
+  private TransitionData? PrepareTransition<TArgument>(TEvent @event, TArgument argument, bool argumentHasPriority)
   {
     try
     {
       _lock.WaitOne();
 
-      if(! _activeState!.FindTransitionTransitive(@event, out var transition) // looks for a transition through all parent states
+      if(! _activeState.FindTransitionTransitive(@event, out var transition) // looks for a transition through all parent states
       || ! transition!.GetTargetStateId(out var stateId))
       {
         // no transition by specified event is found or dynamic transition returns null as target state id
@@ -31,11 +31,10 @@ public partial class StateMachine<TState, TEvent>
 
       var targetState = GetStateById(stateId!);
 
-      var mixedArgument  = PrepareRealArgument(argument, _activeState, backupRelayArgument);
       var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);
-      ValidateStates(_activeState, @event, targetState, mixedArgument, commonAncestor); // validate before changing any state of the state machine
+      var argumentsBag = PrepareArguments(argument, argumentHasPriority, targetState, commonAncestor, _activeState);
 
-      return new TransitionData<TArgument, TRelay>(_activeState, transition, targetState, mixedArgument, commonAncestor);
+      return new TransitionData(_activeState, transition, targetState, argumentsBag, commonAncestor);
     }
     catch(TransitionException)
     {
@@ -52,18 +51,59 @@ public partial class StateMachine<TState, TEvent>
     }
   }
 
+  private static ArgumentsBag PrepareArguments<TArgument>(
+    TArgument               argument,
+    bool                    argumentHasPriority,
+    IState<TState, TEvent>  targetState,
+    IState<TState, TEvent>? commonAncestor,
+    IState<TState, TEvent>  sourceState)
+  {
+    var argumentWithCache = new Argument.WithCache();
+
+    var map = new ArgumentsBag();
+
+    var argumentTarget = targetState;
+    while(argumentTarget != commonAncestor)
+    {
+      if(argumentTarget is null) throw new InvalidOperationException("It can't be null before it is equal to commonAncestor");
+      var argumentTargetCopy = argumentTarget; // anti-closure copy
+
+      var argumentType = argumentTarget.GetArgumentTypeSafe();
+      if(argumentType is not null)
+      {
+        var passedArgumentIsSuitable = argumentType.IsAssignableFrom(typeof(TArgument));
+        if(argumentHasPriority && passedArgumentIsSuitable)
+          map.Add(argumentTarget, () => Argument.SetArgument(argumentTargetCopy, argument));
+        else
+        {
+          if(argumentWithCache.GetArgumentSource(sourceState, argumentType, out var argumentSource))
+            map.Add(argumentTarget, () => Argument.SetArgumentByReflection(argumentSource, argumentTargetCopy));
+          else if(passedArgumentIsSuitable) // suitable but has no priority
+            map.Add(argumentTarget, () => Argument.SetArgument(argumentTargetCopy, argument));
+          else
+            Throw.NoArgument(argumentTarget, argumentType);
+        }
+      }
+
+      argumentTarget = argumentTarget.ParentState;
+    }
+
+    return map;
+  }
+
   /// <summary>
   ///   Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
   ///   into the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{System.Exception})" />
   /// </summary>
+
   // [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery", Justification = "foreach is more readable here")]
-  private bool PerformTransition<TArgument, TRelay>(TransitionData<TArgument, TRelay> transitionData)
+  private bool PerformTransition(TransitionData transitionData)
   {
     var currentActiveState = transitionData.CurrentActiveState;
     var prevActiveState    = currentActiveState;
     var transition         = transitionData.Transition;
     var targetState        = transitionData.TargetState;
-    var argument           = transitionData.Argument;
+    var argumentsBag       = transitionData.ArgumentsBag;
     var commonAncestor     = transitionData.CommonAncestor;
 
     var enterActions = new List<Action>();
@@ -85,7 +125,7 @@ public partial class StateMachine<TState, TEvent>
 
       while(targetState != commonAncestor)
       {
-        var enterAction = ActivateStateNotGuarded(targetState!, argument); // targetState can't become null earlier then be equal to commonAncestor
+        var enterAction = ActivateStateNotGuarded(targetState!, argumentsBag); // targetState can't become null earlier then be equal to commonAncestor
         enterActions.Add(enterAction);
         targetState = targetState!.ParentState;
       }
@@ -107,27 +147,14 @@ public partial class StateMachine<TState, TEvent>
   ///   Doesn't acquire lock itself, caller should care about safe context
   /// </summary>
   /// <returns> Returns 'enter' action of the state </returns>
-  private Action ActivateStateNotGuarded<TArgument, TRelay>(IState<TState, TEvent> state, MixOf<TArgument, TRelay> argument)
+  private Action ActivateStateNotGuarded(IState<TState, TEvent> state, ArgumentsBag argumentsBag)
   {
     state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
-
     var controller = new Controller(state, this);
-
-    return state switch
+    return () =>
     {
-      IState<TState, TEvent, TArgument> passedArgumentState =>
-        () => passedArgumentState.EnterSafe(controller, argument.PassedArgument.Value, _onException),
-
-      IState<TState, TEvent, TRelay> relayedArgumentState =>
-        () => relayedArgumentState.EnterSafe(controller, argument.RelayedArgument.Value, _onException),
-
-      IState<TState, TEvent, ITuple<TArgument, TRelay>> bothArgumentsState =>
-        () => bothArgumentsState.EnterSafe(controller, CreateTuple(argument), _onException),
-
-      IState<TState, TEvent, Unit> relayedArgumentState =>
-        () => relayedArgumentState.EnterSafe(controller, default, _onException),
-
-      _ => throw new ArgumentOutOfRangeException(),
+      argumentsBag[state].Invoke(); // set the Argument property of the state
+      state.EnterSafe(controller, _onException);
     };
   }
 
@@ -135,9 +162,9 @@ public partial class StateMachine<TState, TEvent>
     => new Tuple<TArgument, TRelay>(mixOf.PassedArgument.Value, mixOf.RelayedArgument.Value);
 
   private static MixOf<TArgument, TRelay> PrepareRealArgument<TArgument, TRelay>(
-  TArgument               argument,
-  IState<TState, TEvent>? sourceState,
-  Maybe<TRelay>           backupRelayArgument)
+    TArgument               argument,
+    IState<TState, TEvent>? sourceState,
+    Maybe<TRelay>           backupRelayArgument)
   {
     if(! Argument.IsSpecified<TRelay>()) // no relaying argument
       return Argument.IsSpecified<TArgument>() ? new MixOf<TArgument, TRelay>(argument.ToMaybe(), Maybe<TRelay>.Nothing) : MixOf<TArgument, TRelay>.Empty;
@@ -164,26 +191,28 @@ public partial class StateMachine<TState, TEvent>
     );
   }
 
-  private readonly struct TransitionData<TArgument, TRelay>
+  private readonly struct TransitionData
   {
     public readonly IState<TState, TEvent>     CurrentActiveState;
     public readonly Transition<TState, TEvent> Transition;
     public readonly IState<TState, TEvent>     TargetState;
-    public readonly MixOf<TArgument, TRelay>   Argument;
+    public readonly ArgumentsBag               ArgumentsBag;
     public readonly IState<TState, TEvent>?    CommonAncestor;
 
     public TransitionData(
-    IState<TState, TEvent>     currentActiveState,
-    Transition<TState, TEvent> transition,
-    IState<TState, TEvent>     targetState,
-    MixOf<TArgument, TRelay>   argument,
-    IState<TState, TEvent>?    commonAncestor)
+      IState<TState, TEvent>     currentActiveState,
+      Transition<TState, TEvent> transition,
+      IState<TState, TEvent>     targetState,
+      ArgumentsBag               argumentsBag,
+      IState<TState, TEvent>?    commonAncestor)
     {
       CurrentActiveState = currentActiveState;
       Transition         = transition;
       TargetState        = targetState;
-      Argument           = argument;
+      ArgumentsBag       = argumentsBag;
       CommonAncestor     = commonAncestor;
     }
   }
+
+  private class ArgumentsBag : Dictionary<IState, Action> { }
 }

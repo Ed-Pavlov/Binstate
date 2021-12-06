@@ -5,11 +5,11 @@ namespace Binstate;
 
 internal class EnterActionInvoker<TEvent> : IEnterActionInvoker
 {
-  private readonly Func<IStateMachine<TEvent>, Task?> _action;
+  private readonly Func<IStateController<TEvent>, Task?> _action;
 
-  public EnterActionInvoker(Func<IStateMachine<TEvent>, Task?> action) => _action = action;
+  public EnterActionInvoker(Func<IStateController<TEvent>, Task?> action) => _action = action;
 
-  public Task? Invoke(IStateMachine<TEvent> stateMachine) => _action(stateMachine);
+  public Task? Invoke(IStateController<TEvent> stateController) => _action(stateController);
 }
 
 /// <summary>
@@ -17,9 +17,9 @@ internal class EnterActionInvoker<TEvent> : IEnterActionInvoker
 /// </summary>
 internal class EnterActionInvoker<TEvent, TArgument> : IEnterActionInvoker<TEvent, TArgument>
 {
-  private readonly Func<IStateMachine<TEvent>, TArgument, Task?> _action;
+  private readonly Func<IStateController<TEvent>, TArgument, Task?> _action;
 
-  public EnterActionInvoker(Func<IStateMachine<TEvent>, TArgument, Task?> action) => _action = action;
+  public EnterActionInvoker(Func<IStateController<TEvent>, TArgument, Task?> action) => _action = action;
 
-  public Task? Invoke(IStateMachine<TEvent> isInState, TArgument argument) => _action(isInState, argument);
+  public Task? Invoke(IStateController<TEvent> isInState, TArgument argument) => _action(isInState, argument);
 }

@@ -21,7 +21,7 @@ public static partial class Config<TState, TEvent>
       return OnEnter(_ => enterAction());
     }
 
-    public IExitEx OnEnter(Action<IStateMachine<TEvent>> enterAction)
+    public IExitEx OnEnter(Action<IStateController<TEvent>> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
@@ -37,7 +37,7 @@ public static partial class Config<TState, TEvent>
       return OnEnter(_ => enterAction());
     }
 
-    public IExitEx OnEnter(Func<IStateMachine<TEvent>, Task> enterAction)
+    public IExitEx OnEnter(Func<IStateController<TEvent>, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
@@ -53,7 +53,7 @@ public static partial class Config<TState, TEvent>
       return OnEnter<TArgument>((_, argument) => enterAction(argument));
     }
 
-    public IExit<TArgument> OnEnter<TArgument>(Action<IStateMachine<TEvent>, TArgument> enterAction)
+    public IExit<TArgument> OnEnter<TArgument>(Action<IStateController<TEvent>, TArgument> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
@@ -70,7 +70,7 @@ public static partial class Config<TState, TEvent>
       return OnEnter<TArgument>((_, argument) => enterAction(argument));
     }
 
-    public IExit<TArgument> OnEnter<TArgument>(Func<IStateMachine<TEvent>, TArgument, Task> enterAction)
+    public IExit<TArgument> OnEnter<TArgument>(Func<IStateController<TEvent>, TArgument, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
@@ -87,7 +87,7 @@ public static partial class Config<TState, TEvent>
       return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.PassedArgument, tuple.RelayedArgument));
     }
 
-    public IExit<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Action<IStateMachine<TEvent>, TArgument, TRelay> enterAction)
+    public IExit<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Action<IStateController<TEvent>, TArgument, TRelay> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
@@ -102,7 +102,7 @@ public static partial class Config<TState, TEvent>
       return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.PassedArgument, tuple.RelayedArgument));
     }
 
-    public IExit<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Func<IStateMachine<TEvent>, TArgument, TRelay, Task> enterAction)
+    public IExit<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Func<IStateController<TEvent>, TArgument, TRelay, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 

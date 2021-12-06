@@ -81,14 +81,14 @@ public class ConfigurationTest : StateMachineTestBase
     Action target05 = () => config.OnEnter((Action<object, object>)null!);
     Action target06 = () => config.OnEnter((Func<object, object, Task>)null!);
 
-    Action target07 = () => config.OnEnter((Action<IStateMachine<string>>)null!);
-    Action target08 = () => config.OnEnter((Func<IStateMachine<string>, Task>)null!);
+    Action target07 = () => config.OnEnter((Action<IStateController<string>>)null!);
+    Action target08 = () => config.OnEnter((Func<IStateController<string>, Task>)null!);
 
-    Action target09 = () => config.OnEnter((Action<IStateMachine<string>, object>)null!);
-    Action target10 = () => config.OnEnter((Func<IStateMachine<string>, object, Task>)null!);
+    Action target09 = () => config.OnEnter((Action<IStateController<string>, object>)null!);
+    Action target10 = () => config.OnEnter((Func<IStateController<string>, object, Task>)null!);
 
-    Action target11 = () => config.OnEnter((Action<IStateMachine<string>, object, object>)null!);
-    Action target12 = () => config.OnEnter((Func<IStateMachine<string>, object, object, Task>)null!);
+    Action target11 = () => config.OnEnter((Action<IStateController<string>, object, object>)null!);
+    Action target12 = () => config.OnEnter((Func<IStateController<string>, object, object, Task>)null!);
 #pragma warning restore 8625
 
     // --assert
@@ -117,9 +117,9 @@ public class ConfigurationTest : StateMachineTestBase
     async void AsyncMethod1()                                   { }
     async void AsyncMethod2(object                _)            { }
     async void AsyncMethod3(object                _, object __) { }
-    async void AsyncMethod4(IStateMachine<string> _)                        { }
-    async void AsyncMethod5(IStateMachine<string> _, object __)             { }
-    async void AsyncMethod6(IStateMachine<string> _, object __, object ___) { }
+    async void AsyncMethod4(IStateController<string> _)                        { }
+    async void AsyncMethod5(IStateController<string> _, object __)             { }
+    async void AsyncMethod6(IStateController<string> _, object __, object ___) { }
 #pragma warning restore 1998
 
     // --act

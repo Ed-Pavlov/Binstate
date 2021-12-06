@@ -3,14 +3,18 @@
 namespace Binstate;
 
 /// <summary>
-///   Interface is used to make argument types invariant in order to pass arguments of compatible types
+///  //TODO:
 /// </summary>
-/// <typeparam name="TPassed"> Type of argument passed to <see cref="IStateMachine{TState,TEvent}.Raise{T}" /> method </typeparam>
-/// <typeparam name="TRelay">
-///   Type of the argument attached to one of the currently active states
-///   and passed to <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}()" /> method.
-/// </typeparam>
-public interface ITuple<out TPassed, out TRelay>
+public interface ITuple { }
+
+/// <summary>
+///   This data structure is used if a state needs to accept two arguments at once,
+///   usually one is passed to <see cref="IStateMachine{TState,TEvent}.Raise{T}" /> method and the second one is obtained from the previously active
+///   states during transition automatically. But they could be both from the active states.
+///
+///   Interface is used to make argument types invariant in order to pass arguments of compatible types.
+/// </summary>
+public interface ITuple<out TPassed, out TRelay> : ITuple
 {
   /// <summary>
   ///   Passed argument value
@@ -39,9 +43,10 @@ public class Tuple<TPassed, TRelay> : ITuple<TPassed, TRelay>
   /// <inheritdoc />
   public TRelay RelayedArgument { get; }
 
-  private bool Equals(ITuple<TPassed, TRelay>? other) => other is not null
-                                                      && EqualityComparer<TPassed>.Default.Equals(PassedArgument, other.PassedArgument)
-                                                      && EqualityComparer<TRelay>.Default.Equals(RelayedArgument, other.RelayedArgument);
+  private bool Equals(ITuple<TPassed, TRelay>? other)
+    => other is not null
+    && EqualityComparer<TPassed>.Default.Equals(PassedArgument, other.PassedArgument)
+    && EqualityComparer<TRelay>.Default.Equals(RelayedArgument, other.RelayedArgument);
 
   /// <remarks> Equals doesnt check exact type of other object, only if it can be cast to <see cref="ITuple{TPassed,TRelay}" /> </remarks>
   public override bool Equals(object? obj)

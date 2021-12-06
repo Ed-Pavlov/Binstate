@@ -32,7 +32,9 @@ public class ArgumentRelayingTest : StateMachineTestBase
     target.Raise(Event1, expected);
 
     // --act
+#pragma warning disable CS0618
     target.Relaying<int>().Raise(raiseWay, Event2);
+#pragma warning restore CS0618
 
     // --assert
     actual.Should().Be(expected);
@@ -63,7 +65,9 @@ public class ArgumentRelayingTest : StateMachineTestBase
     target.Raise(Event1, expected);
 
     // --act
+#pragma warning disable CS0618
     target.Relaying<int>().Raise(raiseWay, Event2);
+#pragma warning restore CS0618
 
     // --assert
     actual.Should().Be(expected);
@@ -173,7 +177,9 @@ public class ArgumentRelayingTest : StateMachineTestBase
     target.Raise(raiseWay, Event1, expectedRelayedValue); // attach an argument to State1
 
     // --act
-    target.Relaying<Stream>().Raise(raiseWay, Event2, expectedPassedValue); // pass and relay arguments to State2 
+#pragma warning disable CS0618
+    target.Relaying<Stream>().Raise(raiseWay, Event2, expectedPassedValue); // pass and relay arguments to State2
+#pragma warning restore CS0618
 
     // --assert
 
@@ -215,7 +221,9 @@ public class ArgumentRelayingTest : StateMachineTestBase
     target.Raise(raiseWay, Event1, expectedRelayed); // attach MemoryStream to State1
 
     // --act
+#pragma warning disable CS0618
     target.Relaying<MemoryStream>().Raise(raiseWay, Event2, expectedPassed); // pass string and relay MemoryStream to Child
+#pragma warning restore CS0618
 
     // --assert
     A.CallTo(() => onEnterRoot(expectedPassed)).MustHaveHappenedOnceExactly();
@@ -242,7 +250,9 @@ public class ArgumentRelayingTest : StateMachineTestBase
     stateMachine.Raise(Event1, 93);
 
     // --act
+#pragma warning disable CS0618
     Action target = () => stateMachine.Relaying<int>().Raise(raiseWay, Event2);
+#pragma warning restore CS0618
 
     // --assert
     target.Should()
@@ -265,7 +275,9 @@ public class ArgumentRelayingTest : StateMachineTestBase
     var stateMachine = builder.Build(Initial);
 
     // --act
+#pragma warning disable CS0618
     Action target = () => stateMachine.Relaying<int>().Raise(Event1, 93);
+#pragma warning restore CS0618
 
     // --assert
     target.Should()

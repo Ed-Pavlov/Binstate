@@ -53,10 +53,10 @@ public partial class Example
     var stateMachine = builder.Build(offHook);
   }
 
-  private static Task PlayMusic(IStateMachine<string> stateMachine) => Task.Run(
+  private static Task PlayMusic(IStateController<string> stateController) => Task.Run(
     () =>
     {
-      while(stateMachine.InMyState)
+      while(stateController.InMyState)
       {
         // play music
       }

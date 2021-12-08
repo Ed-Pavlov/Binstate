@@ -32,7 +32,7 @@ public partial class StateMachine<TState, TEvent>
       var targetState = GetStateById(stateId!);
 
       var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);
-      var argumentsBag = PrepareArguments(argument, argumentHasPriority, targetState, commonAncestor, _activeState);
+      var argumentsBag   = PrepareArgument(argument, argumentHasPriority, targetState, commonAncestor, _activeState);
 
       return new TransitionData(_activeState, transition, targetState, argumentsBag, commonAncestor);
     }
@@ -51,7 +51,7 @@ public partial class StateMachine<TState, TEvent>
     }
   }
 
-  private static ArgumentsBag PrepareArguments<TArgument>(
+  private static ArgumentsBag PrepareArgument<TArgument>(
     TArgument               argument,
     bool                    argumentHasPriority,
     IState<TState, TEvent>  targetState,
@@ -66,23 +66,15 @@ public partial class StateMachine<TState, TEvent>
     while(argumentTarget != commonAncestor)
     {
       if(argumentTarget is null) throw new InvalidOperationException("It can't be null before it is equal to commonAncestor");
-      var argumentTargetCopy = argumentTarget; // anti-closure copy
 
-      var argumentType = argumentTarget.GetArgumentTypeSafe();
-      if(argumentType is not null)
+      var targetArgumentType = argumentTarget.GetArgumentTypeSafe();
+      if(targetArgumentType is not null)
       {
-        var passedArgumentIsSuitable = argumentType.IsAssignableFrom(typeof(TArgument));
-        if(argumentHasPriority && passedArgumentIsSuitable)
-          map.Add(argumentTarget, () => Argument.SetArgument(argumentTargetCopy, argument));
-        else
-        {
-          if(argumentWithCache.GetArgumentSource(sourceState, argumentType, out var argumentSource))
-            map.Add(argumentTarget, () => Argument.SetArgumentByReflection(argumentSource, argumentTargetCopy));
-          else if(passedArgumentIsSuitable) // suitable but has no priority
-            map.Add(argumentTarget, () => Argument.SetArgument(argumentTargetCopy, argument));
-          else
-            Throw.NoArgument(argumentTarget, argumentType);
-        }
+        if(! argumentWithCache.GetArgumentProviders(targetArgumentType, argument, argumentHasPriority, sourceState, out var argumentProviders))
+          Throw.NoArgument(argumentTarget);
+
+        var copy = argumentTarget; // anti-closure copy
+        map.Add(argumentTarget, () => Argument.SetArgumentByReflection(copy, argumentProviders));
       }
 
       argumentTarget = argumentTarget.ParentState;
@@ -95,8 +87,6 @@ public partial class StateMachine<TState, TEvent>
   ///   Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
   ///   into the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{System.Exception})" />
   /// </summary>
-
-  // [SuppressMessage("ReSharper", "LoopCanBeConvertedToQuery", Justification = "foreach is more readable here")]
   private bool PerformTransition(TransitionData transitionData)
   {
     var currentActiveState = transitionData.CurrentActiveState;
@@ -110,37 +100,48 @@ public partial class StateMachine<TState, TEvent>
 
     try
     {
-      // exit all active states which are not parent for the new state
-      while(currentActiveState != commonAncestor)
+      try
       {
-        currentActiveState!.ExitSafe(_onException); // currentActiveState can't become null earlier then be equal to commonAncestor
-        currentActiveState = currentActiveState.ParentState;
+        // exit all active states which are not parent for the new state
+        while(currentActiveState != commonAncestor)
+        {
+          currentActiveState!.ExitSafe(_onException); // currentActiveState can't become null earlier then be equal to commonAncestor
+          currentActiveState = currentActiveState.ParentState;
+        }
+
+        // invoke action attached to the transition itself
+        prevActiveState.CallTransitionActionSafe(transition, _onException);
+
+        // and then activate new active states
+        _activeState = targetState;
+
+        while(targetState != commonAncestor)
+        {
+          var enterAction = ActivateStateNotGuarded(targetState!, argumentsBag); // targetState can't become null earlier then be equal to commonAncestor
+          enterActions.Add(enterAction);
+          targetState = targetState!.ParentState;
+        }
+      }
+      finally // no exception should be thrown here, but paranoia is my life
+      {
+        _lock.Set();
       }
 
-      // invoke action attached to the transition itself
-      prevActiveState.CallTransitionActionSafe(transition, _onException);
-
-      // and then activate new active states
-      _activeState = targetState;
-
-      while(targetState != commonAncestor)
-      {
-        var enterAction = ActivateStateNotGuarded(targetState!, argumentsBag); // targetState can't become null earlier then be equal to commonAncestor
-        enterActions.Add(enterAction);
-        targetState = targetState!.ParentState;
-      }
+      // call 'enter' actions out of the lock due to it can block execution
+      CallEnterActions(enterActions);
     }
-    finally // no exception should be thrown here, but paranoia is my life
+    catch(Exception exception)
     {
-      _lock.Set();
+      _onException(exception);
     }
-
-    // call 'enter' actions out of the lock due to it can block execution
-    // call them in reverse order, parent's 'enter' is called first, child's one last
-    for(var i = enterActions.Count - 1; i >= 0; i--)
-      enterActions[i]();
 
     return true; // just to reduce amount of code calling this method
+  }
+
+  private static void CallEnterActions(List<Action> enterActions)
+  { // call them in reverse order, parent's 'enter' is called first, child's one last
+    for(var i = enterActions.Count - 1; i >= 0; i--)
+      enterActions[i]();
   }
 
   /// <summary>
@@ -151,44 +152,19 @@ public partial class StateMachine<TState, TEvent>
   {
     state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
     var controller = new Controller(state, this);
+
+    // enter action, will be called later
     return () =>
     {
-      argumentsBag[state].Invoke(); // set the Argument property of the state
+      // set Argument property before calling EnterSafe, due to it uses this property
+      if(state.IsRequireArgument())
+      {
+        var setArgument = argumentsBag.GetValueSafe(state);
+        if(setArgument is null) Throw.NoArgument(state);
+        setArgument();// set the Argument property of the state
+      }
       state.EnterSafe(controller, _onException);
     };
-  }
-
-  private static Tuple<TArgument, TRelay> CreateTuple<TArgument, TRelay>(MixOf<TArgument, TRelay> mixOf)
-    => new Tuple<TArgument, TRelay>(mixOf.PassedArgument.Value, mixOf.RelayedArgument.Value);
-
-  private static MixOf<TArgument, TRelay> PrepareRealArgument<TArgument, TRelay>(
-    TArgument               argument,
-    IState<TState, TEvent>? sourceState,
-    Maybe<TRelay>           backupRelayArgument)
-  {
-    if(! Argument.IsSpecified<TRelay>()) // no relaying argument
-      return Argument.IsSpecified<TArgument>() ? new MixOf<TArgument, TRelay>(argument.ToMaybe(), Maybe<TRelay>.Nothing) : MixOf<TArgument, TRelay>.Empty;
-
-    var state = sourceState;
-
-    while(state != null)
-    {
-      if(state is State<TState, TEvent, TRelay> stateWithArgument)
-        return Argument.IsSpecified<TArgument>()
-                 ? stateWithArgument.CreateTuple(argument)
-                 : new MixOf<TArgument, TRelay>(Maybe<TArgument>.Nothing, stateWithArgument.Argument.ToMaybe());
-
-      state = state.ParentState;
-    }
-
-    if(backupRelayArgument.HasValue)
-      return Argument.IsSpecified<TArgument>()
-               ? new MixOf<TArgument, TRelay>(argument.ToMaybe(),       backupRelayArgument)
-               : new MixOf<TArgument, TRelay>(Maybe<TArgument>.Nothing, backupRelayArgument);
-
-    throw new TransitionException(
-      "Raise with relaying argument is called from the state w/o an attached value and a backup argument for relay is not provided"
-    );
   }
 
   private readonly struct TransitionData
@@ -214,5 +190,7 @@ public partial class StateMachine<TState, TEvent>
     }
   }
 
-  private class ArgumentsBag : Dictionary<IState, Action> { }
+  private class ArgumentsBag : Dictionary<IState, Action>
+  {
+  }
 }

@@ -29,10 +29,6 @@ public partial class StateMachine<TState, TEvent> where TState : notnull where T
       return true;
     }
 
-    [Obsolete(
-      "Since version 1.2 relaying arguments from the currently active states to states require them performs automatically."
-    + "This method is not needed and adds nothing to the behaviour of the state machine."
-    )]
     public IAutoTransition<TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true) => this;
   }
 }

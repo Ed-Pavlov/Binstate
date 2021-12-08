@@ -10,9 +10,8 @@ namespace Binstate;
 ///   The state machine. Use <see cref="Builder{TState, TEvent}" /> to configure and build a state machine.
 /// </summary>
 [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
-public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent>
+public partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
 {
-
   private readonly AutoResetEvent    _lock = new AutoResetEvent(true);
   private readonly Action<Exception> _onException;
 
@@ -64,15 +63,33 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
 
   internal void EnterInitialState<T>(T initialStateArgument)
   {
-    var argumentsBag = new ArgumentsBag { { _activeState, () => ( (IState<T>)_activeState ).Argument = initialStateArgument }, };
-    var enterAction  = ActivateStateNotGuarded(_activeState, argumentsBag);
+    var argumentType = typeof(T);
+    var argumentsBag = new ArgumentsBag();
+    var enterActions = new List<Action>();
+
     try
     {
-      enterAction();
+      // activate all parent states of the initial state
+      var parentState = _activeState;
+      while(parentState is not null)
+      {
+        if(parentState.GetArgumentTypeSafe()?.IsAssignableFrom(argumentType) == true)
+        {
+          var copy = parentState;
+          argumentsBag.Add(parentState, () => ( (ISetArgument<T>)copy ).Argument = initialStateArgument);
+        }
+
+        enterActions.Add(ActivateStateNotGuarded(parentState, argumentsBag));
+
+        parentState = parentState.ParentState;
+      }
+
+      CallEnterActions(enterActions);
     }
     catch(Exception exception)
     {
       _onException(exception);
+      throw;
     }
   }
 
@@ -92,7 +109,8 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TState, TEvent
     "Since version 1.2 relaying arguments from the currently active states to states require them performs automatically."
   + "This method is not needed and adds nothing to the behaviour of the state machine."
   )]
-  public IStateMachine<TState, TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true) => this;
+  [SuppressMessage("ReSharper", "UnusedTypeParameter")]
+  public IStateMachine<TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true) => this;
 
   private bool PerformTransitionSync<TArgument>(TEvent @event, TArgument argument, bool argumentHasPriority)
   {

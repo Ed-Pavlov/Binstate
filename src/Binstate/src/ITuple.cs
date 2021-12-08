@@ -9,7 +9,7 @@ public interface ITuple { }
 
 /// <summary>
 ///   This data structure is used if a state needs to accept two arguments at once,
-///   usually one is passed to <see cref="IStateMachine{TState,TEvent}.Raise{T}" /> method and the second one is obtained from the previously active
+///   usually one is passed to <see cref="IStateMachine{TEvent}.Raise{T}" /> method and the second one is obtained from the previously active
 ///   states during transition automatically. But they could be both from the active states.
 ///
 ///   Interface is used to make argument types invariant in order to pass arguments of compatible types.

@@ -28,7 +28,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors/>
+    <WarningsAsErrors />
     <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
     <DocumentationFile>bin\Debug\Binstate.xml</DocumentationFile>
   </PropertyGroup>
@@ -36,7 +36,7 @@
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors/>
+    <WarningsAsErrors />
     <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
     <DocumentationFile>bin\Release\Binstate.xml</DocumentationFile>
   </PropertyGroup>
@@ -60,7 +60,7 @@
     <Compile Update="src\StateMachine.Transition.cs">
       <DependentUpon>StateMachine.cs</DependentUpon>
     </Compile>
-    <Compile Update="src\IState.cs">
+    <Compile Update="src\IGetArgument.cs">
       <DependentUpon>State.cs</DependentUpon>
     </Compile>
     <Compile Include="..\..\build\GlobalAssemblyInfo.cs">

@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 
 namespace Binstate;
 
-internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent, TArgument> where TState : notnull where TEvent : notnull
+internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>, IGetArgument<TArgument>, ISetArgument<TArgument>
+  where TState : notnull
+  where TEvent : notnull
 {
   private readonly IEnterActionInvoker? _enterAction;
 
@@ -35,11 +37,11 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent, 
   private Task? _task;
 
   public State(
-  TState                                         id,
-  IEnterActionInvoker?                           enterAction,
-  object?                                        exitAction,
-  Dictionary<TEvent, Transition<TState, TEvent>> transitions,
-  IState<TState, TEvent>?                        parentState)
+    TState                                         id,
+    IEnterActionInvoker?                           enterAction,
+    object?                                        exitAction,
+    Dictionary<TEvent, Transition<TState, TEvent>> transitions,
+    IState<TState, TEvent>?                        parentState)
   {
     Id           = id ?? throw new ArgumentNullException(nameof(id));
     _enterAction = enterAction;
@@ -125,8 +127,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent, 
       // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till action finishes
       _task?.Wait();
 
-      if(_exitAction is null)
-      {}
+      if(_exitAction is null) { }
       else if(_exitAction is Action<TArgument> actionT)
         actionT(Argument);
       else if(_exitAction is Action action)
@@ -162,8 +163,6 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent, 
 
     return false;
   }
-
-  public MixOf<TA, TArgument> CreateTuple<TA>(TA argument) => new MixOf<TA, TArgument>(argument.ToMaybe(), Argument.ToMaybe());
 
   public override string ToString() => Id.ToString();
 }

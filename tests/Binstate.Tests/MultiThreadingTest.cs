@@ -42,7 +42,7 @@ public class MultiThreadingTest : StateMachineTestBase
     var target = builder.Build(Initial);
 
     target.RaiseAsync(Event1); // raise async to not to block test execution
-    entered.WaitOne();         // wait till OnEnter will block execution
+    entered.WaitOne(1000);         // wait till OnEnter will block execution
 
     // --act
     target.Raise(Event2);

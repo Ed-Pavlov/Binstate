@@ -42,7 +42,7 @@ public static partial class Config<TState, TEvent>
 
     /// <summary>
     ///   Specifies the action to be called on entering the currently configured state.
-    ///   This overload defines the action accepting the argument. Read about arguments in <see cref="IStateMachine{TState,TEvent}.Raise{TArgument}"/> method
+    ///   This overload defines the action accepting the argument. Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method
     ///   documentation.
     ///   This overload is used to provide blocking action, to provide async action use corresponding overloads of this method.
     /// </summary>
@@ -52,7 +52,7 @@ public static partial class Config<TState, TEvent>
     ///   Specifies the action to be called on entering the currently configured state.
     ///   This overload allows to perform auto transition or to not exit <paramref name="enterAction"/> till the state will be deactivated
     ///   using <see cref="IStateController{TEvent}"/> passed to the provided action.
-    ///   This overload defines the action accepting the argument. Read about arguments in <see cref="IStateMachine{TState,TEvent}.Raise{TArgument}"/> method
+    ///   This overload defines the action accepting the argument. Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method
     ///   documentation.
     ///   This overload is used to provide blocking action, to provide async action use corresponding overloads of this method.
     /// </summary>
@@ -60,7 +60,7 @@ public static partial class Config<TState, TEvent>
 
     /// <summary>
     ///   Specifies the action to be called on entering the currently configured state.
-    ///   This overload defines the action accepting the argument. Read about arguments in <see cref="IStateMachine{TState,TEvent}.Raise{TArgument}"/> method
+    ///   This overload defines the action accepting the argument. Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method
     ///   documentation.
     ///   This overload is used to provide non-blocking async action.
     /// </summary>
@@ -71,7 +71,7 @@ public static partial class Config<TState, TEvent>
     ///   Specifies the action to be called on entering the currently configured state.
     ///   This overload allows to perform auto transition or to not exit <paramref name="enterAction"/> till the state will be deactivated
     ///   using <see cref="IStateController{TEvent}"/> passed to the provided action.
-    ///   This overload defines the action accepting the argument. Read about arguments in <see cref="IStateMachine{TState,TEvent}.Raise{TArgument}"/> method
+    ///   This overload defines the action accepting the argument. Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method
     ///   documentation.
     ///   This overload is used to provide non-blocking async action.
     /// </summary>
@@ -80,7 +80,7 @@ public static partial class Config<TState, TEvent>
 
     /// <summary>
     ///   Specifies the action to be called on entering the currently configured state.
-    ///   This overload defines the action accepting two arguments. Read about arguments in <see cref="IStateMachine{TState,TEvent}.Raise{TArgument}"/> method
+    ///   This overload defines the action accepting two arguments. Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method
     ///   documentation.
     ///   This overload is used to provide blocking action, to provide async action use corresponding overloads of this method.
     /// </summary>
@@ -90,7 +90,7 @@ public static partial class Config<TState, TEvent>
     ///   Specifies the action to be called on entering the currently configured state.
     ///   This overload allows to perform auto transition or to not exit <paramref name="enterAction"/> till the state will be deactivated
     ///   using <see cref="IStateController{TEvent}"/> passed to the provided action.
-    ///   This overload defines the action accepting two arguments. Read about arguments in <see cref="IStateMachine{TState,TEvent}.Raise{TArgument}"/> method
+    ///   This overload defines the action accepting two arguments. Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method
     ///   documentation.
     ///   This overload is used to provide blocking action, to provide async action use corresponding overloads of this method.
     /// </summary>
@@ -98,7 +98,7 @@ public static partial class Config<TState, TEvent>
 
     /// <summary>
     ///   Specifies the action to be called on entering the currently configured state.
-    ///   This overload defines the action accepting two arguments. Read about arguments in <see cref="IStateMachine{TState,TEvent}.Raise{TArgument}"/> method
+    ///   This overload defines the action accepting two arguments. Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method
     ///   documentation.
     ///   This overload is used to provide non-blocking async action.
     /// </summary>
@@ -109,7 +109,7 @@ public static partial class Config<TState, TEvent>
     ///   Specifies the action to be called on entering the currently configured state.
     ///   This overload allows to perform auto transition or to not exit <paramref name="enterAction"/> till the state will be deactivated
     ///   using <see cref="IStateController{TEvent}"/> passed to the provided action.
-    ///   This overload defines the action accepting two arguments. Read about arguments in <see cref="IStateMachine{TState,TEvent}.Raise{TArgument}"/> method
+    ///   This overload defines the action accepting two arguments. Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method
     ///   documentation.
     ///   This overload is used to provide non-blocking async action.
     /// </summary>

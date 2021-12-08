@@ -25,11 +25,11 @@ public enum RaiseWay { Raise, RaiseAsync, }
 
 public static class Extension
 {
-  public static bool Raise<TState, TEvent>(this IStateMachine<TState, TEvent> stateMachine, RaiseWay way, TEvent @event) => Call(
+  public static bool Raise<TEvent>(this IStateMachine<TEvent> stateMachine, RaiseWay way, TEvent @event) => Call(
     way, () => stateMachine.Raise(@event), () => stateMachine.RaiseAsync(@event).Result
   );
 
-  public static bool Raise<TState, TEvent, TA>(this IStateMachine<TState, TEvent> stateMachine, RaiseWay way, TEvent @event, TA arg) => Call(
+  public static bool Raise<TEvent, TA>(this IStateMachine<TEvent> stateMachine, RaiseWay way, TEvent @event, TA arg) => Call(
     way, () => stateMachine.Raise(@event, arg), () => stateMachine.RaiseAsync(@event, arg).Result
   );
 

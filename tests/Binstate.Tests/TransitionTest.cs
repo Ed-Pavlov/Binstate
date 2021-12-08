@@ -196,7 +196,7 @@ public class TransitionTest : StateMachineTestBase
     target.Raise(raiseWay, Event1);
 
     // --assert
-    actual.Should().BeEquivalentTo(stateId1, stateId2);
+    actual.Should().Equal(stateId1, stateId2);
   }
 
   [TestCaseSource(nameof(RaiseWays))]

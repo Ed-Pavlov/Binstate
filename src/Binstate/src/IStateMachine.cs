@@ -6,7 +6,7 @@ namespace Binstate;
 /// <summary>
 ///   Interface of the state machine.
 /// </summary>
-public interface IStateMachine<TState, in TEvent>
+public interface IStateMachine<in TEvent>
 {
   /// <summary>
   ///   Raises the event in the blocking way. It waits while on entering and exiting actions (if defined) of the current state is finished, then:

@@ -11,7 +11,7 @@ public static partial class Config<TState, TEvent> where TState : notnull where 
   ///   boxing of value type arguments, complex generic types machinery is introduced. This is the first part of this machinery,
   ///   Factories what creates <see cref="State{TState, TEvent, Unit}" /> or <see cref="State{TState, TEvent, TArguments}" />. Depending on was 'enter' action
   ///   with parameter is defined for the state one of these types are instantiated.
-  ///   See <see cref="IEnterActionInvoker{TEvent,TArgument}" />, <see cref="IState{TState,TEvent,TArgument}" />, <see cref="State{TState,TEvent,TArgument}" />
+  ///   See <see cref="IEnterActionInvoker{TEvent,TArgument}" />, <see cref="IState{TState,TEvent}" />, <see cref="State{TState,TEvent,TArgument}" />
   ///   and their usage for implementation details.
   /// </summary>
   internal interface IStateFactory

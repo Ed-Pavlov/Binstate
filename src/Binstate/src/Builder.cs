@@ -78,19 +78,6 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
     foreach(var stateConfig in _stateConfigs.Values)
       CreateStateAndAddToMap(stateConfig.StateConfig, states);
 
-    var initialState = states[initialStateId];
-
-    if(! Argument.IsSpecified<T>())
-    {
-      if(initialState.IsRequireArgument())
-        throw new InvalidOperationException("The initial state requires argument, but no argument is provided.");
-    }
-    else
-    {
-      if(! initialState.IsRequireArgument())
-        throw new ArgumentException("The initial state doesn't require argument, but argument is provided.");
-    }
-
     ValidateTransitions(states);
 
     if(! enableLooseRelaying)

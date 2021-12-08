@@ -41,27 +41,10 @@ public class BuilderTest : StateMachineTestBase
   }
 
   [Test]
-  public void should_throw_exception_if_initial_state_does_not_require_argument_but_argument_is_specified()
-  {
-    // --arrange
-    var builder = new Builder<string, int>(OnException);
-
-    builder.DefineState(Initial).AllowReentrancy(Event1);
-
-    // --act
-    Action target = () => builder.Build(Initial, "argument");
-
-    // --assert
-    target.Should()
-          .ThrowExactly<InvalidOperationException>()
-          .WithMessage("The enter action of the initial state doesn't require argument, but argument is provided.");
-  }
-
-  [Test]
   public void should_throw_exception_if_initial_state_requires_argument_but_no_argument_is_specified()
   {
     // --arrange
-    var builder = new Builder<string, int>(OnException);
+    var builder = new Builder<string, int>(_ =>{});
 
     builder.DefineState(Initial).OnEnter<string>(_ => { }).AllowReentrancy(Event1);
 
@@ -71,7 +54,7 @@ public class BuilderTest : StateMachineTestBase
     // --assert
     target.Should()
           .ThrowExactly<InvalidOperationException>()
-          .WithMessage("The enter action of the initial state requires argument, but no argument is provided.");
+          .WithMessage("The state*");
   }
 
   [Test]
@@ -118,7 +101,7 @@ public class BuilderTest : StateMachineTestBase
      .Should()
      .Throw<InvalidOperationException>()
      .WithMessage(
-        $"Parent state '{Parent}' enter action requires argument of type '{typeof(int)}' whereas it's child state '{Child}' requires argument of "
+        $"Parent state '{Parent}' requires argument of type '{typeof(int)}' whereas it's child state '{Child}' requires argument of "
       + $"not assignable to the parent type '{typeof(string)}'"
       );
   }

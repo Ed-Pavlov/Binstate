@@ -106,40 +106,7 @@ public class ArgumentPassingTest : StateMachineTestBase
     // --assert
     target.Should()
           .ThrowExactly<TransitionException>()
-          .WithMessage($"The state '{State1}' requires argument of type '{typeof(string)}' but no argument of compatible type has passed nor relayed");
-  }
-
-  [TestCaseSource(nameof(RaiseWays))]
-  public void should_throw_exception_if_argument_specified_and_no_argument_required_by_all_activated_states(RaiseWay raiseWay)
-  {
-    // --arrange
-    var builder = new Builder<string, int>(OnException);
-
-    builder
-     .DefineState(Initial)
-     .AddTransition(Event1, Child);
-
-    builder
-     .DefineState(Parent)
-     .OnEnter(sm => { });
-
-    builder
-     .DefineState(Child)
-     .AsSubstateOf(Parent)
-     .OnEnter(sm => { });
-
-    var stateMachine = builder.Build(Initial);
-
-    // --act
-    Action target = () => stateMachine.Raise(raiseWay, Event1, "argument");
-
-    // --assert
-    target.Should()
-          .ThrowExactly<TransitionException>()
-          .WithMessage(
-             $"Transition from the state '{Initial}' by the event '{Event1}' will activate following states [{Parent}->{Child}]. No one of them are defined with the enter "
-           + "action accepting an argument, but argument was passed or relayed"
-           );
+          .WithMessage($"The state '{State1}' requires argument of type '{typeof(string)}' but no argument*");
   }
 
   [TestCaseSource(nameof(RaiseWays))]
@@ -164,7 +131,7 @@ public class ArgumentPassingTest : StateMachineTestBase
     // --assert
     target.Should()
           .ThrowExactly<TransitionException>()
-          .WithMessage($"The enter action of the state '{State1}' is configured as required an argument but no argument was specified.");
+          .WithMessage($"The state '{State1}' requires argument of type '{typeof(int)}' but no argument*");
   }
 
   [TestCaseSource(nameof(RaiseWays))]
@@ -192,6 +159,6 @@ public class ArgumentPassingTest : StateMachineTestBase
     target
      .Should()
      .Throw<TransitionException>()
-     .WithMessage($"The state '{Parent}' requires argument of type '{typeof(int)}' but no argument of compatible type has passed nor relayed");
+     .WithMessage($"The state '{Parent}' requires argument of type '{typeof(int)}' but no argument*");
   }
 }

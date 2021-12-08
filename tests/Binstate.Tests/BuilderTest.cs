@@ -53,7 +53,7 @@ public class BuilderTest : StateMachineTestBase
 
     // --assert
     target.Should()
-          .ThrowExactly<InvalidOperationException>()
+          .ThrowExactly<TransitionException>()
           .WithMessage("The state*");
   }
 

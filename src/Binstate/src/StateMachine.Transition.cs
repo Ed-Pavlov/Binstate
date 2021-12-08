@@ -14,7 +14,7 @@ public partial class StateMachine<TState, TEvent>
   ///   dynamic transition returns 'null'
   /// </returns>
   /// <exception cref="TransitionException"> Throws if passed argument doesn't match the 'enter' action of the target state. </exception>
-  private TransitionData? PrepareTransition<TArgument>(TEvent @event, TArgument argument, bool argumentHasPriority)
+  private TransitionData? PrepareTransition<TArgument>(TEvent @event, TArgument argument, bool argumentIsFallback)
   {
     try
     {
@@ -32,7 +32,7 @@ public partial class StateMachine<TState, TEvent>
       var targetState = GetStateById(stateId!);
 
       var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);
-      var argumentsBag   = PrepareArgument(argument, argumentHasPriority, targetState, commonAncestor, _activeState);
+      var argumentsBag   = PrepareArgument(argument, argumentIsFallback, targetState, commonAncestor, _activeState);
 
       return new TransitionData(_activeState, transition, targetState, argumentsBag, commonAncestor);
     }
@@ -53,7 +53,7 @@ public partial class StateMachine<TState, TEvent>
 
   private static ArgumentsBag PrepareArgument<TArgument>(
     TArgument               argument,
-    bool                    argumentHasPriority,
+    bool                    argumentIsFallback,
     IState<TState, TEvent>  targetState,
     IState<TState, TEvent>? commonAncestor,
     IState<TState, TEvent>  sourceState)
@@ -70,7 +70,7 @@ public partial class StateMachine<TState, TEvent>
       var targetArgumentType = argumentTarget.GetArgumentTypeSafe();
       if(targetArgumentType is not null)
       {
-        if(! argumentWithCache.GetArgumentProviders(targetArgumentType, argument, argumentHasPriority, sourceState, out var argumentProviders))
+        if(! argumentWithCache.GetArgumentProviders(targetArgumentType, argument, argumentIsFallback, sourceState, out var argumentProviders))
           Throw.NoArgument(argumentTarget);
 
         var copy = argumentTarget; // anti-closure copy

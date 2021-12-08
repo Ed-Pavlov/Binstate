@@ -11,6 +11,8 @@ namespace Binstate;
 /// </summary>
 [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
 public partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
+  where TState : notnull
+  where TEvent : notnull
 {
   private readonly AutoResetEvent    _lock = new AutoResetEvent(true);
   private readonly Action<Exception> _onException;
@@ -93,28 +95,9 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
     }
   }
 
-  /// <summary>
-  ///   Tell the state machine that it should get an argument attached to the currently active state (or any of parents) and pass it to the newly activated state
-  /// </summary>
-  /// <typeparam name="TRelay">
-  ///   The type of the argument. Should be exactly the same as the generic type passed into
-  ///   <see cref="Config{TState,TEvent}.Enter.OnEnter{T}(Action{T})" /> or one of it's overload when configured currently active state (of one of it's parent).
-  /// </typeparam>
-  /// <param name="relayArgumentIsRequired">
-  ///   If there is no active state with argument for relaying:
-  ///   true: Raise method throws an exception
-  ///   false: state machine will pass default(TRelay) as an argument
-  /// </param>
-  [Obsolete(
-    "Since version 1.2 relaying arguments from the currently active states to states require them performs automatically."
-  + "This method is not needed and adds nothing to the behaviour of the state machine."
-  )]
-  [SuppressMessage("ReSharper", "UnusedTypeParameter")]
-  public IStateMachine<TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true) => this;
-
-  private bool PerformTransitionSync<TArgument>(TEvent @event, TArgument argument, bool argumentHasPriority)
+  private bool PerformTransitionSync<TArgument>(TEvent @event, TArgument argument, bool argumentIsFallback)
   {
-    var data = PrepareTransition(@event, argument, argumentHasPriority);
+    var data = PrepareTransition(@event, argument, argumentIsFallback);
 
     return data != null && PerformTransition(data.Value);
   }

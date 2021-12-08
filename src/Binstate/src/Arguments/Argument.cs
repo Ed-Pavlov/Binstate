@@ -145,7 +145,7 @@ internal static class Argument
     public bool GetArgumentProviders<TArgument, TState, TEvent>(
       Type                                                                   targetArgumentType,
       TArgument                                                              argument,
-      bool                                                                   argumentHasPriority,
+      bool                                                                   argumentIsFallback,
       IState<TState, TEvent>                                                 rootState,
       [NotNullWhen(true)] out ITuple<IArgumentProvider, IArgumentProvider?>? providers)
     {
@@ -154,7 +154,7 @@ internal static class Argument
 
       var passedArgumentType = typeof(TArgument);
 
-      if(targetArgumentType.IsAssignableFrom(typeof(TArgument)) && argumentHasPriority)
+      if(targetArgumentType.IsAssignableFrom(typeof(TArgument)) && !argumentIsFallback)
       {
         providers = new Tuple<IArgumentProvider, IArgumentProvider?>(new ArgumentProvider<TArgument>(argument), null);
         _argumentSourcesCache.Add(targetArgumentType, providers);

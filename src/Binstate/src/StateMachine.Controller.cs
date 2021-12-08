@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Binstate;
 
-public partial class StateMachine<TState, TEvent> where TState : notnull where TEvent : notnull
+public partial class StateMachine<TState, TEvent>
 {
   private class Controller : IStateController<TEvent>
   {
@@ -28,7 +28,5 @@ public partial class StateMachine<TState, TEvent> where TState : notnull where T
       Task.Run(() => _owner.PerformTransition(data.Value));
       return true;
     }
-
-    public IAutoTransition<TEvent> Relaying<TRelay>(bool relayArgumentIsRequired = true) => this;
   }
 }

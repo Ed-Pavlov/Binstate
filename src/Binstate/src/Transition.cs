@@ -3,16 +3,15 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Binstate;
 
-/// <summary>
-/// </summary>
-/// <typeparam name="TState"> </typeparam>
-/// <typeparam name="TEvent"> </typeparam>
-public class Transition<TState, TEvent>
+internal interface ITransition
+{
+  void InvokeActionSafe<T>(T argument, Action<Exception> onException);
+}
+
+internal class Transition<TState, TEvent> : ITransition
 {
   private readonly object? _action;
 
-  /// <summary>
-  /// </summary>
   public readonly GetState<TState> GetTargetStateId;
 
   /// <summary>
@@ -20,12 +19,6 @@ public class Transition<TState, TEvent>
   /// </summary>
   public readonly bool IsStatic;
 
-  /// <summary>
-  /// </summary>
-  /// <param name="event"> </param>
-  /// <param name="getTargetStateId"> </param>
-  /// <param name="isStatic"> </param>
-  /// <param name="action"> </param>
   public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, object? action)
   {
     Event            = @event;
@@ -34,15 +27,8 @@ public class Transition<TState, TEvent>
     _action          = action;
   }
 
-  /// <summary>
-  /// </summary>
   public TEvent Event { get; }
 
-  /// <summary>
-  /// </summary>
-  /// <param name="argument"> </param>
-  /// <param name="onException"> </param>
-  /// <typeparam name="T"> </typeparam>
   public void InvokeActionSafe<T>(T argument, Action<Exception> onException)
   {
     if(_action is null) return;
@@ -61,7 +47,6 @@ public class Transition<TState, TEvent>
     }
   }
 
-  /// <inheritdoc />
   [ExcludeFromCodeCoverage]
   public override string ToString()
   {

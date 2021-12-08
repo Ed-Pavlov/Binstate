@@ -141,7 +141,7 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
             }
             else
               throw new InvalidOperationException( //TODO: very strange message, revisit
-                $"Parent state '{parentState.Id}' requires argument of type '{parentState.GetArgumentType()}' whereas it's child state '{state.Id}' requires "
+                $"Parent state '{parentState}' requires argument of type '{parentState.GetArgumentType()}' whereas it's child state '{state}' requires "
               + $"argument of not assignable to the parent type '{state.GetArgumentType()}'"
               );
           }

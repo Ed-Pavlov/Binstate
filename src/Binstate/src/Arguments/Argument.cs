@@ -8,17 +8,13 @@ namespace Binstate;
 
 internal static class Argument
 {
-  private static readonly MethodInfo RelayMethod                  = typeof(Argument).GetMethod(nameof(Relay), BindingFlags.NonPublic | BindingFlags.Static)!;
-  private static readonly MethodInfo RelayToTupleArgumentMethod   = typeof(Argument).GetMethod(nameof(RelayToTupleArgument), BindingFlags.NonPublic | BindingFlags.Static)!;
-  private static readonly MethodInfo RelayFromTupleArgumentMethod = typeof(Argument).GetMethod(nameof(RelayFromTupleArgument), BindingFlags.NonPublic | BindingFlags.Static)!;
-  private static readonly MethodInfo RelayFromTupleRelayMethod    = typeof(Argument).GetMethod(nameof(RelayFromTupleRelay), BindingFlags.NonPublic | BindingFlags.Static)!;
-  private static readonly Type       TupleType                    = typeof(ITuple);
+  private static readonly MethodInfo RelayMethod = typeof(Argument).GetMethod(nameof(Relay), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsSpecified<T>() => typeof(Unit) != typeof(T);
+  private static readonly MethodInfo RelayToTupleArgumentMethod = typeof(Argument).GetMethod(
+    nameof(RelayToTupleArgument), BindingFlags.NonPublic | BindingFlags.Static
+  )!;
 
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool IsRequireArgument(this IState state) => state.GetArgumentTypeSafe() is not null;
+  private static readonly string TupleInterfaceName = typeof(ITuple<,>).Name;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Type? GetArgumentTypeSafe(this IState state)
@@ -28,183 +24,141 @@ internal static class Argument
   }
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  public static bool IsRequireArgument(this IState state) => state.GetArgumentTypeSafe() is not null;
+
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Type GetArgumentType(this IState state) => state.GetArgumentTypeSafe() ?? throw new ArgumentException();
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Type GetArgumentType(this IArgumentProvider argumentProvider)
+  private static Type GetArgumentType(this IArgumentProvider argumentProvider)
     => argumentProvider.GetType().GetInterface(typeof(IGetArgument<>).Name).GetGenericArguments()[0];
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool CanAcceptArgumentFrom(this IState argumentTarget, IState argumentSource)
     => argumentTarget.GetArgumentType().IsAssignableFrom(argumentSource.GetArgumentType());
 
-  public static bool IsTuple(this Type type) => typeof(ITuple).IsAssignableFrom(type);
-
-  private static bool IsTuple(this Type type, [NotNullWhen(true)] out Type? argumentType, [NotNullWhen(true)] out Type? relayType)
-  {
-    if(! TupleType.IsAssignableFrom(type))
-    {
-      argumentType = null;
-      relayType    = null;
-      return false;
-    }
-
-    var genericArguments = type.GetGenericArguments();
-    argumentType = genericArguments[0];
-    relayType    = genericArguments[1];
-    return true;
-  }
-
   public static void SetArgumentByReflection(IState target, ITuple<IArgumentProvider, IArgumentProvider?> tuple)
   {
     var targetArgumentType  = target.GetArgumentType();
-    var source1ArgumentType = tuple.PassedArgument.GetArgumentType();
+    var source1ArgumentType = tuple.ItemX.GetArgumentType();
 
     // target is simple -> then only PassedArgument should be set and be good
     if(targetArgumentType.IsAssignableFrom(source1ArgumentType))
     {
-      if(tuple.RelayedArgument is not null) Throw.ImpossibleException(target);
+      if(tuple.ItemY is not null) Throw.ImpossibleException(target);
 
       var method = RelayMethod.MakeGenericMethod(targetArgumentType);
-      method.Invoke(null, new object[] { target, tuple.PassedArgument });
+      method.Invoke(null, new object[] { target, tuple.ItemX });
       return;
     }
 
     // target argument is ITuple, pass both providers
-    var source2ArgumentType = tuple.RelayedArgument?.GetArgumentType();
-    if(targetArgumentType.IsTuple(out var argType, out var relayType))
+    var source2ArgumentType = tuple.ItemY?.GetArgumentType();
+    if(targetArgumentType.IsTuple(out var typeX, out var typeY))
     {
       if(source2ArgumentType is null) Throw.ImpossibleException(target);
 
-      var method = RelayToTupleArgumentMethod.MakeGenericMethod(argType, relayType);
-      method.Invoke(null, new object[] { target, tuple.PassedArgument, tuple.RelayedArgument! });
-      return;
+      var method = RelayToTupleArgumentMethod.MakeGenericMethod(typeX, typeY);
+      method.Invoke(null, new object[] { target, tuple.ItemX, tuple.ItemY! });
     }
-
-//    if(source1ArgumentType.IsTuple(out var arg, out var relay))
-//    {
-//      if(targetArgumentType.IsAssignableFrom(arg))
-//      {
-//        var relayFromTupleMethod = RelayFromTupleArgumentMethod.MakeGenericMethod(arg, relay);
-//        relayFromTupleMethod.Invoke(null, new object[] { target, tuple });
-//      }
-//      else if(targetArgumentType.IsAssignableFrom(relay))
-//      {
-//        var relayFromTupleMethod = RelayFromTupleRelayMethod.MakeGenericMethod(arg, relay);
-//        relayFromTupleMethod.Invoke(null, new object[] { target, tuple });
-//      }
-//      else
-//        Throw.ImpossibleException(target);
-//    }
-//    else
-//      Throw.ImpossibleException(target);
-
-//    SetArgumentByReflection(target, tuple.PassedArgument);
-  }
-
-  private static void SetArgumentByReflection(IState target, IArgumentProvider source)
-  {
-    var targetArgumentType = target.GetArgumentType();
-    var sourceArgumentType = source.GetArgumentType();
-
-    if(sourceArgumentType.IsTuple(out var tupleArg, out var tupleRelay))
-    {
-      if(targetArgumentType.IsAssignableFrom(tupleArg))
-      {
-        var relayFromTupleMethod = RelayFromTupleArgumentMethod.MakeGenericMethod(tupleArg, tupleRelay);
-        relayFromTupleMethod.Invoke(null, new object[] { target, source });
-      }
-      else if(targetArgumentType.IsAssignableFrom(tupleRelay))
-      {
-        var relayFromTupleMethod = RelayFromTupleRelayMethod.MakeGenericMethod(tupleArg, tupleRelay);
-        relayFromTupleMethod.Invoke(null, new object[] { target, source });
-      }
-      else
-        throw new ArgumentOutOfRangeException();
-    }
-    else
-      throw new ArgumentOutOfRangeException(nameof(source), $"Argument from {source} should be suitable for target in any way");
   }
 
   private static void Relay<T>(ISetArgument<T> target, IGetArgument<T> source) => target.Argument = source.Argument;
 
-  private static void RelayToTupleArgument<TA, TR>(ISetArgument<ITuple<TA, TR>> target, IGetArgument<TA> sourceA, IGetArgument<TR> sourceR)
-    => target.Argument = new Tuple<TA, TR>(sourceA.Argument, sourceR.Argument);
+  private static void RelayToTupleArgument<TX, TY>(ISetArgument<ITuple<TX, TY>> target, IGetArgument<TX> providerX, IGetArgument<TY> providerY)
+    => target.Argument = new Tuple<TX, TY>(providerX.Argument, providerY.Argument);
 
-  private static void RelayFromTupleArgument<TA, TR>(ISetArgument<TA> target, IGetArgument<ITuple<TA, TR>> source)
-    => target.Argument = source.Argument.PassedArgument;
+  private static bool IsTuple(this Type type, [NotNullWhen(true)] out Type? typeX, [NotNullWhen(true)] out Type? typeY)
+  {
+    if(type.Name == TupleInterfaceName)
+    {
+      var genericArguments = type.GetGenericArguments();
+      typeX = genericArguments[0];
+      typeY = genericArguments[1];
+      return true;
+    }
 
-  private static void RelayFromTupleRelay<TA, TR>(ISetArgument<TR> target, IGetArgument<ITuple<TA, TR>> source)
-    => target.Argument = source.Argument.RelayedArgument;
+    typeX = null;
+    typeY = null;
+    return false;
+  }
 
   public class WithCache
   {
     private readonly Dictionary<Type, ITuple<IArgumentProvider, IArgumentProvider?>> _argumentSourcesCache  = new();
     private readonly Dictionary<Type, IArgumentProvider>                             _argumentProviderCache = new();
 
-    public bool GetArgumentProviders<TArgument, TState, TEvent>(
+    public bool GetArgumentProviders<TArgument>(
       Type                                                                   targetArgumentType,
       TArgument                                                              argument,
       bool                                                                   argumentIsFallback,
-      IState<TState, TEvent>                                                 rootState,
+      IState                                                                 rootState,
       [NotNullWhen(true)] out ITuple<IArgumentProvider, IArgumentProvider?>? providers)
     {
       if(_argumentSourcesCache.TryGetValue(targetArgumentType, out providers))
         return true;
 
-      var passedArgumentType = typeof(TArgument);
-
-      if(targetArgumentType.IsAssignableFrom(typeof(TArgument)) && !argumentIsFallback)
+      // if argument is provided and suitable, set it, don't search active states
+      if(! argumentIsFallback && targetArgumentType.IsAssignableFrom(typeof(TArgument)))
       {
         providers = new Tuple<IArgumentProvider, IArgumentProvider?>(new ArgumentProvider<TArgument>(argument), null);
         _argumentSourcesCache.Add(targetArgumentType, providers);
         return true;
       }
 
-      if(targetArgumentType.IsTuple(out var argArgType, out var argRelayType))
+      // search for a state provides argument of assignable type, if target requires a Tuple and there is a source with suitable Tuple, it will be found
+      if(GetArgumentProviderForSingleArgument(rootState, targetArgumentType, out var provider))
       {
-        GetArgumentProviderForSingleArgument(rootState, argArgType,   out var argArgProvider);
-        GetArgumentProviderForSingleArgument(rootState, argRelayType, out var argRelayProvider);
-
-        if(argArgProvider is null)
-          if(argArgType.IsAssignableFrom(passedArgumentType))
-            argArgProvider = new ArgumentProvider<TArgument>(argument);
-
-        if(argRelayProvider is null)
-          if(argRelayType.IsAssignableFrom(passedArgumentType))
-            argRelayProvider =new ArgumentProvider<TArgument>(argument);
-
-        if(argArgProvider is null || argRelayProvider is null)
-          return false;
-
-        providers = new Tuple<IArgumentProvider, IArgumentProvider?>(argArgProvider, argRelayProvider);
+        providers = new Tuple<IArgumentProvider, IArgumentProvider?>(provider, null);
         _argumentSourcesCache.Add(targetArgumentType, providers);
         return true;
       }
 
-      if(! GetArgumentProviderForSingleArgument(rootState, targetArgumentType, out var provider))
-        if(!targetArgumentType.IsAssignableFrom(typeof(TArgument)))
-          return false;
-        else // use fallback value but not add it to the cache
-        {
-          providers = new Tuple<IArgumentProvider, IArgumentProvider?>(new ArgumentProvider<TArgument>(argument), null);
-          return true;
-        }
+      var passedArgumentType = typeof(TArgument);
 
-      providers = new Tuple<IArgumentProvider, IArgumentProvider?>(provider, null);
-      _argumentSourcesCache.Add(targetArgumentType, providers);
-      return true;
+      // if still not found, and target argument type is a Tuple, try to compose it from different source states
+      if(targetArgumentType.IsTuple(out var typeX, out var typeY))
+      {
+        GetArgumentProviderForSingleArgument(rootState, typeX, out var providerX);
+        GetArgumentProviderForSingleArgument(rootState, typeY, out var providerY);
+
+        if(providerX is null)
+          if(typeX.IsAssignableFrom(passedArgumentType))
+            providerX = new ArgumentProvider<TArgument>(argument); // replace with fallback value if provided
+
+        if(providerY is null)
+          if(typeY.IsAssignableFrom(passedArgumentType))
+            providerY = new ArgumentProvider<TArgument>(argument); // replace with fallback value if provided
+
+        if(providerX is null || providerY is null)
+          return false;
+
+        providers = new Tuple<IArgumentProvider, IArgumentProvider?>(providerX, providerY);
+        _argumentSourcesCache.Add(targetArgumentType, providers);
+        return true;
+      }
+
+      // if still no result and there is the fallback is provided, use it
+      if(targetArgumentType.IsAssignableFrom(passedArgumentType))
+      {
+        providers = new Tuple<IArgumentProvider, IArgumentProvider?>(new ArgumentProvider<TArgument>(argument), null);
+        return true;
+      }
+
+      return false;
     }
 
-    private bool GetArgumentProviderForSingleArgument<TState, TEvent>(
-      IState<TState, TEvent>                     sourceRoot,
+    private bool GetArgumentProviderForSingleArgument(
+      IState                                     sourceRoot,
       Type                                       targetArgumentType,
       [NotNullWhen(true)] out IArgumentProvider? provider)
     {
+      // separate cache for single providers, provider still can provide Tuple
       if(_argumentProviderCache.TryGetValue(targetArgumentType, out provider))
         return true;
 
       provider = null;
+
       var state = sourceRoot;
       while(state is not null)
       {
@@ -219,13 +173,14 @@ internal static class Argument
             return true;
           }
 
-          if(stateArgumentType.IsTuple(out var tupleArg, out var tupleRelay)
+          // if one of the Tuple items of the source state is suitable for target, use it
+          if(stateArgumentType.IsTuple(out var typeX, out var typeY)
           && (
-               targetArgumentType.IsAssignableFrom(tupleArg)
-            || targetArgumentType.IsAssignableFrom(tupleRelay)
+               targetArgumentType.IsAssignableFrom(typeX)
+            || targetArgumentType.IsAssignableFrom(typeY)
              ))
           {
-            provider = StateTupleArgumentProvider.Create(targetArgumentType, tupleArg, tupleRelay, state);
+            provider = StateTupleArgumentProvider.Create(targetArgumentType, typeX, typeY, state); // magic is here
             _argumentProviderCache.Add(targetArgumentType, provider);
             return true;
           }

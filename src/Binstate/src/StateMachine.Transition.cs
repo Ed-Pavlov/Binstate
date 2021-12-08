@@ -52,11 +52,11 @@ public partial class StateMachine<TState, TEvent>
   }
 
   private static ArgumentsBag PrepareArgument<TArgument>(
-    TArgument               argument,
-    bool                    argumentIsFallback,
-    IState<TState, TEvent>  targetState,
-    IState<TState, TEvent>? commonAncestor,
-    IState<TState, TEvent>  sourceState)
+    TArgument argument,
+    bool      argumentIsFallback,
+    IState    targetState,
+    IState?   commonAncestor,
+    IState    sourceState)
   {
     var argumentWithCache = new Argument.WithCache();
 
@@ -71,7 +71,7 @@ public partial class StateMachine<TState, TEvent>
       if(targetArgumentType is not null)
       {
         if(! argumentWithCache.GetArgumentProviders(targetArgumentType, argument, argumentIsFallback, sourceState, out var argumentProviders))
-          Throw.NoArgument(argumentTarget);
+          Throw.NoArgument<TEvent>(argumentTarget);
 
         var copy = argumentTarget; // anti-closure copy
         map.Add(argumentTarget, () => Argument.SetArgumentByReflection(copy, argumentProviders));
@@ -148,7 +148,7 @@ public partial class StateMachine<TState, TEvent>
   ///   Doesn't acquire lock itself, caller should care about safe context
   /// </summary>
   /// <returns> Returns 'enter' action of the state </returns>
-  private Action ActivateStateNotGuarded(IState<TState, TEvent> state, ArgumentsBag argumentsBag)
+  private Action ActivateStateNotGuarded(IState state, ArgumentsBag argumentsBag)
   {
     state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
     var controller = new Controller(state, this);
@@ -160,27 +160,28 @@ public partial class StateMachine<TState, TEvent>
       if(state.IsRequireArgument())
       {
         var setArgument = argumentsBag.GetValueSafe(state);
-        if(setArgument is null) Throw.NoArgument(state);
-        setArgument();// set the Argument property of the state
+        if(setArgument is null) Throw.NoArgument<TEvent>(state);
+        setArgument(); // set the Argument property of the state
       }
+
       state.EnterSafe(controller, _onException);
     };
   }
 
   private readonly struct TransitionData
   {
-    public readonly IState<TState, TEvent>     CurrentActiveState;
-    public readonly Transition<TState, TEvent> Transition;
-    public readonly IState<TState, TEvent>     TargetState;
-    public readonly ArgumentsBag               ArgumentsBag;
-    public readonly IState<TState, TEvent>?    CommonAncestor;
+    public readonly IState                 CurrentActiveState;
+    public readonly ITransition            Transition;
+    public readonly IState<TState, TEvent> TargetState;
+    public readonly ArgumentsBag           ArgumentsBag;
+    public readonly IState?                CommonAncestor;
 
     public TransitionData(
-      IState<TState, TEvent>     currentActiveState,
-      Transition<TState, TEvent> transition,
-      IState<TState, TEvent>     targetState,
-      ArgumentsBag               argumentsBag,
-      IState<TState, TEvent>?    commonAncestor)
+      IState                 currentActiveState,
+      ITransition            transition,
+      IState<TState, TEvent> targetState,
+      ArgumentsBag           argumentsBag,
+      IState?                commonAncestor)
     {
       CurrentActiveState = currentActiveState;
       Transition         = transition;
@@ -190,7 +191,5 @@ public partial class StateMachine<TState, TEvent>
     }
   }
 
-  private class ArgumentsBag : Dictionary<IState, Action>
-  {
-  }
+  private class ArgumentsBag : Dictionary<IState, Action> { }
 }

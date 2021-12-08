@@ -6,9 +6,9 @@ namespace Binstate;
 internal static class Throw
 {
   [DoesNotReturn]
-  public static void NoArgument<TState, TEvent>(IState<TState, TEvent> state)
+  public static void NoArgument<TEvent>(IState state)
     => throw new TransitionException(
-         $"The state '{state.Id}' requires argument of type '{state.GetArgumentType()}' but no argument of compatible type has passed to "
+         $"The state '{state}' requires argument of type '{state.GetArgumentType()}' but no argument of compatible type has passed to "
        + $"the {nameof(IStateMachine<TEvent>.Raise)} method and no compatible argument is found in the currently active states"
        );
 

@@ -114,7 +114,7 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
   private IState<TState, TEvent> GetStateById(TState state)
     => _states.TryGetValue(state, out var result) ? result : throw new TransitionException($"State '{state}' is not defined");
 
-  private static IState<TState, TEvent>? FindLeastCommonAncestor(IState<TState, TEvent> left, IState<TState, TEvent> right)
+  private static IState? FindLeastCommonAncestor(IState left, IState right)
   {
     if(ReferenceEquals(left, right)) return null; // no common ancestor with itself
 

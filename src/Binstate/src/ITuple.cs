@@ -2,10 +2,6 @@
 
 namespace Binstate;
 
-/// <summary>
-///  //TODO:
-/// </summary>
-public interface ITuple { }
 
 /// <summary>
 ///   This data structure is used if a state needs to accept two arguments at once,
@@ -14,39 +10,35 @@ public interface ITuple { }
 ///
 ///   Interface is used to make argument types invariant in order to pass arguments of compatible types.
 /// </summary>
-public interface ITuple<out TPassed, out TRelay> : ITuple
+public interface ITuple<out TX, out TY>
 {
-  /// <summary>
-  ///   Passed argument value
-  /// </summary>
-  TPassed PassedArgument { get; }
+  /// <summary />
+  TX ItemX { get; }
 
-  /// <summary>
-  ///   Relayed argument value
-  /// </summary>
-  TRelay RelayedArgument { get; }
+  /// <summary />
+  TY ItemY { get; }
 }
 
 /// <inheritdoc />
-public class Tuple<TPassed, TRelay> : ITuple<TPassed, TRelay>
+public class Tuple<TX, TY> : ITuple<TX, TY>
 {
   /// <summary />
-  public Tuple(TPassed passedArgument, TRelay relayedArgument)
+  public Tuple(TX x, TY y)
   {
-    PassedArgument  = passedArgument;
-    RelayedArgument = relayedArgument;
+    ItemX  = x;
+    ItemY = y;
   }
 
   /// <inheritdoc />
-  public TPassed PassedArgument { get; }
+  public TX ItemX { get; }
 
   /// <inheritdoc />
-  public TRelay RelayedArgument { get; }
+  public TY ItemY { get; }
 
-  private bool Equals(ITuple<TPassed, TRelay>? other)
+  private bool Equals(ITuple<TX, TY>? other)
     => other is not null
-    && EqualityComparer<TPassed>.Default.Equals(PassedArgument, other.PassedArgument)
-    && EqualityComparer<TRelay>.Default.Equals(RelayedArgument, other.RelayedArgument);
+    && EqualityComparer<TX>.Default.Equals(ItemX, other.ItemX)
+    && EqualityComparer<TY>.Default.Equals(ItemY, other.ItemY);
 
   /// <remarks> Equals doesnt check exact type of other object, only if it can be cast to <see cref="ITuple{TPassed,TRelay}" /> </remarks>
   public override bool Equals(object? obj)
@@ -54,7 +46,7 @@ public class Tuple<TPassed, TRelay> : ITuple<TPassed, TRelay>
     if(ReferenceEquals(null, obj)) return false;
     if(ReferenceEquals(this, obj)) return true;
 
-    return Equals(obj as ITuple<TPassed, TRelay>);
+    return Equals(obj as ITuple<TX, TY>);
   }
 
   /// <summary />
@@ -62,7 +54,7 @@ public class Tuple<TPassed, TRelay> : ITuple<TPassed, TRelay>
   {
     unchecked
     {
-      return ( EqualityComparer<TPassed>.Default.GetHashCode(PassedArgument) * 397 ) ^ EqualityComparer<TRelay>.Default.GetHashCode(RelayedArgument);
+      return ( EqualityComparer<TX>.Default.GetHashCode(ItemX) * 397 ) ^ EqualityComparer<TY>.Default.GetHashCode(ItemY);
     }
   }
 }

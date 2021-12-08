@@ -84,7 +84,7 @@ public static partial class Config<TState, TEvent>
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-      return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.PassedArgument, tuple.RelayedArgument));
+      return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.ItemX, tuple.ItemY));
     }
 
     public IExit<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Action<IStateController<TEvent>, TArgument, TRelay> enterAction)
@@ -92,21 +92,21 @@ public static partial class Config<TState, TEvent>
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-      return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.PassedArgument, tuple.RelayedArgument));
+      return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.ItemX, tuple.ItemY));
     }
 
     public IExit<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Func<TArgument, TRelay, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-      return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.PassedArgument, tuple.RelayedArgument));
+      return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.ItemX, tuple.ItemY));
     }
 
     public IExit<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Func<IStateController<TEvent>, TArgument, TRelay, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-      return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.PassedArgument, tuple.RelayedArgument));
+      return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.ItemX, tuple.ItemY));
     }
 
     private static bool IsAsyncMethod(MemberInfo method) => method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) is not null;

@@ -65,8 +65,8 @@ public class BoxingTest : StateMachineTestBase
     // dont' use actual.Should().Be(expected); due to this method leads boxing
     actual1.Value.Should().Be(expected1.Value);
     actual2.Value.Should().Be(expected2.Value);
-    actualTuple!.RelayedArgument.Value.Should().Be(expected1.Value);
-    actualTuple.PassedArgument.Value.Should().Be(expected2.Value);
+    actualTuple!.ItemY.Value.Should().Be(expected1.Value);
+    actualTuple.ItemX.Value.Should().Be(expected2.Value);
   }
 
   [Test]

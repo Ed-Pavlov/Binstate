@@ -18,7 +18,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   private readonly ManualResetEvent _enterActionFinished = new ManualResetEvent(true);
 
   /// <summary>
-  ///   This event is used to avoid race condition when <see cref="ExitSafe" /> method is called before <see cref="EnterSafe" /> method.
+  ///   This event is used to avoid race condition when <see cref="ExitSafe" /> method is called before <see cref="EnterSafe{T}" /> method.
   ///   See usages for details.
   /// </summary>
   private readonly ManualResetEvent _entered = new ManualResetEvent(true);
@@ -79,7 +79,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     }
   }
 
-  public void EnterSafe(IStateController<TEvent> stateController, Action<Exception> onException)
+  public void EnterSafe<TE>(IStateController<TE> stateController, Action<Exception> onException)
   {
     try
     {
@@ -91,8 +91,8 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
       //TODO: looks like I can have only one "invoker" which will ignore "Unit" argument, try to discard this complex part
       _task = _enterAction switch
       {
-        EnterActionInvoker<TEvent> action             => action.Invoke(stateController),
-        IEnterActionInvoker<TEvent, TArgument> action => action.Invoke(stateController, Argument), // Argument is set externally
+        EnterActionInvoker<TE> action             => action.Invoke(stateController),
+        IEnterActionInvoker<TE, TArgument> action => action.Invoke(stateController, Argument), // Argument is set externally
         _                                             => throw new ArgumentOutOfRangeException(),
       };
     }
@@ -141,7 +141,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     }
   }
 
-  public void CallTransitionActionSafe(Transition<TState, TEvent> transition, Action<Exception> onException)
+  public void CallTransitionActionSafe(ITransition transition, Action<Exception> onException)
     => transition.InvokeActionSafe(Argument, onException);
 
   // use [NotNullWhen(returnValue: true)] when upgrading to .netstandard 2.1 and update usages
@@ -164,5 +164,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     return false;
   }
 
-  public override string ToString() => Id.ToString();
+  IState? IState.        ParentState => ParentState;
+
+  public override string ToString()  => Id.ToString();
 }

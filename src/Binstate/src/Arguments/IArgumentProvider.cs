@@ -30,8 +30,8 @@ internal class OneTupleItemArgumentProvider<T, TA, TR> : IGetArgument<T>
     var tuple = ( (IGetArgument<ITuple<TA, TR>>)state ).Argument;
     Argument = tuple switch
     {
-      { PassedArgument : T arg }   => arg,
-      { RelayedArgument: T relay } => relay,
+      { ItemX : T arg }   => arg,
+      { ItemY: T relay } => relay,
       _                            => throw new ArgumentOutOfRangeException(nameof(tuple))
     };
   }

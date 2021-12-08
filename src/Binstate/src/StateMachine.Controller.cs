@@ -8,9 +8,9 @@ public partial class StateMachine<TState, TEvent>
   private class Controller : IStateController<TEvent>
   {
     private readonly StateMachine<TState, TEvent> _owner;
-    private readonly IState<TState, TEvent>       _state;
+    private readonly IState                       _state;
 
-    internal Controller(IState<TState, TEvent> state, StateMachine<TState, TEvent> stateMachine)
+    internal Controller(IState state, StateMachine<TState, TEvent> stateMachine)
     {
       _state = state        ?? throw new ArgumentNullException(nameof(state));
       _owner = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));

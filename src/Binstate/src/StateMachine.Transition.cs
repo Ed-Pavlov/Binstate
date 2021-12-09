@@ -34,7 +34,7 @@ internal partial class StateMachine<TState, TEvent>
       var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);
       var argumentsBag   = PrepareArgument(argument, argumentIsFallback, targetState, commonAncestor, _activeState);
 
-      return new TransitionData(_activeState, transition, targetState, argumentsBag, commonAncestor);
+      return new TransitionData(_activeState, transition, targetState, commonAncestor, argumentsBag);
     }
     catch(TransitionException)
     {
@@ -51,36 +51,25 @@ internal partial class StateMachine<TState, TEvent>
     }
   }
 
-  private static ArgumentsBag PrepareArgument<TArgument>(
+  private static Argument.Bag PrepareArgument<TArgument>(
     TArgument argument,
     bool      argumentIsFallback,
     IState    targetState,
     IState?   commonAncestor,
     IState    sourceState)
   {
-    var argumentWithCache = new Argument.WithCache();
+    var argumentResolver = new Argument.Resolver();
 
-    var map = new ArgumentsBag();
-
-    var argumentTarget = targetState;
-    while(argumentTarget != commonAncestor)
+    var state = targetState;
+    while(state != commonAncestor)
     {
-      if(argumentTarget is null) throw new InvalidOperationException("It can't be null before it is equal to commonAncestor");
+      if(state is null) throw new InvalidOperationException("It can't be null before it is equal to commonAncestor");
 
-      var targetArgumentType = argumentTarget.GetArgumentTypeSafe();
-      if(targetArgumentType is not null)
-      {
-        if(! argumentWithCache.GetArgumentProviders(targetArgumentType, argument, argumentIsFallback, sourceState, out var argumentProviders))
-          Throw.NoArgument<TEvent>(argumentTarget);
-
-        var copy = argumentTarget; // anti-closure copy
-        map.Add(argumentTarget, () => Argument.SetArgumentByReflection(copy, argumentProviders));
-      }
-
-      argumentTarget = argumentTarget.ParentState;
+      argumentResolver.FindArgumentFor(state, argument, argumentIsFallback, sourceState);
+      state = state.ParentState;
     }
 
-    return map;
+    return argumentResolver.ArgumentsBag;
   }
 
   /// <summary>
@@ -93,8 +82,8 @@ internal partial class StateMachine<TState, TEvent>
     var prevActiveState    = currentActiveState;
     var transition         = transitionData.Transition;
     var targetState        = transitionData.TargetState;
-    var argumentsBag       = transitionData.ArgumentsBag;
     var commonAncestor     = transitionData.CommonAncestor;
+    var argumentsBag       = transitionData.ArgumentsBag;
 
     var enterActions = new List<Action>();
 
@@ -148,22 +137,18 @@ internal partial class StateMachine<TState, TEvent>
   ///   Doesn't acquire lock itself, caller should care about safe context
   /// </summary>
   /// <returns> Returns 'enter' action of the state </returns>
-  private Action ActivateStateNotGuarded(IState state, ArgumentsBag argumentsBag)
+  private Action ActivateStateNotGuarded(IState state, Argument.Bag argumentsBag)
   {
     state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
     var controller = new Controller(state, this);
 
-    // enter action, will be called later
+    // prepare 'enter' action - will be called later
     return () =>
     {
-      // set Argument property before calling EnterSafe, due to it uses this property
-      if(state.IsRequireArgument())
-      {
-        var setArgument = argumentsBag.GetValueSafe(state);
-        if(setArgument is null) Throw.NoArgument<TEvent>(state);
-        setArgument(); // set the Argument property of the state
-      }
+      var setArgument = argumentsBag.GetValueSafe(state);
+      setArgument?.Invoke();   // set the Argument property of the state if Argument is required
 
+      // set Argument property before calling EnterSafe, due to it uses this property
       state.EnterSafe(controller, _onException);
     };
   }
@@ -173,15 +158,15 @@ internal partial class StateMachine<TState, TEvent>
     public readonly IState                 CurrentActiveState;
     public readonly ITransition            Transition;
     public readonly IState<TState, TEvent> TargetState;
-    public readonly ArgumentsBag           ArgumentsBag;
     public readonly IState?                CommonAncestor;
+    public readonly Argument.Bag           ArgumentsBag;
 
     public TransitionData(
       IState                 currentActiveState,
       ITransition            transition,
       IState<TState, TEvent> targetState,
-      ArgumentsBag           argumentsBag,
-      IState?                commonAncestor)
+      IState?                commonAncestor,
+      Argument.Bag           argumentsBag)
     {
       CurrentActiveState = currentActiveState;
       Transition         = transition;
@@ -190,6 +175,4 @@ internal partial class StateMachine<TState, TEvent>
       CommonAncestor     = commonAncestor;
     }
   }
-
-  private class ArgumentsBag : Dictionary<IState, Action> { }
 }

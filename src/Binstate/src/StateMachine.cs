@@ -66,7 +66,7 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
   internal void EnterInitialState<T>(T initialStateArgument)
   {
     var argumentType = typeof(T);
-    var argumentsBag = new ArgumentsBag();
+    var argumentsBag = new Argument.Bag();
     var enterActions = new List<Action>();
 
     try
@@ -75,11 +75,15 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
       var parentState = _activeState;
       while(parentState is not null)
       {
-        if(parentState.GetArgumentTypeSafe()?.IsAssignableFrom(argumentType) == true)
-        {
-          var copy = parentState;
-          argumentsBag.Add(parentState, () => ( (ISetArgument<T>)copy ).Argument = initialStateArgument);
-        }
+        var stateArgumentType = parentState.GetArgumentTypeSafe();
+        if(stateArgumentType is not null)
+          if(! stateArgumentType.IsAssignableFrom(argumentType))
+            Throw.NoArgument(parentState);
+          else
+          {
+            var copy = parentState;
+            argumentsBag.Add(parentState, () => ( (ISetArgument<T>)copy ).Argument = initialStateArgument);
+          }
 
         enterActions.Add(ActivateStateNotGuarded(parentState, argumentsBag));
 

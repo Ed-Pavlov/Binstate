@@ -30,14 +30,14 @@ internal static class Argument
   public static Type GetArgumentType(this IState state) => state.GetArgumentTypeSafe() ?? throw new ArgumentException();
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static Type GetArgumentType(this IArgumentProvider argumentProvider)
-    => argumentProvider.GetType().GetInterface(typeof(IGetArgument<>).Name).GetGenericArguments()[0];
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool CanAcceptArgumentFrom(this IState argumentTarget, IState argumentSource)
     => argumentTarget.GetArgumentType().IsAssignableFrom(argumentSource.GetArgumentType());
 
-  public static void SetArgumentByReflection(IState target, ITuple<IArgumentProvider, IArgumentProvider?> tuple)
+  [MethodImpl(MethodImplOptions.AggressiveInlining)]
+  private static Type GetArgumentType(this IArgumentProvider argumentProvider)
+    => argumentProvider.GetType().GetInterface(typeof(IGetArgument<>).Name).GetGenericArguments()[0];
+
+  private static void SetArgumentByReflection(IState target, ITuple<IArgumentProvider, IArgumentProvider?> tuple)
   {
     var targetArgumentType  = target.GetArgumentType();
     var source1ArgumentType = tuple.ItemX.GetArgumentType();
@@ -83,12 +83,31 @@ internal static class Argument
     return false;
   }
 
-  public class WithCache
+public class Bag : Dictionary<IState, Action> { }
+
+  public class Resolver
   {
     private readonly Dictionary<Type, ITuple<IArgumentProvider, IArgumentProvider?>> _argumentSourcesCache  = new();
     private readonly Dictionary<Type, IArgumentProvider>                             _argumentProviderCache = new();
 
-    public bool GetArgumentProviders<TArgument>(
+    public readonly Bag ArgumentsBag = new Bag();
+
+    public void FindArgumentFor<TArgument>(
+      IState    targetState,
+      TArgument argument,
+      bool      argumentIsFallback,
+      IState    sourceState)
+    {
+      var targetArgumentType = targetState.GetArgumentTypeSafe();
+      if(targetArgumentType is null) return;
+
+      if(! GetArgumentProviders(targetArgumentType, argument, argumentIsFallback, sourceState, out var argumentProviders))
+        Throw.NoArgument(targetState);
+
+      ArgumentsBag.Add(targetState, () => SetArgumentByReflection(targetState, argumentProviders));
+    }
+
+    private bool GetArgumentProviders<TArgument>(
       Type                                                                   targetArgumentType,
       TArgument                                                              argument,
       bool                                                                   argumentIsFallback,

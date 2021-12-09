@@ -10,7 +10,7 @@ namespace Binstate;
 ///   The state machine. Use <see cref="Builder{TState, TEvent}" /> to configure and build a state machine.
 /// </summary>
 [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
-public partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
+internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
   where TState : notnull
   where TEvent : notnull
 {
@@ -36,15 +36,15 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
   {
     if(@event is null) throw new ArgumentNullException(nameof(@event));
 
-    return PerformTransitionSync(@event, Unit.Default, false);
+    return PerformTransitionSync(@event, Unit.Default, true);
   }
 
   /// <inheritdoc />
-  public bool Raise<T>(TEvent @event, T argument)
+  public bool Raise<T>(TEvent @event, T argument, bool argumentIsFallback = false)
   {
     if(@event is null) throw new ArgumentNullException(nameof(@event));
 
-    return PerformTransitionSync(@event, argument, true);
+    return PerformTransitionSync(@event, argument, argumentIsFallback);
   }
 
   /// <inheritdoc />
@@ -56,11 +56,11 @@ public partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
   }
 
   /// <inheritdoc />
-  public Task<bool> RaiseAsync<T>(TEvent @event, T argument)
+  public Task<bool> RaiseAsync<T>(TEvent @event, T argument, bool argumentIsFallback = false)
   {
     if(@event is null) throw new ArgumentNullException(nameof(@event));
 
-    return PerformTransitionAsync(@event, argument, true);
+    return PerformTransitionAsync(@event, argument, argumentIsFallback);
   }
 
   internal void EnterInitialState<T>(T initialStateArgument)

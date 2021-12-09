@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Binstate;
 
-public partial class StateMachine<TState, TEvent>
+internal partial class StateMachine<TState, TEvent>
 {
   /// <summary>
   ///   Performing transition is split into two parts, the first one is "read only", preparing and checking all the data, can throw an exception.

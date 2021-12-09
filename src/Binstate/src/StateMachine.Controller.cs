@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Binstate;
 
-public partial class StateMachine<TState, TEvent>
+internal partial class StateMachine<TState, TEvent>
 {
   private class Controller : IStateController<TEvent>
   {
@@ -20,9 +20,9 @@ public partial class StateMachine<TState, TEvent>
 
     public bool RaiseAsync(TEvent @event) => RaiseAsync<Unit>(@event, default);
 
-    public bool RaiseAsync<T>(TEvent @event, T argument)
+    public bool RaiseAsync<T>(TEvent @event, T argument, bool argumentIsFallback = false)
     {
-      var data = _owner.PrepareTransition(@event, argument, true);
+      var data = _owner.PrepareTransition(@event, argument, argumentIsFallback);
       if(data is null) return false;
 
       Task.Run(() => _owner.PerformTransition(data.Value));

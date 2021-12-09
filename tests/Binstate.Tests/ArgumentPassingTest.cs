@@ -23,16 +23,16 @@ public class ArgumentPassingTest : StateMachineTestBase
 
     builder
      .DefineState(Initial)
-     .AddTransition(Event1, State1);
+     .AddTransition(GoToStateX, StateX);
 
     builder
-     .DefineState(State1)
+     .DefineState(StateX)
      .OnEnter<string>((sm, param) => actual = param);
 
     var target = builder.Build(Initial);
 
     // --act
-    target.Raise(raiseWay, Event1, expected);
+    target.Raise(raiseWay, GoToStateX, expected);
 
     // --assert
     actual.Should().Be(expected);
@@ -47,13 +47,13 @@ public class ArgumentPassingTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).AddTransition(Event1, State1);
-    builder.DefineState(State1).OnEnter<IDisposable>(onEnter);
+    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
+    builder.DefineState(StateX).OnEnter<IDisposable>(onEnter);
 
     var target = builder.Build(Initial);
 
     // --act
-    target.Raise(raiseWay, Event1, expected);
+    target.Raise(raiseWay, GoToStateX, expected);
 
     // --assert
     A.CallTo(() => onEnter(expected)).MustHaveHappenedOnceExactly();
@@ -92,21 +92,21 @@ public class ArgumentPassingTest : StateMachineTestBase
 
     builder
      .DefineState(Initial)
-     .AddTransition(Event1, State1);
+     .AddTransition(GoToStateX, StateX);
 
     builder
-     .DefineState(State1)
+     .DefineState(StateX)
      .OnEnter<string>((sm, value) => { });
 
     var stateMachine = builder.Build(Initial);
 
     // --act
-    Action target = () => stateMachine.Raise(raiseWay, Event1, 983);
+    Action target = () => stateMachine.Raise(raiseWay, GoToStateX, 983);
 
     // --assert
     target.Should()
           .ThrowExactly<TransitionException>()
-          .WithMessage($"The state '{State1}' requires argument of type '{typeof(string)}' but no argument*");
+          .WithMessage($"The state '{StateX}' requires argument of type '{typeof(string)}' but no argument*");
   }
 
   [TestCaseSource(nameof(RaiseWays))]
@@ -117,21 +117,21 @@ public class ArgumentPassingTest : StateMachineTestBase
 
     builder
      .DefineState(Initial)
-     .AddTransition(Event1, State1);
+     .AddTransition(GoToStateX, StateX);
 
     builder
-     .DefineState(State1)
+     .DefineState(StateX)
      .OnEnter<int>(value => { });
 
     var stateMachine = builder.Build(Initial);
 
     // --act
-    Action target = () => stateMachine.Raise(raiseWay, Event1);
+    Action target = () => stateMachine.Raise(raiseWay, GoToStateX);
 
     // --assert
     target.Should()
           .ThrowExactly<TransitionException>()
-          .WithMessage($"The state '{State1}' requires argument of type '{typeof(int)}' but no argument*");
+          .WithMessage($"The state '{StateX}' requires argument of type '{typeof(int)}' but no argument*");
   }
 
   [TestCaseSource(nameof(RaiseWays))]
@@ -141,7 +141,7 @@ public class ArgumentPassingTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
 
-    builder.DefineState(Initial).AddTransition(Event1, Child);
+    builder.DefineState(Initial).AddTransition(GoToStateX, Child);
 
     builder.DefineState(Parent)
            .OnEnter<int>((stateMachine, value) => { });
@@ -151,9 +151,9 @@ public class ArgumentPassingTest : StateMachineTestBase
            .OnEnter<string>(value => { });
 
     // --act
-    var sm = builder.Build(Initial, true);
+    var sm = builder.Build(Initial, ArgumentTransferMode.Free);
 
-    Action target = () => sm.Raise(Event1, "stringArgument");
+    Action target = () => sm.Raise(GoToStateX, "stringArgument");
 
     // --assert
     target

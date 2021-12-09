@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using Binstate.Tests.Util;
+using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
 
@@ -8,6 +10,50 @@ namespace Binstate.Tests;
 [SuppressMessage("ReSharper", "UnusedParameter.Local")]
 public class BuilderTest : StateMachineTestBase
 {
+  [Test]
+  public void should_pass_argument_to_initial_state_enter_action()
+  {
+    const string expected = "expected";
+    var          onEnter  = A.Fake<Action<string>>();
+
+    // --arrange
+    var target = new Builder<string, int>(OnException);
+
+    target.DefineState(Initial).OnEnter(onEnter).AddTransition(GoToStateX, StateX);
+    target.DefineState(StateX);
+
+    // --act
+    target.Build(Initial, expected);
+
+    // --assert
+    A.CallTo(() => onEnter(expected)).MustHaveHappenedOnceAndOnly();
+  }
+
+  [Test]
+  public void should_pass_argument_to_initial_and_its_parents_states()
+  {
+    const string expected = "expected";
+    var          onEnter  = A.Fake<Action<string>>();
+    var          onEnterParent  = A.Fake<Action<string>>();
+    var          onEnterRoot  = A.Fake<Action<string>>();
+
+    // --arrange
+    var target = new Builder<string, int>(OnException);
+
+    target.DefineState(Root).OnEnter(onEnterRoot);
+    target.DefineState(Parent).AsSubstateOf(Root).OnEnter(onEnterParent);
+    target.DefineState(Initial).AsSubstateOf(Parent).OnEnter(onEnter).AddTransition(GoToStateX, StateX);
+    target.DefineState(StateX);
+
+    // --act
+    target.Build(Initial, expected);
+
+    // --assert
+    A.CallTo(() => onEnterRoot(expected)).MustHaveHappenedOnceAndOnly();
+    A.CallTo(() => onEnterParent(expected)).MustHaveHappenedOnceAndOnly();
+    A.CallTo(() => onEnter(expected)).MustHaveHappenedOnceAndOnly();
+  }
+
   [Test]
   public void should_throw_exception_if_initial_state_is_not_defined()
   {
@@ -46,7 +92,7 @@ public class BuilderTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(_ =>{});
 
-    builder.DefineState(Initial).OnEnter<string>(_ => { }).AllowReentrancy(Event1);
+    builder.DefineState(Initial).OnEnter<string>(_ => { }).AllowReentrancy(GoToStateX);
 
     // --act
     Action target = () => builder.Build(Initial);
@@ -66,7 +112,7 @@ public class BuilderTest : StateMachineTestBase
 
     builder
      .DefineState(Initial)
-     .AddTransition(Event1, wrongState);
+     .AddTransition(GoToStateX, wrongState);
 
     // --act
     Action target = () => builder.Build(Initial);
@@ -74,7 +120,7 @@ public class BuilderTest : StateMachineTestBase
     // --assert
     target.Should()
           .ThrowExactly<InvalidOperationException>()
-          .WithMessage($"The transition '{Event1}' from the state '{Initial}' references not defined state '{wrongState}'");
+          .WithMessage($"The transition '{GoToStateX}' from the state '{Initial}' references not defined state '{wrongState}'");
   }
 
   [Test]
@@ -84,7 +130,7 @@ public class BuilderTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
 
-    builder.DefineState(Initial).AddTransition(Event1, Child);
+    builder.DefineState(Initial).AddTransition(GoToStateX, Child);
 
     builder.DefineState(Parent)
            .OnEnter<int>((sm, value) => { });
@@ -112,7 +158,7 @@ public class BuilderTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).AddTransition(Event1, Child);
+    builder.DefineState(Initial).AddTransition(GoToStateX, Child);
 
     builder.DefineState(Parent)
            .OnEnter<int>((sm, value) => { });
@@ -122,7 +168,7 @@ public class BuilderTest : StateMachineTestBase
            .OnEnter<string>(value => { });
 
     // --act
-    var target = builder.Build(Initial, true);
+    var target = builder.Build(Initial, ArgumentTransferMode.Free);
 
     // --assert
     target.Should().NotBeNull();
@@ -134,12 +180,12 @@ public class BuilderTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).AddTransition(Event1, Child);
+    builder.DefineState(Initial).AddTransition(GoToStateX, Child);
 
     // --act
     Action target = () => builder.Build(Initial);
 
     // --assert
-    target.Should().ThrowExactly<InvalidOperationException>($"The transition '{Event1}' from the state '{Initial}' references not defined state '{Child}'");
+    target.Should().ThrowExactly<InvalidOperationException>($"The transition '{GoToStateX}' from the state '{Initial}' references not defined state '{Child}'");
   }
 }

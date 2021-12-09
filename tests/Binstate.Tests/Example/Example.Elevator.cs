@@ -9,7 +9,7 @@ public partial class Example
   [SuppressMessage("ReSharper", "UnusedMember.Global")]
   public class Elevator
   {
-    private readonly StateMachine<States, Events> _elevator;
+    private readonly IStateMachine<Events> _elevator;
 
     public Elevator()
     {

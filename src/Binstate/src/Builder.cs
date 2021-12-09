@@ -52,15 +52,9 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
   /// </summary>
   /// <param name="initialStateId"> The initial state of the state machine. </param>
   /// <param name="initialStateArgument"> If initial state requires argument use this overload to pass it </param>
-  /// <param name="enableLooseRelaying">
-  ///   Enables non strict relaying model of the argument attached ot the state. If relayed argument type
-  ///   is <see cref="ITuple{TPassed,TRelay}" /> all 'enter' actions receiving arguments of type  <see cref="ITuple{TPassed,TRelay}" />, TArgument, and TRelay
-  ///   will receive corresponding argument.
-  ///   If not enabled - all 'enter' action in child/parent relation should have the same parameter type of declared 'enter' action. Also it's possible that some
-  ///   of state requires an argument but some not.
-  /// </param>
+  /// <param name="argumentTransferMode">The mode of transferring arguments to new newly activated states. See <see cref="ArgumentTransferMode"/> for details.</param>
   /// <exception cref="InvalidOperationException"> Throws if there are any inconsistencies in the provided configuration. </exception>
-  public StateMachine<TState, TEvent> Build<T>(TState initialStateId, T initialStateArgument, bool enableLooseRelaying = false)
+  public IStateMachine<TEvent> Build<T>(TState initialStateId, T initialStateArgument, ArgumentTransferMode argumentTransferMode = ArgumentTransferMode.Strict)
   {
     if(initialStateId is null) throw new ArgumentNullException(nameof(initialStateId));
 
@@ -80,7 +74,7 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
 
     ValidateTransitions(states);
 
-    if(! enableLooseRelaying)
+    if(argumentTransferMode == ArgumentTransferMode.Strict)
       ValidateSubstateEnterArgument(states);
 
     var stateMachine = new StateMachine<TState, TEvent>(states, _onException, initialStateId);
@@ -108,16 +102,10 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
   ///   Validates consistency and builds the state machine using provided configuration.
   /// </summary>
   /// <param name="initialStateId"> The initial state of the state machine. </param>
-  /// <param name="enableLooseRelaying">
-  ///   Enables non strict relaying model of the argument attached ot the state. If relayed argument type
-  ///   is <see cref="ITuple{TPassed,TRelay}" /> all 'enter' actions receiving arguments of type  <see cref="ITuple{TPassed,TRelay}" />, TArgument, and TRelay
-  ///   will receive corresponding argument.
-  ///   If not enabled - all 'enter' action in child/parent relation should have the same parameter type of declared 'enter' action. Also it's possible that some
-  ///   of state requires an argument but some not.
-  /// </param>
+  /// <param name="argumentTransferMode">The mode of transferring arguments to new newly activated states. See <see cref="ArgumentTransferMode"/> for details.</param>
   /// <exception cref="InvalidOperationException"> Throws if there are any inconsistencies in the provided configuration. </exception>
-  public StateMachine<TState, TEvent> Build(TState initialStateId, bool enableLooseRelaying = false)
-    => Build<Unit>(initialStateId, default, enableLooseRelaying);
+  public IStateMachine<TEvent> Build(TState initialStateId, ArgumentTransferMode argumentTransferMode = ArgumentTransferMode.Strict)
+    => Build<Unit>(initialStateId, default, argumentTransferMode);
 
   private static void ValidateSubstateEnterArgument(Dictionary<TState, IState<TState, TEvent>> states)
   {
@@ -153,7 +141,8 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
   private void ValidateTransitions(Dictionary<TState, IState<TState, TEvent>> states)
   {
     foreach(var stateConfig in _stateConfigs.Values.Select(_ => _.StateConfig))
-    foreach(var transition in stateConfig.TransitionList.Values.Where(_ => _.IsStatic)) // do not check dynamic transitions because they are depends on the app state
+    foreach(var transition in
+            stateConfig.TransitionList.Values.Where(_ => _.IsStatic)) // do not check dynamic transitions because they are depends on the app state
     {
       transition.GetTargetStateId(out var targetStateId);
 
@@ -163,4 +152,34 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
         );
     }
   }
+}
+
+/// <summary>
+/// Possible modes of transferring arguments during state transition from the currently active states to the newly activated.
+/// When transition is performed the state machine looks up for a required argument in the following order:
+///  * Not fallback argument passed to the <see cref="IStateMachine{TEvent}.Raise{T}"/> (or overload) method
+///  * Active state and all its parents
+///  * Fallback argument passed to the <see cref="IStateMachine{TEvent}.Raise{T}"/> (or overload) method
+/// </summary>
+public enum ArgumentTransferMode
+{
+  /// <summary> default value is invalid </summary>
+  Invalid = 0,
+
+  /// <summary>
+  ///   All actions performed on 'enter', 'exit', and/or 'transition' of a state involved in child/parent relation should have parameter of the same type
+  ///   in the declared method used as the action. Also it's possible that some of states requires an argument but some not.
+  /// </summary>
+  Strict = 2,
+
+  /// <summary>
+  ///  Each state can have its own argument type.
+  ///
+  ///  If an argument type of the currently active state is <see cref="ITuple{TX,TY}" /> all newly activated actions
+  ///  require arguments of type <see cref="ITuple{TX,TY}" />, TX, and TY will receive corresponding argument.
+  ///
+  ///  If a newly activated state requires an argument of type <see cref="ITuple{TX,TY}" /> it is mixed from the arguments,
+  ///  see <see cref="ArgumentTransferMode"/> for details.
+  /// </summary>
+  Free = 4,
 }

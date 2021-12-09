@@ -57,4 +57,7 @@ public class Tuple<TX, TY> : ITuple<TX, TY>
       return ( EqualityComparer<TX>.Default.GetHashCode(ItemX) * 397 ) ^ EqualityComparer<TY>.Default.GetHashCode(ItemY);
     }
   }
+
+  /// <inheritdoc />
+  public override string ToString() => $"{{{nameof(ItemX)}: {ItemX}, {nameof(ItemY)}:{ItemY}}}";
 }

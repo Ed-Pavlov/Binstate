@@ -28,27 +28,27 @@ public class MultiThreadingTest : StateMachineTestBase
 
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).AddTransition(Event1, State1);
+    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
 
-    builder.DefineState(State1)
+    builder.DefineState(StateX)
            .OnEnter(BlockingEnter)
            .OnExit(() => actual.Add(exit))
-           .AddTransition(Event2, State2);
+           .AddTransition(GoToStateY, StateY);
 
     builder
-     .DefineState(State2)
-     .OnEnter(_ => actual.Add(State2));
+     .DefineState(StateY)
+     .OnEnter(_ => actual.Add(StateY));
 
     var target = builder.Build(Initial);
 
-    target.RaiseAsync(Event1); // raise async to not to block test execution
+    target.RaiseAsync(GoToStateX); // raise async to not to block test execution
     entered.WaitOne(1000);         // wait till OnEnter will block execution
 
     // --act
-    target.Raise(Event2);
+    target.Raise(GoToStateY);
 
     // -- assert
-    actual.Should().Equal(enter, exit, State2);
+    actual.Should().Equal(enter, exit, StateY);
   }
 
   [TestCaseSource(nameof(RaiseWays))]
@@ -65,24 +65,24 @@ public class MultiThreadingTest : StateMachineTestBase
     }
 
     var builder = new Builder<string, int>(OnException);
-    builder.DefineState(Initial).AddTransition(Event1, State1);
+    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
 
     builder
-     .DefineState(State1)
+     .DefineState(StateX)
      .OnEnter(AsyncEnter)
-     .AddTransition(Event2, State2);
+     .AddTransition(GoToStateY, StateY);
 
-    builder.DefineState(State2);
+    builder.DefineState(StateY);
 
     var target = builder.Build(Initial);
 
     // --act
-    target.Raise(raiseWay, Event1);
+    target.Raise(raiseWay, GoToStateX);
 
     // --assert
     entered.WaitOne(TimeSpan.FromSeconds(4)).Should().BeTrue();
 
     // --cleanup
-    target.Raise(Event2); // exit async method
+    target.Raise(GoToStateY); // exit async method
   }
 }

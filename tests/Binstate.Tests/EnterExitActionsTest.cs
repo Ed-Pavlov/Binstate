@@ -19,7 +19,7 @@ public class EnterExitActionsTest : StateMachineTestBase
 
     builder.DefineState(Initial)
            .OnEnter(() => entered = true)
-           .AddTransition(Event1, () => null);
+           .AddTransition(GoToStateX, () => null);
 
     // --act
     builder.Build(Initial);
@@ -39,7 +39,7 @@ public class EnterExitActionsTest : StateMachineTestBase
 
     builder.DefineState(Initial)
            .OnEnter<string>(arg => actual = arg)
-           .AddTransition(Event1, () => null);
+           .AddTransition(GoToStateX, () => null);
 
     // --act
     builder.Build(Initial, expected);
@@ -57,18 +57,18 @@ public class EnterExitActionsTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
     builder.DefineState(Initial)
-           .AddTransition(Event1, State1);
+           .AddTransition(GoToStateX, StateX);
 
-    builder.DefineState(State1)
-           .OnEnter(_ => actual.Add(State1));
+    builder.DefineState(StateX)
+           .OnEnter(_ => actual.Add(StateX));
 
     var stateMachine = builder.Build(Initial);
 
     // --act
-    stateMachine.Raise(raiseWay, Event1);
+    stateMachine.Raise(raiseWay, GoToStateX);
 
     // --assert
-    actual.Should().BeEquivalentTo(State1);
+    actual.Should().BeEquivalentTo(StateX);
   }
 
   [TestCaseSource(nameof(RaiseWays))]
@@ -82,10 +82,10 @@ public class EnterExitActionsTest : StateMachineTestBase
 
     // --arrange
     var builder = new Builder<string, int>(OnException);
-    builder.DefineState(Initial).AddTransition(Event1, State1);
+    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
 
     builder
-     .DefineState(State1)
+     .DefineState(StateX)
      .OnEnter(
         _ =>
         {
@@ -100,16 +100,16 @@ public class EnterExitActionsTest : StateMachineTestBase
           actual.Add(exit1);
         }
       )
-     .AddTransition(Event2, State2);
+     .AddTransition(GoToStateY, StateY);
 
-    builder.DefineState(State2)
+    builder.DefineState(StateY)
            .OnEnter(_ => actual.Add(enter2));
 
     var target = builder.Build(Initial);
-    target.Raise(raiseWay, Event1);
+    target.Raise(raiseWay, GoToStateX);
 
     // --act
-    target.Raise(raiseWay, Event2);
+    target.Raise(raiseWay, GoToStateY);
 
     // --assert
     actual.Should().BeEquivalentTo(enter1, exit1, enter2);
@@ -126,19 +126,19 @@ public class EnterExitActionsTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).AddTransition(Event1, State1);
+    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
 
     builder
-     .DefineState(State1)
+     .DefineState(StateX)
      .OnEnter(_ => actual.Add(enter))
      .OnExit(() => actual.Add(exit))
-     .AllowReentrancy(Event1);
+     .AllowReentrancy(GoToStateX);
 
     var target = builder.Build(Initial);
-    target.Raise(raiseWay, Event1);
+    target.Raise(raiseWay, GoToStateX);
 
     // --act
-    target.Raise(raiseWay, Event1);
+    target.Raise(raiseWay, GoToStateX);
 
     // --assert
     actual.Should().BeEquivalentTo(enter, exit, enter);
@@ -154,20 +154,20 @@ public class EnterExitActionsTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).AddTransition(Event1, State1);
+    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
     builder.DefineState(Final);
 
     builder
-     .DefineState(State1)
+     .DefineState(StateX)
      .OnEnter<int>(_ => { })
      .OnExit(onExit)
-     .AddTransition(Event1, Final);
+     .AddTransition(GoToStateX, Final);
 
     var target = builder.Build(Initial);
-    target.Raise(Event1, expected);
+    target.Raise(GoToStateX, expected);
 
     // --act
-    target.Raise(raiseWay, Event1); // exit State1
+    target.Raise(raiseWay, GoToStateX); // exit State1
 
     // --assert
     A.CallTo(() => onExit(expected)).MustHaveHappenedOnceExactly();
@@ -181,20 +181,20 @@ public class EnterExitActionsTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).AddTransition(Event1, State1);
+    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
     builder.DefineState(Final);
 
     builder
-     .DefineState(State1)
+     .DefineState(StateX)
      .OnEnter<int>(_ => { })
      .OnExit(onExit)
-     .AddTransition(Event1, Final);
+     .AddTransition(GoToStateX, Final);
 
     var target = builder.Build(Initial);
-    target.Raise(Event1, 3987);
+    target.Raise(GoToStateX, 3987);
 
     // --act
-    target.Raise(raiseWay, Event1); // exit State1
+    target.Raise(raiseWay, GoToStateX); // exit State1
 
     // --assert
     A.CallTo(() => onExit()).MustHaveHappenedOnceExactly();

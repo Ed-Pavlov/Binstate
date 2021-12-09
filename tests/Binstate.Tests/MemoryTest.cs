@@ -25,11 +25,11 @@ public class BoxingTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).AddTransition(Event1, State1);
+    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
 
-    builder.DefineState(State1)
+    builder.DefineState(StateX)
            .OnEnter<ValueType1>(_ => { })
-           .AddTransition(Event2, State2);
+           .AddTransition(GoToStateY, StateY);
 
     builder.DefineState(Parent)
            .OnEnter<ValueType2>(value => actual2 = value);
@@ -38,18 +38,18 @@ public class BoxingTest : StateMachineTestBase
            .AsSubstateOf(Parent)
            .OnEnter<ValueType1>(value => actual1 = value);
 
-    builder.DefineState(State2)
+    builder.DefineState(StateY)
            .AsSubstateOf(Child)
            .OnEnter<ITuple<ValueType2, ValueType1>>(value => actualTuple = value);
 
-    var target = builder.Build(Initial, true);
+    var target = builder.Build(Initial, ArgumentTransferMode.Free);
 
     var startPoint = dotMemory.Check();
 
     // --act
-    target.Raise(raiseWay, Event1, expected1); // pass to State1
+    target.Raise(raiseWay, GoToStateX, expected1); // pass to State1
 
-    target.Raise(raiseWay, Event2, expected2); // pass everywhere
+    target.Raise(raiseWay, GoToStateY, expected2); // pass everywhere
 
     // --assert
     dotMemory.Check(
@@ -60,7 +60,6 @@ public class BoxingTest : StateMachineTestBase
               .Should()
               .Be(0)
     );
-
 
     // dont' use actual.Should().Be(expected); due to this method leads boxing
     actual1.Value.Should().Be(expected1.Value);

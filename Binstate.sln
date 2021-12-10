@@ -30,6 +30,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "global", "global", "{A7E61C
 		.gitignore = .gitignore
 		Binstate.sln.DotSettings = Binstate.sln.DotSettings
 		README.md = README.md
+		nuget-readme.md = nuget-readme.md
 	EndProjectSection
 EndProject
 Global

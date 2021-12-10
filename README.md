@@ -27,7 +27,7 @@ executes an 'exit' action of the current state and an 'enter' action of the new 
 If an 'enter' action is blocking `Raise` will block until enter action finishes.
 `RaiseAsync(event)` uses `Task.Run` to execute a transition.
 
-It gives an application a full control on the threading model of the state machine.
+It gives an application full control over the threading model of the state machine.
 
 ### Support async methods
 

@@ -8,7 +8,6 @@
     <LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Label="nuspec">
@@ -21,8 +20,8 @@
     <copyright>Copyright © 2020 Ed Pavlov</copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageIcon>icon.png</PackageIcon>
-    <PackageTags>.NET StateMachine state-machine FSM HSM hierarchical-state-machine</PackageTags>
-    <description>Binstate is a lightweight but yet powerful implementation of the state machine for .NET. Threadsafe. Supports async methods. Supports hierarchically nested states.</description>
+    <PackageTags>fsm finite-state-machine state-machine state-machine-dsl hierarchical-state-machine hierarchical-states thread-safe async dotnet-core dotnet</PackageTags>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -102,5 +101,6 @@
     <Content Include="..\..\build\icon.png" Pack="true" PackagePath="">
       <Link>build\icon.png</Link>
     </Content>
+    <None Include="..\..\nuget-readme.md" Pack="true" PackagePath="\readme.md"/>
   </ItemGroup>
 </Project>

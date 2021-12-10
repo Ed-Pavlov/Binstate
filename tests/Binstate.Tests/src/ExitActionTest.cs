@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Text;
 using Binstate.Tests.Util;
 using FakeItEasy;
 using NUnit.Framework;
@@ -23,26 +22,6 @@ public class ExitActionTest : StateMachineTestBase
 
     // --act
     target.Raise(raiseWay, GoToStateX);
-
-    // --assert
-    A.CallTo(() => onExit()).MustHaveHappenedOnceExactly();
-  }
-
-  [TestCaseSource(nameof(RaiseWays))]
-  public void should_call_exit_action_wo_argument_if_enter_w_argument(RaiseWay raiseWay)
-  {
-    var onExit = A.Fake<Action>();
-
-    // --arrange
-    var builder = new Builder<string, int>(OnException);
-
-    builder.DefineState(Initial).OnEnter<string>(_ => { }).OnExit(onExit).AddTransition(GoToStateX, StateX);
-    builder.DefineState(StateX);
-
-    var target = builder.Build(Initial, "argh");
-
-    // --act
-    target.Raise(raiseWay, GoToStateX, "argument");
 
     // --assert
     A.CallTo(() => onExit()).MustHaveHappenedOnceExactly();

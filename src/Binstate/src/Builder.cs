@@ -63,12 +63,11 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
 
     var initialStateConfig = _stateConfigs[initialStateId];
 
-    if(initialStateConfig.StateConfig.TransitionList.Count == 0)
-      throw new ArgumentException("No transitions defined from the initial state");
+    if(! IfTransitionDefined(initialStateConfig.StateConfig))
+      throw new ArgumentException("No transitions defined from the initial state nor from its parents.");
 
     // create all states
     var states = new Dictionary<TState, IState<TState, TEvent>>();
-
     foreach(var stateConfig in _stateConfigs.Values)
       CreateStateAndAddToMap(stateConfig.StateConfig, states);
 
@@ -107,6 +106,19 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
   public IStateMachine<TEvent> Build(TState initialStateId, ArgumentTransferMode argumentTransferMode = ArgumentTransferMode.Strict)
     => Build<Unit>(initialStateId, default, argumentTransferMode);
 
+  private bool IfTransitionDefined(Config<TState, TEvent>.StateConfig stateConfig)
+  {
+    var parent = stateConfig;
+    while(parent is not null)
+    {
+      if(parent.TransitionList.Count > 0)
+        return true;
+
+      parent = parent.ParentStateId.HasValue ? _stateConfigs[parent.ParentStateId.Value].StateConfig : null;
+    }
+    return false;
+  }
+
   private static void ValidateSubstateEnterArgument(Dictionary<TState, IState<TState, TEvent>> states)
   {
     foreach(var value in states.Values)
@@ -137,7 +149,11 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
     }
   }
 
-  // ReSharper disable once ParameterOnlyUsedForPreconditionCheck.Local
+  /// <summary>
+  /// Validates that transitions don't reference not defined states
+  /// </summary>
+  /// <param name="states"></param>
+  /// <exception cref="InvalidOperationException"></exception>
   private void ValidateTransitions(Dictionary<TState, IState<TState, TEvent>> states)
   {
     foreach(var stateConfig in _stateConfigs.Values.Select(_ => _.StateConfig))

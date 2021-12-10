@@ -8,7 +8,7 @@ public static partial class Config<TState, TEvent>
   {
     protected Exit(StateConfig stateConfig) : base(stateConfig) { }
 
-    public ITransitions OnExit(Action exitAction)
+    public ITransitionsEx OnExit(Action exitAction)
     {
       StateConfig.ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
       return this;

@@ -49,11 +49,11 @@ public class ConfigurationTest : StateMachineTestBase
   }
 
   [Test]
-  public void should_throw_exception_if_pass_null_initial_state_id_to_build()
+  public void should_throw_exception_if_pass_null_initial_state_id()
   {
     // --arrange
     var builder = new Builder<string, int>(OnException);
-    builder.DefineState(Initial).AllowReentrancy(Event1);
+    builder.DefineState(Initial).AllowReentrancy(GoToStateX);
 
     // --act
     Action target = () => builder.Build(null!);
@@ -72,23 +72,23 @@ public class ConfigurationTest : StateMachineTestBase
 #pragma warning disable 8625
 
     // --act
-    Action target01 = () => config.OnEnter((Action) null!);
-    Action target02 = () => config.OnEnter((Func<Task>) null!);
+    Action target01 = () => config.OnEnter((Action)null!);
+    Action target02 = () => config.OnEnter((Func<Task>)null!);
 
-    Action target03 = () => config.OnEnter((Action<object>) null!);
-    Action target04 = () => config.OnEnter((Func<object, Task>) null!);
+    Action target03 = () => config.OnEnter((Action<object>)null!);
+    Action target04 = () => config.OnEnter((Func<object, Task>)null!);
 
-    Action target05 = () => config.OnEnter((Action<object, object>) null!);
-    Action target06 = () => config.OnEnter((Func<object, object, Task>) null!);
+    Action target05 = () => config.OnEnter((Action<object, object>)null!);
+    Action target06 = () => config.OnEnter((Func<object, object, Task>)null!);
 
-    Action target07 = () => config.OnEnter((Action<IStateMachine<string>>) null!);
-    Action target08 = () => config.OnEnter((Func<IStateMachine<string>, Task>) null!);
+    Action target07 = () => config.OnEnter((Action<IStateController<string>>)null!);
+    Action target08 = () => config.OnEnter((Func<IStateController<string>, Task>)null!);
 
-    Action target09 = () => config.OnEnter((Action<IStateMachine<string>, object>) null!);
-    Action target10 = () => config.OnEnter((Func<IStateMachine<string>, object, Task>) null!);
+    Action target09 = () => config.OnEnter((Action<IStateController<string>, object>)null!);
+    Action target10 = () => config.OnEnter((Func<IStateController<string>, object, Task>)null!);
 
-    Action target11 = () => config.OnEnter((Action<IStateMachine<string>, object, object>) null!);
-    Action target12 = () => config.OnEnter((Func<IStateMachine<string>, object, object, Task>) null!);
+    Action target11 = () => config.OnEnter((Action<IStateController<string>, object, object>)null!);
+    Action target12 = () => config.OnEnter((Func<IStateController<string>, object, object, Task>)null!);
 #pragma warning restore 8625
 
     // --assert
@@ -107,6 +107,25 @@ public class ConfigurationTest : StateMachineTestBase
   }
 
   [Test]
+  public void on_exit_should_check_arguments_for_null()
+  {
+    // --arrange
+    var builder = new Builder<string, string>(OnException);
+    var config  = builder.DefineState(Initial);
+
+#pragma warning disable 8625
+
+    // --act
+    Action target01 = () => config.OnExit(null!);
+    Action target03 = () => config.OnExit((Action<object>)null!);
+#pragma warning restore 8625
+
+    // --assert
+    target01.Should().ThrowExactly<ArgumentNullException>();
+    target03.Should().ThrowExactly<ArgumentNullException>();
+  }
+
+  [Test]
   public void on_enter_should_not_accept_async_void_method()
   {
     // --arrange
@@ -117,9 +136,9 @@ public class ConfigurationTest : StateMachineTestBase
     async void AsyncMethod1()                                   { }
     async void AsyncMethod2(object                _)            { }
     async void AsyncMethod3(object                _, object __) { }
-    async void AsyncMethod4(IStateMachine<string> _)                        { }
-    async void AsyncMethod5(IStateMachine<string> _, object __)             { }
-    async void AsyncMethod6(IStateMachine<string> _, object __, object ___) { }
+    async void AsyncMethod4(IStateController<string> _)                        { }
+    async void AsyncMethod5(IStateController<string> _, object __)             { }
+    async void AsyncMethod6(IStateController<string> _, object __, object ___) { }
 #pragma warning restore 1998
 
     // --act
@@ -154,12 +173,12 @@ public class ConfigurationTest : StateMachineTestBase
 
     // --act
 #pragma warning disable 8625
-    Action target1 = () => config.AddTransition(null, Initial);
+    Action target1 = () => config.AddTransition(null,    Initial);
     Action target2 = () => config.AddTransition(Initial, null, null!);
-    Action target3 = () => config.AddTransition(null, () => "func");
-    Action target4 = () => config.AddTransition(Initial, (Func<string>) null!);
-    Action target5 = () => config.AddTransition(null, GetState);
-    Action target6 = () => config.AddTransition(Initial, (GetState<string>) null!);
+    Action target3 = () => config.AddTransition(null,    () => "func");
+    Action target4 = () => config.AddTransition(Initial, (Func<string>)null!);
+    Action target5 = () => config.AddTransition(null,    (out string? s) => GetState(out s));
+    Action target6 = () => config.AddTransition(Initial, (GetState<string>)null!);
 #pragma warning restore 8625
 
     // --assert
@@ -207,7 +226,7 @@ public class ConfigurationTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.GetOrDefineState(Initial).AllowReentrancy(Event1);
+    builder.GetOrDefineState(Initial).AllowReentrancy(GoToStateX);
 
     // --act
     var actual = builder.Build(Initial);

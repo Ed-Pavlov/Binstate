@@ -2,62 +2,62 @@
 
 namespace Binstate;
 
-/// <summary>
-/// Interface is used to make argument types invariant in order to pass arguments of compatible types
-/// </summary>
-/// <typeparam name="TPassed">Type of argument passed to <see cref="IStateMachine{TState,TEvent}.Raise{T}"/> method </typeparam>
-/// <typeparam name="TRelay">Type of the argument attached to one of the currently active states
-/// and passed to <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}()"/> method.
-/// </typeparam>
-public interface ITuple<out TPassed, out TRelay>
-{
-  /// <summary>
-  /// Passed argument value
-  /// </summary>
-  TPassed PassedArgument { get; }
 
-  /// <summary>
-  /// Relayed argument value
-  /// </summary>
-  TRelay RelayedArgument { get; }
+/// <summary>
+///   This data structure is used if a state needs to accept two arguments at once,
+///   usually one is passed to <see cref="IStateMachine{TEvent}.Raise{T}" /> method and the second one is obtained from the previously active
+///   states during transition automatically. But they could be both from the active states.
+///
+///   Interface is used to make argument types invariant in order to pass arguments of compatible types.
+/// </summary>
+public interface ITuple<out TX, out TY>
+{
+  /// <summary />
+  TX ItemX { get; }
+
+  /// <summary />
+  TY ItemY { get; }
 }
 
 /// <inheritdoc />
-public class Tuple<TPassed, TRelay> : ITuple<TPassed, TRelay>
+public class Tuple<TX, TY> : ITuple<TX, TY>
 {
-  /// <summary/>
-  public Tuple(TPassed passedArgument, TRelay relayedArgument)
+  /// <summary />
+  public Tuple(TX x, TY y)
   {
-    PassedArgument  = passedArgument;
-    RelayedArgument = relayedArgument;
+    ItemX  = x;
+    ItemY = y;
   }
 
   /// <inheritdoc />
-  public TPassed PassedArgument { get; }
+  public TX ItemX { get; }
 
   /// <inheritdoc />
-  public TRelay RelayedArgument { get; }
+  public TY ItemY { get; }
 
-  private bool Equals(ITuple<TPassed, TRelay>? other)
+  private bool Equals(ITuple<TX, TY>? other)
     => other is not null
-    && EqualityComparer<TPassed>.Default.Equals(PassedArgument, other.PassedArgument)
-    && EqualityComparer<TRelay>.Default.Equals(RelayedArgument, other.RelayedArgument);
+    && EqualityComparer<TX>.Default.Equals(ItemX, other.ItemX)
+    && EqualityComparer<TY>.Default.Equals(ItemY, other.ItemY);
 
-  /// <remarks>Equals doesnt check exact type of other object, only if it can be cast to <see cref="ITuple{TPassed,TRelay}"/> </remarks>
+  /// <remarks> Equals doesnt check exact type of other object, only if it can be cast to <see cref="ITuple{TPassed,TRelay}" /> </remarks>
   public override bool Equals(object? obj)
   {
     if(ReferenceEquals(null, obj)) return false;
     if(ReferenceEquals(this, obj)) return true;
 
-    return Equals(obj as ITuple<TPassed, TRelay>);
+    return Equals(obj as ITuple<TX, TY>);
   }
 
-  /// <summary/>
+  /// <summary />
   public override int GetHashCode()
   {
     unchecked
     {
-      return (EqualityComparer<TPassed>.Default.GetHashCode(PassedArgument) * 397) ^ EqualityComparer<TRelay>.Default.GetHashCode(RelayedArgument);
+      return ( EqualityComparer<TX>.Default.GetHashCode(ItemX) * 397 ) ^ EqualityComparer<TY>.Default.GetHashCode(ItemY);
     }
   }
+
+  /// <inheritdoc />
+  public override string ToString() => $"{{{nameof(ItemX)}: {ItemX}, {nameof(ItemY)}:{ItemY}}}";
 }

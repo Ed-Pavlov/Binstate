@@ -17,7 +17,7 @@ jobs:
   build:
 
     runs-on: windows-latest
-    
+
     steps:
     -
       name: Checkout
@@ -42,7 +42,7 @@ jobs:
       with:
         dotnet-version: 6.0.x
 
-    # Restore build and test as one command in order to not copy/paste the same arguments      
+    # Restore build and test as one command in order to not copy/paste the same arguments
     -
       name: Restore and build
       run:  dotnet build --packages Packages -c ${{env.configuration}} -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
@@ -51,10 +51,10 @@ jobs:
       name: Run tests
       run:  dotnet test --no-build
 
-# dotMemory Unit doesn't work on github agent, looks like there is not enough privileges to run profiling
-#    -
-#      name: Run dotMemory tests
-#      run:  Packages\jetbrains.dotmemoryunit\3.1.20200127.214830\lib\tools\dotMemoryUnit.exe "C:\Program Files\dotnet\dotnet.exe" -- test --no-build --filter TestCategory=MemoryTest
+    # dotMemory Unit doesn't work on github agent, looks like there is not enough privileges to run profiling
+    #    -
+    #      name: Run dotMemory tests
+    #      run:  Packages\jetbrains.dotmemoryunit\3.1.20200127.214830\lib\tools\dotMemoryUnit.exe "C:\Program Files\dotnet\dotnet.exe" -- test --no-build --filter TestCategory=MemoryTest
 
     # Place nuget packages into env.nugets-dir directory
     -

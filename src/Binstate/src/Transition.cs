@@ -3,11 +3,23 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Binstate;
 
-internal class Transition<TState, TEvent>
+internal interface ITransition
 {
-  private readonly IActionInvoker? _action;
+  void InvokeActionSafe<T>(T argument, Action<Exception> onException);
+}
 
-  public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, IActionInvoker? action)
+internal class Transition<TState, TEvent> : ITransition
+{
+  private readonly object? _action;
+
+  public readonly GetState<TState> GetTargetStateId;
+
+  /// <summary>
+  ///   Means a transition targets the predefined state in opposite to the calculated dynamically runtime
+  /// </summary>
+  public readonly bool IsStatic;
+
+  public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, object? action)
   {
     Event            = @event;
     GetTargetStateId = getTargetStateId;
@@ -15,35 +27,26 @@ internal class Transition<TState, TEvent>
     _action          = action;
   }
 
-  /// <summary>
-  /// Means a transition targets the predefined state in opposite to the calculated dynamically runtime
-  /// </summary>
-  public readonly bool IsStatic;
-
   public TEvent Event { get; }
-
-  public readonly GetState<TState> GetTargetStateId;
 
   public void InvokeActionSafe<T>(T argument, Action<Exception> onException)
   {
-    if(_action is null) return;
     try
     {
-      if(_action is IActionInvoker<T> invoker)
-        invoker.Invoke(argument);
-      else
-        _action.Invoke();
-    }
-    catch(Exception exc)
-    { // transition action can throw "user" exception
-      onException(exc);
-    }
-  }
-  public void InvokeActionSafe(Action<Exception> onException)
-  {
-    try
-    {
-      _action?.Invoke();
+      switch(_action)
+      {
+        case null: break;
+
+        case Action action:
+          action();
+          break;
+
+        case Action<T> actionT:
+          actionT(argument);
+          break;
+
+        default: throw new ArgumentOutOfRangeException();
+      }
     }
     catch(Exception exc)
     { // transition action can throw "user" exception

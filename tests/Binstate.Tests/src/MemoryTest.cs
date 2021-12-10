@@ -11,7 +11,7 @@ public class BoxingTest : StateMachineTestBase
   [TestCaseSource(nameof(RaiseWays))]
   [Category(MemoryTest)]
   [DotMemoryUnit(FailIfRunWithoutSupport = false)]
-  [AssertTraffic(AllocatedObjectsCount = 0, Types = new[] { typeof(ValueType1), typeof(ValueType2) })]
+  [AssertTraffic(AllocatedObjectsCount = 0, Types = new[] { typeof(ValueType1), typeof(ValueType2), })]
   public void should_not_boxing_passed_value_type_arguments(RaiseWay raiseWay)
   {
     // don't use FakeItEasy due to it boxes value types during comparison
@@ -25,11 +25,11 @@ public class BoxingTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).AddTransition(Event1, State1);
+    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
 
-    builder.DefineState(State1)
+    builder.DefineState(StateX)
            .OnEnter<ValueType1>(_ => { })
-           .AddTransition(Event2, State2);
+           .AddTransition(GoToStateY, StateY);
 
     builder.DefineState(Parent)
            .OnEnter<ValueType2>(value => actual2 = value);
@@ -38,18 +38,18 @@ public class BoxingTest : StateMachineTestBase
            .AsSubstateOf(Parent)
            .OnEnter<ValueType1>(value => actual1 = value);
 
-    builder.DefineState(State2)
+    builder.DefineState(StateY)
            .AsSubstateOf(Child)
            .OnEnter<ITuple<ValueType2, ValueType1>>(value => actualTuple = value);
 
-    var target = builder.Build(Initial, true);
+    var target = builder.Build(Initial, ArgumentTransferMode.Free);
 
     var startPoint = dotMemory.Check();
 
     // --act
-    target.Raise(raiseWay, Event1, expected1); // pass to State1
+    target.Raise(raiseWay, GoToStateX, expected1); // pass to State1
 
-    target.Relaying<ValueType1>().Raise(raiseWay, Event2, expected2); // pass everywhere
+    target.Raise(raiseWay, GoToStateY, expected2); // pass everywhere
 
     // --assert
     dotMemory.Check(
@@ -58,20 +58,20 @@ public class BoxingTest : StateMachineTestBase
               .Where(_ => _.Type.Is<ValueType1>() | _.Type.Is<ValueType2>())
               .AllocatedMemory.ObjectsCount
               .Should()
-              .Be(0));
-
+              .Be(0)
+    );
 
     // dont' use actual.Should().Be(expected); due to this method leads boxing
     actual1.Value.Should().Be(expected1.Value);
     actual2.Value.Should().Be(expected2.Value);
-    actualTuple!.RelayedArgument.Value.Should().Be(expected1.Value);
-    actualTuple.PassedArgument.Value.Should().Be(expected2.Value);
+    actualTuple!.ItemY.Value.Should().Be(expected1.Value);
+    actualTuple.ItemX.Value.Should().Be(expected2.Value);
   }
 
   [Test]
   [Category(MemoryTest)]
   [DotMemoryUnit(FailIfRunWithoutSupport = false)]
-  [AssertTraffic(AllocatedObjectsCount = 0, Types = new[] { typeof(ValueType1) })]
+  [AssertTraffic(AllocatedObjectsCount = 0, Types = new[] { typeof(ValueType1), })]
   public void should_not_box_value_type_instance_passed_by_reflection()
   {
     // don't use FakeItEasy due to it boxes value types during comparison
@@ -87,7 +87,7 @@ public class BoxingTest : StateMachineTestBase
     var genericMethod = method.MakeGenericMethod(source.GetType().GetGenericArguments()[0]);
 
     // --act
-    genericMethod.Invoke(null, new object[] { source, target });
+    genericMethod.Invoke(null, new object[] { source, target, });
 
     // --assert
     target.Should().BeOfType<Target<ValueType1>>().Which.Arg.Value.Should().Be(expected.Value);
@@ -106,6 +106,7 @@ public class BoxingTest : StateMachineTestBase
   }
 
   private class Source { }
+
   private class Source<T> : Source
   {
     public readonly T Arg;
@@ -113,6 +114,7 @@ public class BoxingTest : StateMachineTestBase
   }
 
   private class Target { }
+
   private class Target<T> : Target
   {
     public T? Arg;

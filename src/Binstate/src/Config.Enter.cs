@@ -7,26 +7,13 @@ namespace Binstate;
 
 public static partial class Config<TState, TEvent>
 {
-  /// <summary>
-  /// This class is used to configure enter action of the currently configured state.
-  /// </summary>
-  public class Enter : Exit
+  internal class Enter : Exit, IEnter
   {
     private const string AsyncVoidMethodNotSupported = "'async void' methods are not supported, use Task return type for async method";
 
-    private IStateFactory _stateFactory = new NoArgumentStateFactory();
+    internal Enter(StateConfig stateConfig) : base(stateConfig) { }
 
-    internal IEnterActionInvoker? EnterActionInvoker;
-
-    internal Enter(TState stateId) : base(stateId) { }
-
-    /// <summary>
-    /// Specifies the simple action to be called on entering the currently configured state in case of controlling the current state
-    /// or transition to another one is not needed.
-    /// This overload is used to provide blocking action. To provide async action use <see cref="OnEnter(Func{IStateMachine{TEvent}, Task})"/>.
-    /// </summary>
-    /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public IExit OnEnter(Action enterAction)
+    public IExitEx OnEnter(Action enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
@@ -34,57 +21,31 @@ public static partial class Config<TState, TEvent>
       return OnEnter(_ => enterAction());
     }
 
-    /// <summary>
-    /// Specifies the action to be called on entering the currently configured state.
-    /// This overload is used to provide blocking action. To provide async action use <see cref="OnEnter(Func{IStateMachine{TEvent}, Task})"/>.
-    /// </summary>
-    /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public IExit OnEnter(Action<IStateMachine<TEvent>> enterAction)
+    public IExitEx OnEnter(Action<IStateController<TEvent>> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-      EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(enterAction);
-
+      StateConfig.EnterAction = WrapAction(enterAction);
       return this;
     }
 
-    /// <summary>
-    /// Specifies the simple action to be called on entering the currently configured state in case of controlling the current state
-    /// or transition to another one is not needed.
-    /// This overload is used to provide non-blocking async action.
-    /// </summary>
-    /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public IExit OnEnter(Func<Task> enterAction)
+    public IExitEx OnEnter(Func<Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
       return OnEnter(_ => enterAction());
     }
 
-    /// <summary>
-    /// Specifies the action to be called on entering the currently configured state.
-    /// This overload is used to provide non-blocking async action.
-    /// </summary>
-    /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public IExit OnEnter(Func<IStateMachine<TEvent>, Task> enterAction)
+    public IExitEx OnEnter(Func<IStateController<TEvent>, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-      EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(enterAction);
 
+      StateConfig.EnterAction = WrapAction(enterAction);
       return this;
     }
 
-    /// <summary>
-    /// Specifies the simple action with parameter to be called on entering the currently configured state in case of controlling the current state
-    /// or transition to another one is not needed.
-    /// This overload is used to provide blocking action. To provide async action use
-    /// <see>
-    ///   <cref>OnEnter(Func{IStateMachine, T, Task})</cref>
-    /// </see>.
-    /// </summary>
-    /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
     public IExit<TArgument> OnEnter<TArgument>(Action<TArgument> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
@@ -93,121 +54,82 @@ public static partial class Config<TState, TEvent>
       return OnEnter<TArgument>((_, argument) => enterAction(argument));
     }
 
-#pragma warning disable 1574
-    /// <summary>
-    /// Specifies the action with parameter to be called on entering the currently configured state.
-    /// This overload is used to provide blocking action. To provide async action use
-    /// <see cref="OnEnter{TArgument}(Func{IStateMachine{TEvent}, TArgument, Task})"/>
-    /// </summary>
-    /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-#pragma warning restore 1574
-    public IExit<TArgument> OnEnter<TArgument>(Action<IStateMachine<TEvent>, TArgument> enterAction)
+    public IExit<TArgument> OnEnter<TArgument>(Action<IStateController<TEvent>, TArgument> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-      EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(enterAction);
-      _stateFactory      = new StateFactory<TArgument>();
-
-      return new Exit<TArgument>(this);
+      StateConfig.EnterAction = WrapAction(enterAction);
+      StateConfig.Factory     = new StateFactory<TArgument>();
+      return new Exit<TArgument>(StateConfig);
     }
 
-    /// <summary>
-    /// Specifies the simple action with parameter to be called on entering the currently configured state in case of controlling the current state
-    /// or transition to another one is not needed.
-    /// This overload is used to provide non-blocking async action.
-    /// </summary>
-    /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public IExit OnEnter<TArgument>(Func<TArgument, Task> enterAction)
+    public IExit<TArgument> OnEnter<TArgument>(Func<TArgument, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
       return OnEnter<TArgument>((_, argument) => enterAction(argument));
     }
 
-    /// <summary>
-    /// Specifies the action with parameter to be called on entering the currently configured state.
-    /// This overload is used to provide non-blocking async action.
-    /// </summary>
-    /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public IExit OnEnter<TArgument>(Func<IStateMachine<TEvent>, TArgument, Task> enterAction)
+    public IExit<TArgument> OnEnter<TArgument>(Func<IStateController<TEvent>, TArgument, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-      EnterActionInvoker = EnterActionInvokerFactory<TEvent>.Create(enterAction);
-      _stateFactory      = new StateFactory<TArgument>();
-
-      return this;
+      StateConfig.EnterAction = WrapAction(enterAction);
+      StateConfig.Factory     = new StateFactory<TArgument>();
+      return new Exit<TArgument>(StateConfig);
     }
 
-    /// <summary>
-    /// Specifies the action with two parameters, one passed using <see cref="StateMachine{TState,TEvent}.Raise{TArgument}"/>
-    /// and another relayed from the currently active state using <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}()"/>
-    /// to be called on entering the currently configured state for case when controlling the current state
-    /// or transition to another one is not needed.
-    /// This overload is used to provide blocking action. To provide async action use
-    /// <see cref="OnEnter{TArgument, TRelay}(Func{TArgument, TRelay, Task})"/>
-    /// </summary>
-    /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
     public IExit<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Action<TArgument, TRelay> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
-
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-      return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.PassedArgument, tuple.RelayedArgument));
+      return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.ItemX, tuple.ItemY));
     }
 
-#pragma warning disable 1574
-    /// <summary>
-    /// Specifies the action with two parameters, one passed using <see cref="StateMachine{TState,TEvent}.Raise{TArgument}"/>
-    /// and another relayed from the currently active state using <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}()"/>
-    /// to be called on entering the currently configured state.
-    /// This overload is used to provide blocking action. To provide async action use
-    /// <see cref="OnEnter{TArgument, TRelay}(Func{IStateMachine{TEvent}, TArgument, TRelay, Task})"/>
-    /// </summary>
-    /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-#pragma warning restore 1574
-    public IExit<ITuple<TArgument, TRelay>>  OnEnter<TArgument, TRelay>(Action<IStateMachine<TEvent>, TArgument, TRelay> enterAction)
+    public IExit<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Action<IStateController<TEvent>, TArgument, TRelay> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
-
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-      return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.PassedArgument, tuple.RelayedArgument));
+      return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.ItemX, tuple.ItemY));
     }
 
-    /// <summary>
-    /// Specifies the action with two parameters, one passed using <see cref="StateMachine{TState,TEvent}.Raise{TArgument}"/>
-    /// and another relayed from the currently active state using <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}()"/>
-    /// to be called on entering the currently configured state for case when controlling the current state
-    /// or transition to another one is not needed.
-    /// This overload is used to provide non-blocking async action.
-    /// </summary>
-    /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public IExit OnEnter<TArgument, TRelay>(Func<TArgument, TRelay, Task> enterAction)
+    public IExit<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Func<TArgument, TRelay, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-      return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.PassedArgument, tuple.RelayedArgument));
+      return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.ItemX, tuple.ItemY));
     }
 
-    /// <summary>
-    /// Specifies the action with two parameters, one passed using <see cref="StateMachine{TState,TEvent}.Raise{TArgument}"/>
-    /// and another relayed from the currently active state using <see cref="StateMachine{TState,TEvent}.Relaying{TRelay}()"/>
-    /// to be called on entering the currently configured state.
-    /// This overload is used to provide non-blocking async action.
-    /// </summary>
-    /// <remarks>Do not use async void methods, async methods should return <see cref="Task"/></remarks>
-    public IExit OnEnter<TArgument, TRelay>(Func<IStateMachine<TEvent>, TArgument, TRelay, Task> enterAction)
+    public IExit<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Func<IStateController<TEvent>, TArgument, TRelay, Task> enterAction)
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-      return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.PassedArgument, tuple.RelayedArgument));
+      return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.ItemX, tuple.ItemY));
     }
-
-    internal State<TState, TEvent> CreateState(State<TState, TEvent>? parentState) => _stateFactory.CreateState(this, parentState);
 
     private static bool IsAsyncMethod(MemberInfo method) => method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) is not null;
+
+    private static Func<IStateController<TEvent>, Task?> WrapAction(Action<IStateController<TEvent>> enterAction)
+      => (controller) =>
+      {
+        enterAction(controller);
+        return null;
+      };
+
+    private static Func<IStateController<TEvent>, TArgument, Task?> WrapAction<TArgument>(Action<IStateController<TEvent>, TArgument> enterAction)
+      => (controller, argument) =>
+      {
+        enterAction(controller, argument);
+        return null;
+      };
+
+    private static Func<IStateController<TEvent>, Task?> WrapAction(Func<IStateController<TEvent>, Task> enterAction)
+      => enterAction;
+
+    private static Func<IStateController<TEvent>, TArgument, Task?> WrapAction<TArgument>(Func<IStateController<TEvent>, TArgument, Task> enterAction)
+      => enterAction;
   }
 }

@@ -24,6 +24,14 @@ ProjectSection(SolutionItems) = preProject
 	.github\workflows\release-to-market.yml = .github\workflows\release-to-market.yml
 EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "global", "global", "{A7E61CED-BE75-4828-9209-E8455B62005F}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitignore = .gitignore
+		Binstate.sln.DotSettings = Binstate.sln.DotSettings
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

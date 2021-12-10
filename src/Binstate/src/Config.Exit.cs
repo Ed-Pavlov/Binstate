@@ -2,23 +2,23 @@ using System;
 
 namespace Binstate;
 
-// ReSharper disable once UnusedTypeParameter
 public static partial class Config<TState, TEvent>
 {
-  /// <inheritdoc cref="IExit" />
-  public class Exit : Transitions, IExit
+  internal class Exit : Transitions, IExitEx
   {
-    internal IActionInvoker? ExitActionInvoker;
+    protected Exit(StateConfig stateConfig) : base(stateConfig) { }
 
-    /// <inheritdoc />
-    protected Exit(TState stateId) : base(stateId) { }
-
-    /// <inheritdoc />
-    public virtual ITransitions OnExit(Action exitAction)
+    public ITransitionsEx OnExit(Action exitAction)
     {
-      if(exitAction == null) throw new ArgumentNullException(nameof(exitAction));
-      ExitActionInvoker = new ActionInvoker(exitAction);
+      StateConfig.ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
       return this;
+    }
+
+    public ITransitions<T> OnExit<T>(Action<T> exitAction)
+    {
+      StateConfig.ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
+      StateConfig.Factory = new StateFactory<T>();
+      return new Transitions<T>(StateConfig);
     }
   }
 }

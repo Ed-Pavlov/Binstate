@@ -4,7 +4,7 @@ namespace Binstate;
 
 internal readonly struct Maybe<T>
 {
-  public static readonly Maybe<T> Nothing = new();
+  public static readonly Maybe<T> Nothing = new Maybe<T>();
 
   private readonly T _value;
 
@@ -21,5 +21,5 @@ internal readonly struct Maybe<T>
 
 internal static class Maybe
 {
-  public static Maybe<T> ToMaybe<T>(this T value) => new(value);
+  public static Maybe<T> ToMaybe<T>(this T value) => new Maybe<T>(value);
 }

@@ -9,7 +9,7 @@ public partial class Example
   [SuppressMessage("ReSharper", "UnusedMember.Global")]
   public class Elevator
   {
-    private readonly StateMachine<States, Events> _elevator;
+    private readonly IStateMachine<Events> _elevator;
 
     public Elevator()
     {
@@ -30,9 +30,9 @@ public partial class Example
        .OnEnter(AnnounceFloor)
        .OnExit(() => Beep(2))
        .AddTransition(Events.CloseDoor, States.DoorClosed)
-       .AddTransition(Events.OpenDoor, States.DoorOpen)
-       .AddTransition(Events.GoUp, States.MovingUp)
-       .AddTransition(Events.GoDown, States.MovingDown);
+       .AddTransition(Events.OpenDoor,  States.DoorOpen)
+       .AddTransition(Events.GoUp,      States.MovingUp)
+       .AddTransition(Events.GoDown,    States.MovingDown);
 
       builder
        .DefineState(States.Moving)
@@ -86,19 +86,19 @@ public partial class Example
       /* beep */
     }
 
-    private void CheckOverload(IStateMachine<Events> stateMachine)
+    private void CheckOverload(IStateController<Events> stateController)
     {
       if(IsOverloaded())
       {
         AnnounceOverload();
-        stateMachine.RaiseAsync(Events.Stop);
+        stateController.RaiseAsync(Events.Stop);
       }
     }
 
     private bool IsOverloaded() => false;
 
-    private enum States { None, Healthy, OnFloor, Moving, MovingUp, MovingDown, DoorOpen, DoorClosed, Error }
+    private enum States { None, Healthy, OnFloor, Moving, MovingUp, MovingDown, DoorOpen, DoorClosed, Error, }
 
-    private enum Events { GoUp, GoDown, OpenDoor, CloseDoor, Stop, Error, Reset }
+    private enum Events { GoUp, GoDown, OpenDoor, CloseDoor, Stop, Error, Reset, }
   }
 }

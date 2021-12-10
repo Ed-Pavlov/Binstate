@@ -4,7 +4,7 @@ using System.IO;
 using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
-// ReSharper disable RedundantTypeArgumentsOfMethod
+
 
 namespace Binstate.Tests;
 
@@ -22,16 +22,16 @@ public class ArgumentPassingTest : StateMachineTestBase
 
     builder
      .DefineState(Initial)
-     .AddTransition(Event1, State1);
+     .AddTransition(GoToStateX, StateX);
 
     builder
-     .DefineState(State1)
+     .DefineState(StateX)
      .OnEnter<string>((sm, param) => actual = param);
 
     var target = builder.Build(Initial);
 
     // --act
-    target.Raise(raiseWay, Event1, expected);
+    target.Raise(raiseWay, GoToStateX, expected);
 
     // --assert
     actual.Should().Be(expected);
@@ -46,13 +46,13 @@ public class ArgumentPassingTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).AddTransition(Event1, State1);
-    builder.DefineState(State1).OnEnter<IDisposable>(onEnter);
+    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
+    builder.DefineState(StateX).OnEnter(onEnter);
 
     var target = builder.Build(Initial);
 
     // --act
-    target.Raise(raiseWay, Event1, expected);
+    target.Raise(raiseWay, GoToStateX, expected);
 
     // --assert
     A.CallTo(() => onEnter(expected)).MustHaveHappenedOnceExactly();
@@ -69,9 +69,9 @@ public class ArgumentPassingTest : StateMachineTestBase
     var builder = new Builder<string, string>(OnException);
 
     builder.DefineState(Initial).AddTransition(Child, Child);
-    builder.DefineState(Root).OnEnter<IDisposable>(onEnterRoot);
+    builder.DefineState(Root).OnEnter(onEnterRoot);
     builder.DefineState(Parent).AsSubstateOf(Root).OnEnter(sm => { });
-    builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<Stream>(onEnterChild);
+    builder.DefineState(Child).AsSubstateOf(Parent).OnEnter(onEnterChild);
 
     var target = builder.Build(Initial);
 
@@ -91,53 +91,21 @@ public class ArgumentPassingTest : StateMachineTestBase
 
     builder
      .DefineState(Initial)
-     .AddTransition(Event1, State1);
+     .AddTransition(GoToStateX, StateX);
 
     builder
-     .DefineState(State1)
+     .DefineState(StateX)
      .OnEnter<string>((sm, value) => { });
 
     var stateMachine = builder.Build(Initial);
 
     // --act
-    Action target = () => stateMachine.Raise(raiseWay, Event1, 983);
+    Action target = () => stateMachine.Raise(raiseWay, GoToStateX, 983);
 
     // --assert
     target.Should()
           .ThrowExactly<TransitionException>()
-          .WithMessage($"The state '{State1}' requires argument of type '{typeof(string)}' but no argument of compatible type has passed nor relayed");
-  }
-
-  [TestCaseSource(nameof(RaiseWays))]
-  public void should_throw_exception_if_argument_specified_and_no_argument_required_by_all_activated_states(RaiseWay raiseWay)
-  {
-    // --arrange
-    var builder = new Builder<string, int>(OnException);
-
-    builder
-     .DefineState(Initial)
-     .AddTransition(Event1, Child);
-
-    builder
-     .DefineState(Parent)
-     .OnEnter(sm => { });
-
-    builder
-     .DefineState(Child)
-     .AsSubstateOf(Parent)
-     .OnEnter(sm => { });
-
-    var stateMachine = builder.Build(Initial);
-
-    // --act
-    Action target = () => stateMachine.Raise(raiseWay, Event1, "argument");
-
-    // --assert
-    target.Should()
-          .ThrowExactly<TransitionException>()
-          .WithMessage(
-             $"Transition from the state '{Initial}' by the event '{Event1}' will activate following states [{Parent}->{Child}]. No one of them are defined with the enter "
-           + "action accepting an argument, but argument was passed or relayed");
+          .WithMessage($"The state '{StateX}' requires argument of type '{typeof(string)}' but no argument*");
   }
 
   [TestCaseSource(nameof(RaiseWays))]
@@ -148,31 +116,30 @@ public class ArgumentPassingTest : StateMachineTestBase
 
     builder
      .DefineState(Initial)
-     .AddTransition(Event1, State1);
+     .AddTransition(GoToStateX, StateX);
 
     builder
-     .DefineState(State1)
+     .DefineState(StateX)
      .OnEnter<int>(value => { });
 
     var stateMachine = builder.Build(Initial);
 
     // --act
-    Action target = () => stateMachine.Raise(raiseWay, Event1);
+    Action target = () => stateMachine.Raise(raiseWay, GoToStateX);
 
     // --assert
     target.Should()
           .ThrowExactly<TransitionException>()
-          .WithMessage($"The enter action of the state '{State1}' is configured as required an argument but no argument was specified.");
+          .WithMessage($"The state '{StateX}' requires argument of type '{typeof(int)}' but no argument*");
   }
 
   [TestCaseSource(nameof(RaiseWays))]
-  public void should_throw_exception_if_parent_and_child_state_has_not_assignable_arguments_enable_loose_relaying_is_true_and_argument_is_passed(RaiseWay way)
+  public void should_throw_exception_if_parent_and_child_state_has_not_assignable_arguments_enable_free_mode_and_argument_is_passed(RaiseWay way)
   {
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-
-    builder.DefineState(Initial).AddTransition(Event1, Child);
+    builder.DefineState(Initial).AddTransition(GoToStateX, Child);
 
     builder.DefineState(Parent)
            .OnEnter<int>((stateMachine, value) => { });
@@ -182,14 +149,43 @@ public class ArgumentPassingTest : StateMachineTestBase
            .OnEnter<string>(value => { });
 
     // --act
-    var sm = builder.Build(Initial, true);
+    var sm = builder.Build(Initial, ArgumentTransferMode.Free);
 
-    Action target = () => sm.Raise(Event1, "stringArgument");
+    Action target = () => sm.Raise(GoToStateX, "stringArgument");
 
     // --assert
     target
      .Should()
      .Throw<TransitionException>()
-     .WithMessage($"The state '{Parent}' requires argument of type '{typeof(int)}' but no argument of compatible type has passed nor relayed");
+     .WithMessage($"The state '{Parent}' requires argument of type '{typeof(int)}' but no argument*");
+  }
+
+  [TestCaseSource(nameof(RaiseWays))]
+  public void should_pass_the_same_argument_to_enter_exit_and_transition(RaiseWay raiseWay)
+  {
+    var expected     = new MemoryStream();
+    var onEnter      = A.Fake<Action<IDisposable>>();
+    var onExit       = A.Fake<Action<IDisposable>>();
+    var onTransition = A.Fake<Action<IDisposable>>();
+
+    // --arrange
+    var builder = new Builder<string, int>(OnException);
+    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
+    builder.DefineState(StateY);
+    builder.DefineState(StateX)
+           .OnEnter(onEnter)
+           .OnExit(onExit)
+           .AddTransition(GoToStateY, StateY, onTransition);
+
+    var target = builder.Build(Initial);
+
+    // --act
+    target.Raise(GoToStateX, expected);
+    target.Raise(GoToStateY);
+
+    // --assert
+    A.CallTo(() => onEnter(expected)).MustHaveHappenedOnceExactly()
+     .Then(A.CallTo(() => onExit(expected)).MustHaveHappenedOnceExactly())
+     .Then(A.CallTo(() => onTransition(expected)).MustHaveHappenedOnceExactly());
   }
 }

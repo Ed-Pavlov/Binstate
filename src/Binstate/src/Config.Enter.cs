@@ -26,7 +26,7 @@ public static partial class Config<TState, TEvent>
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-      StateConfig.EnterAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
+      StateConfig.EnterAction = WrapAction(enterAction);
       return this;
     }
 
@@ -41,7 +41,8 @@ public static partial class Config<TState, TEvent>
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-      StateConfig.EnterAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
+
+      StateConfig.EnterAction = WrapAction(enterAction);
       return this;
     }
 
@@ -58,8 +59,8 @@ public static partial class Config<TState, TEvent>
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
       if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-      StateConfig.EnterAction = EnterActionInvokerFactory<TEvent>.Create(enterAction);
-      StateConfig.Factory       = new StateFactory<TArgument>();
+      StateConfig.EnterAction = WrapAction(enterAction);
+      StateConfig.Factory     = new StateFactory<TArgument>();
       return new Exit<TArgument>(StateConfig);
     }
 
@@ -74,8 +75,8 @@ public static partial class Config<TState, TEvent>
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-      StateConfig.EnterAction  = EnterActionInvokerFactory<TEvent>.Create(enterAction);
-      StateConfig.Factory = new StateFactory<TArgument>();
+      StateConfig.EnterAction = WrapAction(enterAction);
+      StateConfig.Factory     = new StateFactory<TArgument>();
       return new Exit<TArgument>(StateConfig);
     }
 
@@ -110,5 +111,25 @@ public static partial class Config<TState, TEvent>
     }
 
     private static bool IsAsyncMethod(MemberInfo method) => method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) is not null;
+
+    private static Func<IStateController<TEvent>, Unit, Task?> WrapAction(Action<IStateController<TEvent>> enterAction)
+      => (controller, _) =>
+      {
+        enterAction(controller);
+        return null;
+      };
+
+    private static Func<IStateController<TEvent>, TArgument, Task?> WrapAction<TArgument>(Action<IStateController<TEvent>, TArgument> enterAction)
+      => (controller, argument) =>
+      {
+        enterAction(controller, argument);
+        return null;
+      };
+
+    private static Func<IStateController<TEvent>, Unit, Task?> WrapAction(Func<IStateController<TEvent>, Task> enterAction)
+      => (controller, _) => enterAction(controller);
+
+    private static Func<IStateController<TEvent>, TArgument, Task?> WrapAction<TArgument>(Func<IStateController<TEvent>, TArgument, Task> enterAction)
+      => enterAction;
   }
 }

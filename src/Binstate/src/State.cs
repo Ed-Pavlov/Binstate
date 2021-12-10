@@ -9,7 +9,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   where TState : notnull
   where TEvent : notnull
 {
-  private readonly IEnterActionInvoker? _enterAction;
+  private readonly object? _enterAction;
 
   /// <summary>
   ///   This event is used to wait while state's 'enter' action is finished before call 'exit' action and change the active state of the state machine.
@@ -38,7 +38,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
 
   public State(
     TState                                         id,
-    IEnterActionInvoker?                           enterAction,
+    object?                           enterAction,
     object?                                        exitAction,
     Dictionary<TEvent, Transition<TState, TEvent>> transitions,
     IState<TState, TEvent>?                        parentState)
@@ -88,13 +88,8 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
 
       if(_enterAction is null) return;
 
-      //TODO: looks like I can have only one "invoker" which will ignore "Unit" argument, try to discard this complex part
-      _task = _enterAction switch
-      {
-        EnterActionInvoker<TE> action             => action.Invoke(stateController),
-        IEnterActionInvoker<TE, TArgument> action => action.Invoke(stateController, Argument), // Argument is set externally
-        _                                             => throw new ArgumentOutOfRangeException(),
-      };
+      var enterAction = (Func<IStateController<TE>, TArgument, Task?>)_enterAction;
+      _task = enterAction(stateController, Argument);
     }
     catch(Exception exception)
     {

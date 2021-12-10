@@ -9,11 +9,10 @@ public static partial class Config<TState, TEvent>
     public readonly TState                                         StateId;
     public readonly Dictionary<TEvent, Transition<TState, TEvent>> TransitionList = new();
 
-
-    public IStateFactory        Factory       = new StateFactory();
-    public Maybe<TState>        ParentStateId = Maybe<TState>.Nothing;
-    public IEnterActionInvoker? EnterAction;
-    public object?              ExitAction;
+    public IStateFactory Factory       = new StateFactory();
+    public Maybe<TState> ParentStateId = Maybe<TState>.Nothing;
+    public object?       EnterAction;
+    public object?       ExitAction;
 
     public StateConfig(TState stateId) => StateId = stateId;
 

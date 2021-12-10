@@ -117,6 +117,7 @@ internal partial class StateMachine<TState, TEvent>
       }
 
       // call 'enter' actions out of the lock due to it can block execution
+
       CallEnterActions(enterActions);
     }
     catch(Exception exception)

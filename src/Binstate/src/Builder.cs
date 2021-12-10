@@ -140,9 +140,10 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
               parentState = parentState.ParentState;
             }
             else
-              throw new InvalidOperationException( //TODO: very strange message, revisit
+              throw new InvalidOperationException(
                 $"Parent state '{parentState}' requires argument of type '{parentState.GetArgumentType()}' whereas it's child state '{state}' requires "
-              + $"argument of not assignable to the parent type '{state.GetArgumentType()}'"
+              + $"argument of not assignable to the parent type '{state.GetArgumentType()}'. "
+              + $"Consider enabling {nameof(ArgumentTransferMode)}.{ArgumentTransferMode.Free}."
               );
           }
       }
@@ -160,9 +161,10 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
     foreach(var transition in
             stateConfig.TransitionList.Values.Where(_ => _.IsStatic)) // do not check dynamic transitions because they are depends on the app state
     {
-      transition.GetTargetStateId(out var targetStateId);
+      if(!transition.GetTargetStateId(out var targetStateId))
+        Throw.ImpossibleException();
 
-      if(! states.ContainsKey(targetStateId!))
+      if(! states.ContainsKey(targetStateId))
         throw new InvalidOperationException(
           $"The transition '{transition.Event}' from the state '{stateConfig.StateId}' references not defined state '{targetStateId}'"
         );

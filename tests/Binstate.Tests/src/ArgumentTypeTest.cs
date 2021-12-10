@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using Binstate.Tests.Util;
 using FakeItEasy;
 using NUnit.Framework;

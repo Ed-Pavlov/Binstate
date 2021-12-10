@@ -38,7 +38,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
 
   public State(
     TState                                         id,
-    object?                           enterAction,
+    object?                                        enterAction,
     object?                                        exitAction,
     Dictionary<TEvent, Transition<TState, TEvent>> transitions,
     IState<TState, TEvent>?                        parentState)
@@ -88,10 +88,10 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
 
       _task = _enterAction switch
       {
-        null => null,
+        null                                               => null,
         Func<IStateController<TE>, TArgument, Task?> enter => enter(stateController, Argument),
-        Func<IStateController<TE>, Task?> enter => enter(stateController),
-        _ => throw new ArgumentOutOfRangeException(),
+        Func<IStateController<TE>, Task?> enter            => enter(stateController),
+        _                                                  => throw new ArgumentOutOfRangeException(),
       };
     }
     catch(Exception exception)
@@ -125,13 +125,20 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
       // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till action finishes
       _task?.Wait();
 
-      if(_exitAction is null) { }
-      else if(_exitAction is Action<TArgument> actionT)
-        actionT(Argument);
-      else if(_exitAction is Action action)
-        action();
-      else
-        throw new ArgumentOutOfRangeException();
+      switch(_exitAction)
+      {
+        case null: break;
+
+        case Action action:
+          action();
+          break;
+
+        case Action<TArgument> actionT:
+          actionT(Argument);
+          break;
+
+        default: throw new ArgumentOutOfRangeException();
+      }
     }
     catch(Exception exception)
     {
@@ -139,8 +146,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     }
   }
 
-  public void CallTransitionActionSafe(ITransition transition, Action<Exception> onException)
-    => transition.InvokeActionSafe(Argument, onException);
+  public void CallTransitionActionSafe(ITransition transition, Action<Exception> onException) => transition.InvokeActionSafe(Argument, onException);
 
   // use [NotNullWhen(returnValue: true)] when upgrading to .netstandard 2.1 and update usages
   public bool FindTransitionTransitive(TEvent @event, out Transition<TState, TEvent>? transition)
@@ -162,7 +168,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     return false;
   }
 
-  IState? IState.        ParentState => ParentState;
+  IState? IState.ParentState => ParentState;
 
-  public override string ToString()  => Id.ToString();
+  public override string ToString() => Id.ToString();
 }

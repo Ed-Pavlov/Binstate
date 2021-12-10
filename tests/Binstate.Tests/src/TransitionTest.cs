@@ -32,8 +32,7 @@ public class TransitionTest : StateMachineTestBase
     target.Raise(raiseWay, GoToStateX);
 
     // --assert
-    A.CallTo(() => onExitInitial())
-     .MustHaveHappenedOnceExactly()
+    A.CallTo(() => onExitInitial()).MustHaveHappenedOnceExactly()
      .Then(A.CallTo(() => onTransit()).MustHaveHappenedOnceExactly())
      .Then(A.CallTo(() => onEnterState1()).MustHaveHappenedOnceExactly());
   }
@@ -170,7 +169,6 @@ public class TransitionTest : StateMachineTestBase
       return true;
     }
 
-
     var actual = new List<int>();
 
     // --arrange
@@ -208,7 +206,6 @@ public class TransitionTest : StateMachineTestBase
     static bool DynamicTransition(out int state)
     {
       state = stateId;
-
       return false;
     }
 

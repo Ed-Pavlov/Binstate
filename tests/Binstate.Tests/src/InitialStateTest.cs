@@ -9,6 +9,24 @@ namespace Binstate.Tests;
 public class InitialStateTest : StateMachineTestBase
 {
   [Test]
+  public void should_call_enter_of_initial_state()
+  {
+    var onEnter = A.Fake<Action>();
+
+    // --arrange
+    var target = new Builder<string, int>(OnException);
+
+    target.DefineState(Initial).OnEnter(onEnter).AddTransition(GoToStateX, StateX);
+    target.DefineState(StateX);
+
+    // --act
+    target.Build(Initial, "arg");
+
+    // --assert
+    A.CallTo(() => onEnter()).MustHaveHappenedOnceExactly();
+  }
+
+  [Test]
   public void should_pass_argument_to_initial_state_enter_action()
   {
     const string expected = "expected";
@@ -91,6 +109,7 @@ public class InitialStateTest : StateMachineTestBase
   public void should_use_parent_transition_if_transition_from_initial_state_is_not_set()
   {
     var onEnterX = A.Fake<Action>();
+
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
@@ -110,7 +129,7 @@ public class InitialStateTest : StateMachineTestBase
   public void should_throw_exception_if_initial_state_requires_argument_but_no_argument_is_specified()
   {
     // --arrange
-    var builder = new Builder<string, int>(_ =>{});
+    var builder = new Builder<string, int>(_ => { });
 
     builder.DefineState(Initial).OnEnter<string>(_ => { }).AllowReentrancy(GoToStateX);
 
@@ -127,7 +146,7 @@ public class InitialStateTest : StateMachineTestBase
   public void should_throw_exception_if_parent_of_initial_state_requires_argument_but_no_argument_is_specified()
   {
     // --arrange
-    var builder = new Builder<string, int>(_ =>{});
+    var builder = new Builder<string, int>(_ => { });
 
     builder.DefineState(Parent).OnEnter<string>(_ => { }).AllowReentrancy(GoToStateX);
     builder.DefineState(Initial).AsSubstateOf(Parent);

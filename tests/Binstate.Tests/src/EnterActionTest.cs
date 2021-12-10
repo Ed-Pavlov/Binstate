@@ -256,17 +256,4 @@ public class EnterActionTest : StateMachineTestBase
     // --assert
     A.CallTo(() => onEnter(expectedStringBuilder, expectedString)).MustHaveHappenedOnceAndOnly();
   }
-
-  [Test]
-  public void should_throw()
-  {
-    // --arrange
-    var builder = new Builder<string, int>(OnException);
-
-    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
-
-    // --act
-
-    // --assert
-  }
 }

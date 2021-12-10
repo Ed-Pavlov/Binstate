@@ -5,7 +5,6 @@ using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
 
-// ReSharper disable RedundantTypeArgumentsOfMethod
 
 namespace Binstate.Tests;
 
@@ -48,7 +47,7 @@ public class ArgumentPassingTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
     builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
-    builder.DefineState(StateX).OnEnter<IDisposable>(onEnter);
+    builder.DefineState(StateX).OnEnter(onEnter);
 
     var target = builder.Build(Initial);
 
@@ -70,9 +69,9 @@ public class ArgumentPassingTest : StateMachineTestBase
     var builder = new Builder<string, string>(OnException);
 
     builder.DefineState(Initial).AddTransition(Child, Child);
-    builder.DefineState(Root).OnEnter<IDisposable>(onEnterRoot);
+    builder.DefineState(Root).OnEnter(onEnterRoot);
     builder.DefineState(Parent).AsSubstateOf(Root).OnEnter(sm => { });
-    builder.DefineState(Child).AsSubstateOf(Parent).OnEnter<Stream>(onEnterChild);
+    builder.DefineState(Child).AsSubstateOf(Parent).OnEnter(onEnterChild);
 
     var target = builder.Build(Initial);
 
@@ -135,11 +134,10 @@ public class ArgumentPassingTest : StateMachineTestBase
   }
 
   [TestCaseSource(nameof(RaiseWays))]
-  public void should_throw_exception_if_parent_and_child_state_has_not_assignable_arguments_enable_loose_relaying_is_true_and_argument_is_passed(RaiseWay way)
+  public void should_throw_exception_if_parent_and_child_state_has_not_assignable_arguments_enable_free_mode_and_argument_is_passed(RaiseWay way)
   {
     // --arrange
     var builder = new Builder<string, int>(OnException);
-
 
     builder.DefineState(Initial).AddTransition(GoToStateX, Child);
 
@@ -160,5 +158,34 @@ public class ArgumentPassingTest : StateMachineTestBase
      .Should()
      .Throw<TransitionException>()
      .WithMessage($"The state '{Parent}' requires argument of type '{typeof(int)}' but no argument*");
+  }
+
+  [TestCaseSource(nameof(RaiseWays))]
+  public void should_pass_the_same_argument_to_enter_exit_and_transition(RaiseWay raiseWay)
+  {
+    var expected     = new MemoryStream();
+    var onEnter      = A.Fake<Action<IDisposable>>();
+    var onExit       = A.Fake<Action<IDisposable>>();
+    var onTransition = A.Fake<Action<IDisposable>>();
+
+    // --arrange
+    var builder = new Builder<string, int>(OnException);
+    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
+    builder.DefineState(StateY);
+    builder.DefineState(StateX)
+           .OnEnter(onEnter)
+           .OnExit(onExit)
+           .AddTransition(GoToStateY, StateY, onTransition);
+
+    var target = builder.Build(Initial);
+
+    // --act
+    target.Raise(GoToStateX, expected);
+    target.Raise(GoToStateY);
+
+    // --assert
+    A.CallTo(() => onEnter(expected)).MustHaveHappenedOnceExactly()
+     .Then(A.CallTo(() => onExit(expected)).MustHaveHappenedOnceExactly())
+     .Then(A.CallTo(() => onTransition(expected)).MustHaveHappenedOnceExactly());
   }
 }

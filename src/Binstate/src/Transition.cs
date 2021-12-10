@@ -31,15 +31,22 @@ internal class Transition<TState, TEvent> : ITransition
 
   public void InvokeActionSafe<T>(T argument, Action<Exception> onException)
   {
-    if(_action is null) return;
     try
     {
-      if(_action is Action<T> actionT) // TODO: what if T is Unit?
-        actionT(argument);
-      else if(_action is Action action)
-        action();
-      else
-        throw new ArgumentOutOfRangeException();
+      switch(_action)
+      {
+        case null: break;
+
+        case Action action:
+          action();
+          break;
+
+        case Action<T> actionT:
+          actionT(argument);
+          break;
+
+        default: throw new ArgumentOutOfRangeException();
+      }
     }
     catch(Exception exc)
     { // transition action can throw "user" exception

@@ -7,7 +7,6 @@ namespace Binstate.Tests;
 
 public class HierarchicalStateMachineTest : StateMachineTestBase
 {
-
   private const string Branch1Level1 = nameof(Branch1Level1);
   private const string Branch1Level2 = nameof(Branch1Level2);
   private const string Branch1Level3 = nameof(Branch1Level3);

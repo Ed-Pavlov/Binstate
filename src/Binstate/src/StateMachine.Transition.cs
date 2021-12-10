@@ -29,7 +29,7 @@ internal partial class StateMachine<TState, TEvent>
         return null;
       }
 
-      var targetState = GetStateById(stateId!);
+      var targetState = GetStateById(stateId);
 
       var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);
       var argumentsBag   = PrepareArgument(argument, argumentIsFallback, targetState, commonAncestor, _activeState);

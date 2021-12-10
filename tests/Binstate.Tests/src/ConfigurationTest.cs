@@ -49,7 +49,7 @@ public class ConfigurationTest : StateMachineTestBase
   }
 
   [Test]
-  public void should_throw_exception_if_pass_null_initial_state_id_to_build()
+  public void should_throw_exception_if_pass_null_initial_state_id()
   {
     // --arrange
     var builder = new Builder<string, int>(OnException);
@@ -107,6 +107,25 @@ public class ConfigurationTest : StateMachineTestBase
   }
 
   [Test]
+  public void on_exit_should_check_arguments_for_null()
+  {
+    // --arrange
+    var builder = new Builder<string, string>(OnException);
+    var config  = builder.DefineState(Initial);
+
+#pragma warning disable 8625
+
+    // --act
+    Action target01 = () => config.OnExit(null!);
+    Action target03 = () => config.OnExit((Action<object>)null!);
+#pragma warning restore 8625
+
+    // --assert
+    target01.Should().ThrowExactly<ArgumentNullException>();
+    target03.Should().ThrowExactly<ArgumentNullException>();
+  }
+
+  [Test]
   public void on_enter_should_not_accept_async_void_method()
   {
     // --arrange
@@ -158,7 +177,7 @@ public class ConfigurationTest : StateMachineTestBase
     Action target2 = () => config.AddTransition(Initial, null, null!);
     Action target3 = () => config.AddTransition(null,    () => "func");
     Action target4 = () => config.AddTransition(Initial, (Func<string>)null!);
-    Action target5 = () => config.AddTransition(null,    GetState);
+    Action target5 = () => config.AddTransition(null,    (out string? s) => GetState(out s));
     Action target6 = () => config.AddTransition(Initial, (GetState<string>)null!);
 #pragma warning restore 8625
 

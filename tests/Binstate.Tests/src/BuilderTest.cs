@@ -50,10 +50,7 @@ public class BuilderTest : StateMachineTestBase
     target
      .Should()
      .Throw<InvalidOperationException>()
-     .WithMessage(
-        $"Parent state '{Parent}' requires argument of type '{typeof(int)}' whereas it's child state '{Child}' requires argument of "
-      + $"not assignable to the parent type '{typeof(string)}'"
-      );
+     .WithMessage( $"Parent state '{Parent}' requires argument of type '{typeof(int)}' whereas it's child state '{Child}'*");
   }
 
   [Test]

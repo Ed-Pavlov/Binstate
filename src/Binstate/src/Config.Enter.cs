@@ -112,8 +112,8 @@ public static partial class Config<TState, TEvent>
 
     private static bool IsAsyncMethod(MemberInfo method) => method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) is not null;
 
-    private static Func<IStateController<TEvent>, Unit, Task?> WrapAction(Action<IStateController<TEvent>> enterAction)
-      => (controller, _) =>
+    private static Func<IStateController<TEvent>, Task?> WrapAction(Action<IStateController<TEvent>> enterAction)
+      => (controller) =>
       {
         enterAction(controller);
         return null;
@@ -126,8 +126,8 @@ public static partial class Config<TState, TEvent>
         return null;
       };
 
-    private static Func<IStateController<TEvent>, Unit, Task?> WrapAction(Func<IStateController<TEvent>, Task> enterAction)
-      => (controller, _) => enterAction(controller);
+    private static Func<IStateController<TEvent>, Task?> WrapAction(Func<IStateController<TEvent>, Task> enterAction)
+      => enterAction;
 
     private static Func<IStateController<TEvent>, TArgument, Task?> WrapAction<TArgument>(Func<IStateController<TEvent>, TArgument, Task> enterAction)
       => enterAction;

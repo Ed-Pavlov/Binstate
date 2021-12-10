@@ -86,10 +86,13 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
       _enterActionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
       _entered.Set();               // it is safe to set the state as entered
 
-      if(_enterAction is null) return;
-
-      var enterAction = (Func<IStateController<TE>, TArgument, Task?>)_enterAction;
-      _task = enterAction(stateController, Argument);
+      _task = _enterAction switch
+      {
+        null => null,
+        Func<IStateController<TE>, TArgument, Task?> enter => enter(stateController, Argument),
+        Func<IStateController<TE>, Task?> enter => enter(stateController),
+        _ => throw new ArgumentOutOfRangeException(),
+      };
     }
     catch(Exception exception)
     {

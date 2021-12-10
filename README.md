@@ -22,47 +22,55 @@ The state machine is fully thread safe and allows calling any method from any th
 
 Binstate don't use it's own thread to execute transitions.
 
-`Raise(event)` 
-executes an 'exit' action of the current state and an 'enter' action of the new state on the current thread. 
+`Raise(event)`
+executes an 'exit' action of the current state and an 'enter' action of the new state on the current thread.
 If an 'enter' action is blocking `Raise` will block until enter action finishes.
 `RaiseAsync(event)` uses `Task.Run` to execute a transition.
 
-It gives an application a full control on the threading model of the state machine.   
+It gives an application a full control on the threading model of the state machine.
 
 ### Support async methods
 
 Supports async methods as an 'enter' action of the state. Binstate guarantees that an async 'enter' action will finish before calling an 'exit'
- action of the current state and an 'enter' action of the new state. An async method should return `Task`, `async void` methods are not supported. 
+ action of the current state and an 'enter' action of the new state. An async method should return `Task`, `async void` methods are not supported.
 
 ### Conditional transitions using C# not DSL
-    
+
 Instead of introducing conditional transition into state machine's DSL like
+
+❌
 
     .If(CallDialled, Ringing, () => IsValidNumber)
     .If(CallDialled, Beeping, () => !IsValidNumber);
 
-or 
+or
+
+❌
 
     .If(CheckOverload).Goto(MovingUp)
     .Otherwise().Execute(AnnounceOverload)
 
-Binstate allows using C#     
+Binstate allows using C#
+
+✔️
 
     .AddTransition(CallDialed, () => IsValidNumber ? Ringing : Beeping)
-      
+
     .AddTransition(GoUp, () =>
       {
         if(CheckOverload) return MovingUp;
         AnnounceOverload();
         return null; // no transition will be executed
       });
-      
+
 ### Safe checking if state machine still in the state
 
 The current state of the state machine is not exposed publicly. No knowledge which state to check - less errors.
 
-not `TState CurrentState{ get; }` but `bool InMyState {get;}`
-    
+not ❌`TState CurrentState{ get; }` but ✔️`bool InMyState {get;}`
+
+✔️
+
     private static Task PlayMusic(IStateMachine<State> stateMachine)
     {
       return Task.Run(() =>
@@ -72,8 +80,8 @@ not `TState CurrentState{ get; }` but `bool InMyState {get;}`
           // play music
         }
       });
-    }    
-    
+    }
+
 ### Changing a state from an 'enter' action
 
       private async Task TrackGame(IStateMachine<State> stateMachine, string opponentName)
@@ -84,16 +92,16 @@ not `TState CurrentState{ get; }` but `bool InMyState {get;}`
           if(IsGameFinished())
             stateMachine.RaiseAsync(GameFinished);
         }
-      }  
-      
- ### Enter actions with parameters
- 
+      }
+
+ ### Enter/Exit/OnTransition actions with arguments
+
          builder
            .DefineState(WaitingForGame)
-           .OnEnter(WaitForGame)
-           .AddTransition(GameStarted, TrackingGame)
+           .OnExit<string>(WaitForGame)
+           .AddTransition<string>(GameStarted, TrackingGame, OnTransitionToTrackingGame)
            ...
- 
+
          builder
            .DefineState(TrackingGame)
            .OnEnter<string>(TrackGame)
@@ -101,7 +109,6 @@ not `TState CurrentState{ get; }` but `bool InMyState {get;}`
 
 ### Hierarchically nested states
 Supports hierarchically nested states, see "Elevator" example.
-
 
 
 ### Relaying arguments
@@ -117,9 +124,7 @@ Supports hierarchically nested states, see "Elevator" example.
            .OnEnter<string>(...) // this state also requires an argument
            ...
 
-         stateMachine
-           .Relaying<string>() // specify that argument for AnotherState should be gotten from SomeState rather then passing argument into Raise method
-           .Raise(SomeEvent);
+         stateMachine.Raise(SomeEvent); // argument will be passed from SomeState to AnotherState
 
 #### Mixing relaying and passing arguments
           builder
@@ -129,12 +134,11 @@ Supports hierarchically nested states, see "Elevator" example.
 
          builder
            .DefineState(AnotherState)
-           .OnEnter<ITuple<object, string>>(...) // this state requires two arguments; OnEnter<object, string>(...) overload can be used to simplify code 
+           .OnEnter<ITuple<object, string>>(...) // this state requires two arguments; OnEnter<object, string>(...) overload can be used to simplify code
            ...
 
-         stateMachine
-           .Relaying<string>() // specify that argument one argument for AnotherState should be gotten from SomeState rather then passing argument into Raise method
-           .Raise(SomeEvent, new object()); // and the second one passed using Raise method
+         // one argument will be relayed from the SomeState and the second one passed using Raise method
+         stateMachine.Raise(SomeEvent, new object());
 
 #### Relay argument to one of activated state and pass to another
           builder
@@ -148,17 +152,16 @@ Supports hierarchically nested states, see "Elevator" example.
            ...
 
          builder
-           .DefineState(Childe).AsSubstateOf(Parent)
+           .DefineState(Child).AsSubstateOf(Parent)
            .OnEnter<string>(...)
            ...
 
-         stateMachine
-           .Relaying<string>() // will be relayed to Parent
-           .Raise(SomeEvent, new object()) // will be passed to Child
+         // object passed to Raise will be passed to the Parent state and string argument from the SomeState will be relayed to the Child state
+         stateMachine.Raise(SomeEvent, new object()) // will be passed to Child
 
 * Argument for relaying can be gotten from one of the parent of the active state if the active state itself has no argument.
-* Argument will be relayed to all parent states of the newly activated state if their 'enter' action is suitable
-* If a state already has 'tuple' argument, it can be split by two when relaying to the newly activated state (and its parents) depending on their 'enter' actions argument 
+* Argument will be relayed to all parent states of the newly activated state if they require an argument.
+* If a state already has 'tuple' argument, it can be split by two when relaying to the newly activated state (and its parents) depending on their 'enter' actions argument
 
 
 ## Examples
@@ -170,18 +173,18 @@ Supports hierarchically nested states, see "Elevator" example.
       builder
         .DefineState(OffHook)
         .AddTransition(CallDialed, Ringing);
-      
+
       builder
         .DefineState(Ringing)
         .AddTransition(HungUp, OffHook)
         .AddTransition(CallConnected, Connected);
-      
+
       builder
         .DefineState(Connected)
         .AddTransition(LeftMessage, OffHook)
         .AddTransition(HungUp, OffHook)
         .AddTransition(PlacedOnHold, OnHold);
-      
+
       builder
         .DefineState(OnHold)
         .OnEnter(PlayMusic)
@@ -193,29 +196,29 @@ Supports hierarchically nested states, see "Elevator" example.
         .DefineState(PhoneDestroyed);
 
       var stateMachine = builder.Build(OffHook);
-      
-      // ... 
+
+      // ...
       stateMachine.RaiseAsync(CallDialed);
-      
+
 #### Elevator
-      
+
       public class Elevator
       {
         private readonly StateMachine<States, Events> _elevator;
-  
+
         public Elevator()
         {
             var builder = new Builder<States, Events>(OnException);
-            
+
             builder
               .DefineState(States.Healthy)
               .AddTransition(Events.Error, States.Error);
-            
+
             builder
               .DefineState(States.Error)
               .AddTransition(Events.Reset, States.Healthy)
               .AllowReentrancy(Events.Error);
-            
+
             builder
               .DefineState(States.OnFloor).AsSubstateOf(States.Healthy)
               .OnEnter(AnnounceFloor)
@@ -224,66 +227,66 @@ Supports hierarchically nested states, see "Elevator" example.
               .AddTransition(Events.OpenDoor, States.DoorOpen)
               .AddTransition(Events.GoUp, States.MovingUp)
               .AddTransition(Events.GoDown, States.MovingDown);
-            
+
             builder
               .DefineState(States.Moving).AsSubstateOf(States.Healthy)
               .OnEnter(CheckOverload)
               .AddTransition(Events.Stop, States.OnFloor);
-            
+
             builder.DefineState(States.MovingUp).AsSubstateOf(States.Moving);
             builder.DefineState(States.MovingDown).AsSubstateOf(States.Moving);
             builder.DefineState(States.DoorClosed).AsSubstateOf(States.OnFloor);
             builder.DefineState(States.DoorOpen).AsSubstateOf(States.OnFloor);
-            
+
             _elevator = builder.Build(States.OnFloor);
-            
+
             // ready to work
         }
-  
+
         public void GoToUpperLevel()
         {
           _elevator.Raise(Events.CloseDoor);
           _elevator.Raise(Events.GoUp);
           _elevator.Raise(Events.OpenDoor);
         }
-  
+
         public void GoToLowerLevel()
         {
           _elevator.Raise(Events.CloseDoor);
           _elevator.Raise(Events.GoDown);
           _elevator.Raise(Events.OpenDoor);
         }
-  
+
         public void Error()
         {
           _elevator.Raise(Events.Error);
         }
-  
+
         public void Stop()
         {
           _elevator.Raise(Events.Stop);
         }
-  
+
         public void Reset()
         {
           _elevator.Raise(Events.Reset);
         }
-  
+
         private void AnnounceFloor(IStateMachine<Events> stateMachine)
         {
           /* announce floor number */
         }
-  
+
         private void AnnounceOverload()
         {
           /* announce overload */
         }
-  
+
         private void Beep(int times)
         {
           /* beep */
         }
-  
+
         private void CheckOverload(IStateMachine<Events> stateMachine)
         {
           if (IsOverloaded())
@@ -292,9 +295,9 @@ Supports hierarchically nested states, see "Elevator" example.
             stateMachine.RaiseAsync(Events.Stop);
           }
         }
-  
+
         private bool IsOverloaded() => false;
-        
+
         private enum States
         {
           None,
@@ -307,7 +310,7 @@ Supports hierarchically nested states, see "Elevator" example.
           DoorClosed,
           Error
         }
-    
+
         private enum Events
         {
           GoUp,

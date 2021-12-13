@@ -1,3 +1,12 @@
+<p align='right'>If <b>Binstate</b> has done you any good, consider buying me a cup of coffee</p>
+<p align="right">
+  <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ed@pavlov.is&lc=US&item_name=Kudos+for+Binstate&no_note=0&cn=&currency_code=EUR">
+    <img src="https://ed.pavlov.is/Images/donate-button-60.png" />
+  </a>
+</p>
+
+___
+
 [![Nuget](https://img.shields.io/nuget/dt/Binstate)](https://www.nuget.org/packages/Binstate/)
 [![Build & Test](https://github.com/Ed-Pavlov/Binstate/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/Ed-Pavlov/Binstate/actions/workflows/build-and-test.yml)
 

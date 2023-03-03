@@ -39,6 +39,7 @@ public static partial class Config<TState, TEvent>
       if(@event is null) throw new ArgumentNullException(nameof(@event));
       if(getState is null) throw new ArgumentNullException(nameof(getState));
 
+#pragma warning disable CS8622
       var getStateWrapper = new GetState<TState>(
         (out TState? state) =>
         {
@@ -46,6 +47,7 @@ public static partial class Config<TState, TEvent>
           return ! EqualityComparer<TState?>.Default.Equals(state, default);
         }
       );
+#pragma warning restore CS8622
 
       AddTransitionToList(@event, getStateWrapper, false, null);
       return this;
@@ -61,12 +63,14 @@ public static partial class Config<TState, TEvent>
       return transitions.AddTransition(@event, stateId, action); // delegate call
     }
 
+#pragma warning disable CS8622
     protected static GetState<TState> StaticGetState(TState stateId)
       => (out TState? state) =>
       {
         state = stateId;
         return true;
       };
+#pragma warning restore CS8622
 
     protected void AddTransitionToList(TEvent @event, GetState<TState> getState, bool isStatic, object? action)
       => StateConfig.TransitionList.Add(@event, new Transition<TState, TEvent>(@event, getState, isStatic, action));

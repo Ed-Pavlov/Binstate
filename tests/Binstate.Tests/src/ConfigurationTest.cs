@@ -172,14 +172,14 @@ public class ConfigurationTest : StateMachineTestBase
     var config  = builder.DefineState(Initial);
 
     // --act
-#pragma warning disable 8625
+#pragma warning disable 8625, 8622
     Action target1 = () => config.AddTransition(null,    Initial);
     Action target2 = () => config.AddTransition(Initial, null, null!);
     Action target3 = () => config.AddTransition(null,    () => "func");
     Action target4 = () => config.AddTransition(Initial, (Func<string>)null!);
     Action target5 = () => config.AddTransition(null,    (out string? s) => GetState(out s));
     Action target6 = () => config.AddTransition(Initial, (GetState<string>)null!);
-#pragma warning restore 8625
+#pragma warning restore 8625, 8622
 
     // --assert
     target1.Should().ThrowExactly<ArgumentNullException>();

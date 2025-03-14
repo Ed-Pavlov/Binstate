@@ -173,7 +173,7 @@ public class TransitionTest : StateMachineTestBase
     var actual = new List<int>();
 
     // --arrange
-    var builder = new Builder<int, int>(OnException);
+    var builder = new Builder<int, int>(OnException, true);
 
     builder
      .DefineState(initialStateId)
@@ -284,7 +284,7 @@ public class TransitionTest : StateMachineTestBase
     var builder = new Builder<int, int>(OnException);
 
     builder.DefineState(initialStateId)
-           .AddTransition(GoToStateX, () => default);
+           .AddTransition(GoToStateX, () => default!);
 
     builder.DefineState(stateId).OnEnter(() => Assert.Fail("No transition should be performed"));
 

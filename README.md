@@ -29,7 +29,7 @@ The state machine is fully thread safe and allows calling any method from any th
 
 ### Control on what thread enter and exit actions are executed
 
-Binstate don't use it's own thread to execute transitions.
+Binstate doesn't use its own thread to execute transitions.
 
 `Raise(event)`
 executes an 'exit' action of the current state and an 'enter' action of the new state on the current thread.
@@ -41,7 +41,7 @@ It gives an application full control over the threading model of the state machi
 ### Support async methods
 
 Supports async methods as an 'enter' action of the state. Binstate guarantees that an async 'enter' action will finish before calling an 'exit'
- action of the current state and an 'enter' action of the new state. An async method should return `Task`, `async void` methods are not supported.
+ action of the current state and an 'enter' action of the new state. An async method should return `Task`, `async void` methods aren’t supported.
 
 ### Conditional transitions using C# not DSL
 
@@ -76,15 +76,21 @@ Binstate allows using C#
 
 The current state of the state machine is not exposed publicly. No knowledge which state to check - less errors.
 
-not ❌`TState CurrentState{ get; }` but ✔️`bool InMyState {get;}`
+not
+
+❌
+
+    while(stateController.State == ❌CopyPastedWrongState❌)
+
+but
 
 ✔️
 
-    private static Task PlayMusic(IStateMachine<State> stateMachine)
+    private static Task PlayMusic(IStateController<Event> stateController)
     {
       return Task.Run(() =>
       {
-        while (stateMachine.InMyState)
+        while (✔️stateController.InMyState✔️)
         {
           // play music
         }
@@ -93,13 +99,13 @@ not ❌`TState CurrentState{ get; }` but ✔️`bool InMyState {get;}`
 
 ### Changing a state from an 'enter' action
 
-      private async Task TrackGame(IStateMachine<State> stateMachine, string opponentName)
+      private async Task TrackGame(IStateController<Event> stateController, string opponentName)
       {
-        while (stateMachine.InMyState)
+        while (stateController.InMyState)
         {
           // track game
           if(IsGameFinished())
-            stateMachine.RaiseAsync(GameFinished);
+            stateController.RaiseAsync(GameFinishedEvent);
         }
       }
 
@@ -117,8 +123,15 @@ not ❌`TState CurrentState{ get; }` but ✔️`bool InMyState {get;}`
            ...
 
 ### Hierarchically nested states
-Supports hierarchically nested states, see "Elevator" example.
+Supports hierarchically nested states,
 
+    ...
+    builder
+      .DefineState(States.OnFloor)
+      .AsSubstateOf(States.Healthy)
+      .OnEnter(AnnounceFloor)
+    ...
+See "Elevator" example for more details.
 
 ### Relaying arguments
 #### Relaying arguments attached to a state upon activation
@@ -135,7 +148,7 @@ Supports hierarchically nested states, see "Elevator" example.
 
          stateMachine.Raise(SomeEvent); // argument will be passed from SomeState to AnotherState
 
-#### Mixing relaying and passing arguments
+#### Mixing arguments relaying and passing
           builder
            .DefineState(SomeState)
            .OnEnter<string>(...) // argument passed to 'Raise' mtehod is passed to the 'enter' action and is 'attached' to the state
@@ -149,7 +162,7 @@ Supports hierarchically nested states, see "Elevator" example.
          // one argument will be relayed from the SomeState and the second one passed through Raise method
          stateMachine.Raise(SomeEvent, new object());
 
-#### Relay argument to one of activated state and pass to another
+#### Relay an argument to one of the activated states and pass to another
           builder
             .DefineState(SomeState)
             .OnEnter<string>(...) // argument passed to the 'enter' action is 'attached' to the state

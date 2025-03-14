@@ -1,4 +1,5 @@
 ﻿using System;
+using BeatyBit.Binstate;
 using Binstate.Tests.Util;
 using FakeItEasy;
 using FluentAssertions;

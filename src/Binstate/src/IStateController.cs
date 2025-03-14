@@ -1,6 +1,6 @@
 using System;
 
-namespace Binstate;
+namespace BeatyBit.Binstate;
 
 /// <summary>
 /// This interface is used in 'enter' actions to control execution and to perform 'auto transitions'

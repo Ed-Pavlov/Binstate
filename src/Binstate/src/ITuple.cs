@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Binstate;
+namespace BeatyBit.Binstate;
 
 /// <summary>
 /// This data structure is used if a state needs to accept two arguments at once,

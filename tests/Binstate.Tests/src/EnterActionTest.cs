@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using BeatyBit.Binstate;
 using Binstate.Tests.Util;
 using FakeItEasy;
 using NUnit.Framework;
@@ -230,7 +231,7 @@ public class EnterActionTest : StateMachineTestBase
     target.Raise(raiseWay, GoToStateX, expectedStringBuilder);
 
     // --assert
-    A.CallTo(() => onEnter(new Tuple<StringBuilder, string>(expectedStringBuilder, expectedString))).MustHaveHappenedOnceAndOnly();
+    A.CallTo(() => onEnter(new BeatyBit.Binstate.Tuple<StringBuilder, string>(expectedStringBuilder, expectedString))).MustHaveHappenedOnceAndOnly();
   }
 
   [TestCaseSource(nameof(RaiseWays))]

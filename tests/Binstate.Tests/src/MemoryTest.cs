@@ -1,5 +1,6 @@
 ﻿global using static Binstate.Tests.TestCategory;
 using System;
+using BeatyBit.Binstate;
 using FluentAssertions;
 using JetBrains.dotMemoryUnit;
 using NUnit.Framework;

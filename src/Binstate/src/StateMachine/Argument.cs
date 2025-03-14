@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace Binstate;
+namespace BeatyBit.Binstate;
 
 internal static class Argument
 {

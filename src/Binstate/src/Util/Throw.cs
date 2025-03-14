@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Binstate;
+namespace BeatyBit.Binstate;
 
 internal static class Throw
 {

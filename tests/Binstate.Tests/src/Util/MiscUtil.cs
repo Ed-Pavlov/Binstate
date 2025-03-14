@@ -1,4 +1,6 @@
-﻿namespace Binstate.Tests;
+﻿using BeatyBit.Binstate;
+
+namespace Binstate.Tests;
 
 public class Tuple
 {

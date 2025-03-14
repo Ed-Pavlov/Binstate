@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using BeatyBit.Binstate;
 using NUnit.Framework;
 
 namespace Binstate.Tests;

@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Binstate;
+namespace BeatyBit.Binstate;
 
 /// <summary>
 /// The state machine. Use <see cref="Builder{TState, TEvent}" /> to configure and build a state machine.

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Binstate;
+namespace BeatyBit.Binstate;
 
 public partial class Builder<TState, TEvent>
 {

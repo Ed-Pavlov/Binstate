@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Binstate;
+namespace BeatyBit.Binstate;
 
 internal partial class StateMachine<TState, TEvent>
 {

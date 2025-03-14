@@ -1,4 +1,4 @@
-namespace Binstate;
+namespace BeatyBit.Binstate;
 
 /// <summary>
 /// Is used as generic parameter to specify "no generic parameter"

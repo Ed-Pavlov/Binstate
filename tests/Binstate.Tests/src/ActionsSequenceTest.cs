@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using BeatyBit.Binstate;
 using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;

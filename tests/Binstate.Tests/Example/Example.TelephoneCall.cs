@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using BeatyBit.Binstate;
 
 namespace Binstate.Tests;
 

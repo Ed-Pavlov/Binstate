@@ -1,6 +1,6 @@
 using System;
 
-namespace Binstate;
+namespace BeatyBit.Binstate;
 
 /// <inheritdoc />
 public class StateMachineException : Exception

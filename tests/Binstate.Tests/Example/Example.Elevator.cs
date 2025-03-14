@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
+using BeatyBit.Binstate;
 
 namespace Binstate.Tests;
 

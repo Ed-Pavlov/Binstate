@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Binstate;
+namespace BeatyBit.Binstate;
 
 /// <summary>
 /// This class is used to configure and build a state machine.

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace Binstate;
+namespace BeatyBit.Binstate;
 
 /// <summary>
 /// Defines the interface for a state machine, providing methods to raise events and manage state transitions.

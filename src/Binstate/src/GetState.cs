@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Binstate;
+namespace BeatyBit.Binstate;
 
 /// <summary>
 /// A delegate to be used with <see cref="Builder{TState,TEvent}.ConfiguratorOf.ITransitions.AddTransition(TEvent,GetState{TState})" />.

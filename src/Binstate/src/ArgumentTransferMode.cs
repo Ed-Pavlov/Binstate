@@ -1,4 +1,4 @@
-﻿namespace Binstate;
+﻿namespace BeatyBit.Binstate;
 
 /// <summary>
 /// Possible modes of transferring arguments during state transition from the currently active states to the newly activated.

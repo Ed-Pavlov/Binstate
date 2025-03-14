@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-namespace Binstate;
+namespace BeatyBit.Binstate;
 
 public partial class Builder<TState, TEvent>
 {

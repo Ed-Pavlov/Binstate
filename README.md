@@ -121,11 +121,11 @@ Supports hierarchically nested states, see "Elevator" example.
 
 
 ### Relaying arguments
-#### Relaying arguments attached to a state through states upon activation
+#### Relaying arguments attached to a state upon activation
 
          builder
            .DefineState(SomeState)
-           .OnEnter<string>(...) // argument passed to the 'enter' action is 'attached' to the state
+           .OnEnter<string>(...) // argument passed to 'Raise' mtehod is passed to the 'enter' action and is 'attached' to the state
            .AddTransition(SomeEvent, AnotherState)
 
          builder
@@ -138,7 +138,7 @@ Supports hierarchically nested states, see "Elevator" example.
 #### Mixing relaying and passing arguments
           builder
            .DefineState(SomeState)
-           .OnEnter<string>(...) // argument passed to the 'enter' action is 'attached' to the state
+           .OnEnter<string>(...) // argument passed to 'Raise' mtehod is passed to the 'enter' action and is 'attached' to the state
            .AddTransition(SomeEvent, AnotherState)
 
          builder
@@ -146,7 +146,7 @@ Supports hierarchically nested states, see "Elevator" example.
            .OnEnter<ITuple<object, string>>(...) // this state requires two arguments; OnEnter<object, string>(...) overload can be used to simplify code
            ...
 
-         // one argument will be relayed from the SomeState and the second one passed using Raise method
+         // one argument will be relayed from the SomeState and the second one passed through Raise method
          stateMachine.Raise(SomeEvent, new object());
 
 #### Relay argument to one of activated state and pass to another

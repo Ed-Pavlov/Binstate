@@ -98,16 +98,20 @@ public partial class Builder<TState, TEvent>
       /// <remarks>Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method documentation.</remarks>
       IExitAction<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Action<TArgument, TRelay> enterAction);
 
+#pragma warning disable CS1574
       /// <inheritdoc cref="OnEnter{TArgument}(System.Action{IStateController{TEvent}, TArgument})"/>
       /// <remarks>Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method documentation.</remarks>
+#pragma warning restore CS1574
       IExitAction<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Action<IStateController<TEvent>, TArgument, TRelay> enterAction);
 
       /// <inheritdoc cref="OnEnter{TArgument}(System.Func{TArgument, Task})"/>
       /// <remarks>Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method documentation.</remarks>
       IExitAction<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Func<TArgument, TRelay, Task> enterAction);
 
+#pragma warning disable CS1574
       /// <inheritdoc cref="OnEnter{TArgument}(System.Func{IStateController{TEvent}, TArgument, Task})"/>
       /// <remarks>Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method documentation.</remarks>
+#pragma warning restore CS1574
       IExitAction<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Func<IStateController<TEvent>, TArgument, TRelay, Task> enterAction);
     }
   }

@@ -4,80 +4,88 @@ on:
   workflow_dispatch:
   push:
     branches:
-    - master
-    - 'feature/**'
-#  pull_request:
-#    branches: [ master ]
+      - main
+      - 'feature/**'
+      - 'release/**'
+      - 'hotfix/**'
 
 env:
   configuration: Release
   artifacts-dir: artifacts
   nugets-dir:    artifacts/nupkgs
+  pdb-dir:       artifacts/pdb
 
 jobs:
   build:
-
     runs-on: windows-latest
-
     steps:
-    -
-      name: Checkout
-      uses: actions/checkout@v2.3.4
-      with:
-        fetch-depth: 0
+      -
+        name: Checkout
+        uses: actions/checkout@v4.1.1
+        with:
+          fetch-depth: 0
 
-    -
-      name: Install GitVersion
-      uses: gittools/actions/gitversion/setup@v0.9.15
-      with:
-        versionSpec: '5.x'
+      -
+        name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
-    -
-      name: Use GitVersion
-      id:   gitversion # step id used as reference for output values
-      uses: gittools/actions/gitversion/execute@v0.9.15
+      -
+        name: Install GitVersion
+        uses: gittools/actions/gitversion/setup@v1.1.1
+        with:
+          versionSpec: '5.x'
+          preferLatestVersion: true
 
-    -
-      name: Setup .NET
-      uses: actions/setup-dotnet@v1
-      with:
-        dotnet-version: 6.0.x
+      -
+        name: Use GitVersion
+        id:   gitversion # step id used as reference for output values
+        uses: gittools/actions/gitversion/execute@v1.1.1
 
-    # Restore build and test as one command in order to not copy/paste the same arguments
-    -
-      name: Restore and build
-      run:  dotnet build --packages Packages -c ${{env.configuration}} -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }} -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }} -p:InformationalVersion=${{ steps.gitversion.outputs.informationalVersion }}
+      # Build
+      -
+        name: Build
+        run:  >
+          dotnet build
+          -c ${{env.configuration}}
+          -p:AssemblyVersion=${{ steps.gitversion.outputs.assemblySemVer }}
+          -p:FileVersion=${{ steps.gitversion.outputs.assemblySemFileVer }}
+          -p:InformationalVersion=${{ steps.gitversion.outputs.semVer }}
 
-    -
-      name: Run tests
-      run:  dotnet test --no-build
+      # Run tests
+      -
+        name: Test
+        run: dotnet test --no-build
 
-    # dotMemory Unit doesn't work on github agent, looks like there is not enough privileges to run profiling
-    #    -
-    #      name: Run dotMemory tests
-    #      run:  Packages\jetbrains.dotmemoryunit\3.1.20200127.214830\lib\tools\dotMemoryUnit.exe "C:\Program Files\dotnet\dotnet.exe" -- test --no-build --filter TestCategory=MemoryTest
+      # Create and place nuget packages into env.nugets-dir directory
+      -
+        name: Pack
+        run: dotnet pack --no-build -o:${{ env.nugets-dir }} -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
 
-    # Place nuget packages into env.nugets-dir directory
-    -
-      name: Pack
-      run:  dotnet pack --no-build -c ${{ env.configuration }} -o:${{ env.nugets-dir }}  -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
-    -
-      name: Store Version
-      uses: jsdaniell/create-json@1.1.2
-      with:
-        name: version.json
-        json: |
-              {
-              "assembly-version": "${{ steps.gitversion.outputs.assemblySemVer }}",
-              "assembly-file-version": "${{ steps.gitversion.outputs.assemblySemFileVer }}",
-              "nuget-version": "${{ steps.gitversion.outputs.nuGetVersionV2 }}"
-              }
-        dir:  ${{ env.artifacts-dir }}
+      -
+        name: Store Version
+        uses: jsdaniell/create-json@v1.2.3
+        with:
+          name: version.json
+          json: |
+            {
+            "assembly-version": "${{ steps.gitversion.outputs.assemblySemVer }}",
+            "assembly-file-version": "${{ steps.gitversion.outputs.assemblySemFileVer }}",
+            "nuget-version": "${{ steps.gitversion.outputs.nuGetVersionV2 }}"
+            }
+          dir:  ${{ env.artifacts-dir }}
 
-    -
-      name: Upload Artifacts
-      uses: actions/upload-artifact@v2.2.2
-      with:
-        name:           Artifacts
-        path:           ${{env.artifacts-dir}}/
-        retention-days: 3
+      -
+        name: Store PDB
+        run: |
+          robocopy src\Armature\bin\Release\netstandard2.1\ ${{ env.pdb-dir }} *.pdb
+          if ($lastexitcode -lt 8) { $global:lastexitcode = 0 }
+
+      -
+        name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name:           Artifacts
+          path:           ${{ env.artifacts-dir }}/
+          retention-days: 3

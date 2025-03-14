@@ -1,9 +1,0 @@
-﻿TargetState+[All Parents]
-  get type of argument
-  if(is passed) use it
-  else
-    SourceState+[All Parents]
-      if(type of argument the same) use it
-      
-Can it be implemented without boxing?      
-Yes, see MemoryTest.should_not_box_value_type_instance_passed_by_reflection test

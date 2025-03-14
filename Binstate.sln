@@ -10,13 +10,17 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{F52DA9F2-4C72-4648-928C-1C53ECE9555D}"
 ProjectSection(SolutionItems) = preProject
 	build\binstate.public.snk = build\binstate.public.snk
-	build\Documentation.md = build\Documentation.md
 	build\icon.png = build\icon.png
 	build\logo-big.png = build\logo-big.png
 	GitVersion.yml = GitVersion.yml
+	build\nuget-readme.md = build\nuget-readme.md
 EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{846F7656-28AE-4222-A7B9-815ACC03E132}"
+	ProjectSection(SolutionItems) = preProject
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{09AD0273-F2D8-4A2B-B38A-79221289A129}"
 ProjectSection(SolutionItems) = preProject
@@ -29,8 +33,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "global", "global", "{A7E61C
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 		Binstate.sln.DotSettings = Binstate.sln.DotSettings
-		README.md = README.md
-		nuget-readme.md = nuget-readme.md
 	EndProjectSection
 EndProject
 Global

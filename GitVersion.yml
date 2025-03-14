@@ -1,13 +1,60 @@
-assembly-versioning-scheme:      MajorMinor
-assembly-file-versioning-scheme: MajorMinorPatch
-assembly-informational-format:   '{Major}.{Minor}.{Patch}.{Sha}'
-mode:                            Mainline
-increment:                       Patch
-branches: { }
-#  master:
-#    regex: ^master
-#    tag: ''
-#    is-release-branch: true
-ignore:
-  sha: [ ]
-merge-message-formats: { }
+mode: ContinuousDeployment
+increment: Inherit
+update-build-number: True
+
+branches:
+  main:
+    regex:                                      ^(master|main)$
+    tag:                                        'alpha'
+    increment:                                  Patch
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target:                         true
+    tracks-release-branches:                    false
+    is-release-branch:                          false
+    is-mainline:                                true
+    is-source-branch-for:
+      - release
+      - feature
+    source-branches:
+      - release
+      - feature
+      - hotfix
+    pre-release-weight:                         55000
+
+  release:
+    regex:                                      ^release\/\d+\.\d+\.\d+$
+    mode:                                       ContinuousDeployment
+    tag:                                        'beta'
+    increment:                                  None
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target:                         false
+    is-source-branch-for:
+      - release
+      - hotfix
+    tracks-release-branches:                    true
+    is-release-branch:                          true
+    is-mainline:                                false
+    pre-release-weight:                         30000
+
+  feature:
+    regex:                                      ^feature\/.+$
+    mode:                                       ContinuousDeployment
+    tag:                                        useBranchName
+    increment:                                  None
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target:                         false
+    tracks-release-branches:                    false
+    is-release-branch:                          false
+    is-mainline:                                false
+    pre-release-weight:                         30000
+
+  hotfix:
+    regex:                                      ^hotfix\/\d+\.\d+\.\d+$
+    tag:                                        'beta'
+    increment:                                  None
+    prevent-increment-of-merged-branch-version: true
+    track-merge-target:                         false
+    tracks-release-branches:                    false
+    is-release-branch:                          true
+    is-mainline:                                false
+    pre-release-weight:                         30000

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace Binstate;
 
 /// <summary>
-///   The state machine. Use <see cref="Builder{TState, TEvent}" /> to configure and build a state machine.
+/// The state machine. Use <see cref="Builder{TState, TEvent}" /> to configure and build a state machine.
 /// </summary>
 [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
 internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
@@ -18,7 +18,7 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
   private readonly Action<Exception> _onException;
 
   /// <summary>
-  ///   The map of all defined states
+  /// The map of all defined states
   /// </summary>
   private readonly Dictionary<TState, IState<TState, TEvent>> _states;
 

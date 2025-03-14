@@ -117,7 +117,7 @@ public class ConfigurationTest : StateMachineTestBase
 
     // --act
     Action target01 = () => config.OnExit(null!);
-    Action target03 = () => config.OnExit((Action<object>)null!);
+    Action target03 = () => config.OnExit<object>(null!);
 #pragma warning restore 8625
 
     // --assert
@@ -173,6 +173,7 @@ public class ConfigurationTest : StateMachineTestBase
 
     // --act
 #pragma warning disable 8625, 8622
+#pragma warning disable CS8622
     Action target1 = () => config.AddTransition(null,    Initial);
     Action target2 = () => config.AddTransition(Initial, null, null!);
     Action target3 = () => config.AddTransition(null,    () => "func");

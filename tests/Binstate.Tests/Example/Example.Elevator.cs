@@ -9,67 +9,67 @@ public partial class Example
   [SuppressMessage("ReSharper", "UnusedMember.Global")]
   public class Elevator
   {
-    private readonly IStateMachine<Events> _elevator;
+    private readonly IStateMachine<Event> _elevator;
 
     public Elevator()
     {
-      var builder = new Builder<States, Events>(Console.WriteLine);
+      var builder = new Builder<State, Event>(Console.WriteLine);
 
       builder
-       .DefineState(States.Healthy)
-       .AddTransition(Events.Error, States.Error);
+       .DefineState(State.Healthy)
+       .AddTransition(Event.Error, State.Error);
 
       builder
-       .DefineState(States.Error)
-       .AddTransition(Events.Reset, States.Healthy)
-       .AllowReentrancy(Events.Error);
+       .DefineState(State.Error)
+       .AddTransition(Event.Reset, State.Healthy)
+       .AllowReentrancy(Event.Error);
 
       builder
-       .DefineState(States.OnFloor)
-       .AsSubstateOf(States.Healthy)
+       .DefineState(State.OnFloor)
+       .AsSubstateOf(State.Healthy)
        .OnEnter(AnnounceFloor)
        .OnExit(() => Beep(2))
-       .AddTransition(Events.CloseDoor, States.DoorClosed)
-       .AddTransition(Events.OpenDoor,  States.DoorOpen)
-       .AddTransition(Events.GoUp,      States.MovingUp)
-       .AddTransition(Events.GoDown,    States.MovingDown);
+       .AddTransition(Event.CloseDoor, State.DoorClosed)
+       .AddTransition(Event.OpenDoor,  State.DoorOpen)
+       .AddTransition(Event.GoUp,      State.MovingUp)
+       .AddTransition(Event.GoDown,    State.MovingDown);
 
       builder
-       .DefineState(States.Moving)
-       .AsSubstateOf(States.Healthy)
+       .DefineState(State.Moving)
+       .AsSubstateOf(State.Healthy)
        .OnEnter(CheckOverload)
-       .AddTransition(Events.Stop, States.OnFloor);
+       .AddTransition(Event.Stop, State.OnFloor);
 
-      builder.DefineState(States.MovingUp).AsSubstateOf(States.Moving);
-      builder.DefineState(States.MovingDown).AsSubstateOf(States.Moving);
+      builder.DefineState(State.MovingUp).AsSubstateOf(State.Moving);
+      builder.DefineState(State.MovingDown).AsSubstateOf(State.Moving);
 
-      builder.DefineState(States.DoorClosed).AsSubstateOf(States.OnFloor);
-      builder.DefineState(States.DoorOpen).AsSubstateOf(States.OnFloor);
+      builder.DefineState(State.DoorClosed).AsSubstateOf(State.OnFloor);
+      builder.DefineState(State.DoorOpen).AsSubstateOf(State.OnFloor);
 
-      _elevator = builder.Build(States.OnFloor);
+      _elevator = builder.Build(State.OnFloor);
 
       // ready to work
     }
 
     public void GoToUpperLevel()
     {
-      _elevator.Raise(Events.CloseDoor);
-      _elevator.Raise(Events.GoUp);
-      _elevator.Raise(Events.OpenDoor);
+      _elevator.Raise(Event.CloseDoor);
+      _elevator.Raise(Event.GoUp);
+      _elevator.Raise(Event.OpenDoor);
     }
 
     public void GoToLowerLevel()
     {
-      _elevator.Raise(Events.CloseDoor);
-      _elevator.Raise(Events.GoDown);
-      _elevator.Raise(Events.OpenDoor);
+      _elevator.Raise(Event.CloseDoor);
+      _elevator.Raise(Event.GoDown);
+      _elevator.Raise(Event.OpenDoor);
     }
 
-    public void Error() => _elevator.Raise(Events.Error);
+    public void Error() => _elevator.Raise(Event.Error);
 
-    public void Stop() => _elevator.Raise(Events.Stop);
+    public void Stop() => _elevator.Raise(Event.Stop);
 
-    public void Reset() => _elevator.Raise(Events.Reset);
+    public void Reset() => _elevator.Raise(Event.Reset);
 
     private void AnnounceFloor()
     {
@@ -86,19 +86,19 @@ public partial class Example
       /* beep */
     }
 
-    private void CheckOverload(IStateController<Events> stateController)
+    private void CheckOverload(IStateController<Event> stateController)
     {
       if(IsOverloaded())
       {
         AnnounceOverload();
-        stateController.RaiseAsync(Events.Stop);
+        stateController.RaiseAsync(Event.Stop);
       }
     }
 
     private bool IsOverloaded() => false;
 
-    private enum States { None, Healthy, OnFloor, Moving, MovingUp, MovingDown, DoorOpen, DoorClosed, Error, }
+    private enum State { None, Healthy, OnFloor, Moving, MovingUp, MovingDown, DoorOpen, DoorClosed, Error, }
 
-    private enum Events { GoUp, GoDown, OpenDoor, CloseDoor, Stop, Error, Reset, }
+    private enum Event { GoUp, GoDown, OpenDoor, CloseDoor, Stop, Error, Reset, }
   }
 }

@@ -4,6 +4,8 @@ using System.Collections.Generic;
 namespace Binstate;
 
 public static partial class Config<TState, TEvent>
+  where TState : notnull
+  where TEvent : notnull
 {
   internal class Transitions : ITransitionsEx
   {
@@ -12,7 +14,7 @@ public static partial class Config<TState, TEvent>
     protected Transitions(StateConfig stateConfig) => StateConfig = stateConfig;
 
     /// <summary>
-    ///   Defines transition from the currently configured state to the <paramref name="stateId"> specified state </paramref> when <paramref name="event"> event is raised </paramref>
+    /// Defines transition from the currently configured state to the <paramref name="stateId"> specified state </paramref> when <paramref name="event"> event is raised </paramref>
     /// </summary>
     public ITransitions AddTransition(TEvent @event, TState stateId, Action? action = null)
     {
@@ -67,7 +69,7 @@ public static partial class Config<TState, TEvent>
     protected static GetState<TState> StaticGetState(TState stateId)
       => (out TState? state) =>
       {
-        state = stateId;
+        state = stateId!;
         return true;
       };
 #pragma warning restore CS8622

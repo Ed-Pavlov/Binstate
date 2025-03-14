@@ -41,7 +41,6 @@ public static partial class Config<TState, TEvent>
     {
       if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-
       StateConfig.EnterAction = WrapAction(enterAction);
       return this;
     }

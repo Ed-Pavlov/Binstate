@@ -2,13 +2,12 @@
 
 namespace Binstate;
 
-
 /// <summary>
-///   This data structure is used if a state needs to accept two arguments at once,
-///   usually one is passed to <see cref="IStateMachine{TEvent}.Raise{T}" /> method and the second one is obtained from the previously active
-///   states during transition automatically. But they could be both from the active states.
+/// This data structure is used if a state needs to accept two arguments at once,
+/// usually one is passed to <see cref="IStateMachine{TEvent}.Raise{T}" /> method and the second one is obtained from the previously active
+/// states during transition automatically. But they could be both from the active states.
 ///
-///   Interface is used to make argument types invariant in order to pass arguments of compatible types.
+/// Interface is used to make argument types invariant to pass arguments of compatible types.
 /// </summary>
 public interface ITuple<out TX, out TY>
 {
@@ -40,7 +39,7 @@ public class Tuple<TX, TY> : ITuple<TX, TY>
     && EqualityComparer<TX>.Default.Equals(ItemX, other.ItemX)
     && EqualityComparer<TY>.Default.Equals(ItemY, other.ItemY);
 
-  /// <remarks> Equals doesnt check exact type of other object, only if it can be cast to <see cref="ITuple{TPassed,TRelay}" /> </remarks>
+  /// <remarks> Equals doesn't check the exact type of the other object, only if it can be cast to <see cref="ITuple{TPassed,TRelay}" /> </remarks>
   public override bool Equals(object? obj)
   {
     if(ReferenceEquals(null, obj)) return false;

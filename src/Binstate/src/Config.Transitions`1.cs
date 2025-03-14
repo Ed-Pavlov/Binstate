@@ -13,8 +13,8 @@ public static partial class Config<TState, TEvent>
     public Transitions(StateConfig stateConfig) : base(stateConfig) { }
 
     /// <summary>
-    ///   Defines transition from the currently configured state to the <paramref name="stateId"> specified state </paramref>
-    ///   when <paramref name="event"> event is raised </paramref>
+    /// Defines transition from the currently configured state to the <paramref name="stateId"> specified state </paramref>
+    /// when <paramref name="event"> event is raised </paramref>
     /// </summary>
     public ITransitions<T> AddTransition(TEvent @event, TState stateId, Action<T> action)
     {

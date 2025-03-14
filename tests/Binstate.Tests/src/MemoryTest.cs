@@ -11,7 +11,7 @@ public class BoxingTest : StateMachineTestBase
   [TestCaseSource(nameof(RaiseWays))]
   [Category(MemoryTest)]
   [DotMemoryUnit(FailIfRunWithoutSupport = false)]
-  [AssertTraffic(AllocatedObjectsCount = 0, Types = new[] { typeof(ValueType1), typeof(ValueType2), })]
+  [AssertTraffic(AllocatedObjectsCount = 0, Types = [typeof(ValueType1), typeof(ValueType2)])]
   public void should_not_boxing_passed_value_type_arguments(RaiseWay raiseWay)
   {
     // don't use FakeItEasy due to it boxes value types during comparison

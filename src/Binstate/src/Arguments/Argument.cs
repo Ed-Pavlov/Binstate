@@ -83,7 +83,7 @@ internal static class Argument
     return false;
   }
 
-public class Bag : Dictionary<IState, Action> { }
+  public class Bag : Dictionary<IState, Action>;
 
   public class Resolver
   {

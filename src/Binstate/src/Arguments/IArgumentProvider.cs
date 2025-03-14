@@ -2,7 +2,7 @@
 
 namespace Binstate;
 
-internal interface IArgumentProvider { }
+internal interface IArgumentProvider;
 
 internal interface IGetArgument<out TArgument> : IArgumentProvider
 {
@@ -30,9 +30,9 @@ internal class OneTupleItemArgumentProvider<T, TA, TR> : IGetArgument<T>
     var tuple = ( (IGetArgument<ITuple<TA, TR>>)state ).Argument;
     Argument = tuple switch
     {
-      { ItemX : T arg }   => arg,
+      { ItemX: T arg }   => arg,
       { ItemY: T relay } => relay,
-      _                            => throw new ArgumentOutOfRangeException(nameof(tuple))
+      _                   => throw new ArgumentOutOfRangeException(nameof(tuple))
     };
   }
 
@@ -47,6 +47,6 @@ internal static class StateTupleArgumentProvider
   {
     var type = GenericDefinition.MakeGenericType(t, ta, tr);
     var ctor = type.GetConstructors()[0];
-    return (IArgumentProvider)ctor.Invoke(new object[]{state});
+    return (IArgumentProvider)ctor.Invoke([state]);
   }
 }

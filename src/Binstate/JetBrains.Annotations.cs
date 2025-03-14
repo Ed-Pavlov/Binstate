@@ -38,8 +38,8 @@ namespace JetBrains.Annotations;
 ///
 /// public class SummaryData
 /// {
-///   [UsedImplicitly(ImplicitUseKindFlags.InstantiatedWithFixedConstructorSignature)]
-///   public SummaryData() {}
+/// [UsedImplicitly(ImplicitUseKindFlags.InstantiatedWithFixedConstructorSignature)]
+/// public SummaryData() {}
 /// }
 ///
 /// [UsedImplicitly(ImplicitUseTargetFlags.WithInheritors | ImplicitUseTargetFlags.Default)]
@@ -174,7 +174,7 @@ internal sealed class InstantHandleAttribute : Attribute { }
 /// void ShowError(string message, params object[] args) { /* do something */ }
 ///
 /// void Foo() {
-///   ShowError("Failed: {0}"); // Warning: Non-existing argument in format string
+/// ShowError("Failed: {0}"); // Warning: Non-existing argument in format string
 /// }
 /// </code></example>
 [AttributeUsage(AttributeTargets.Constructor | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Delegate)]
@@ -200,7 +200,7 @@ internal sealed class StringFormatMethodAttribute : Attribute
 /// void LogInfo([StructuredMessageTemplate]string message, params object[] args) { /* do something */ }
 ///
 /// void Foo() {
-///   LogInfo("User created: {username}"); // Warning: Non-existing argument in format string
+/// LogInfo("User created: {username}"); // Warning: Non-existing argument in format string
 /// }
 /// </code></example>
 [AttributeUsage(AttributeTargets.Parameter)]

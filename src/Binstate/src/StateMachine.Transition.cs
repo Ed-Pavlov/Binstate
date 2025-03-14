@@ -6,12 +6,12 @@ namespace Binstate;
 internal partial class StateMachine<TState, TEvent>
 {
   /// <summary>
-  ///   Performing transition is split into two parts, the first one is "read only", preparing and checking all the data, can throw an exception.
+  /// Performing transition is split into two parts, the first one is "readonly", preparing and checking all the data, can throw an exception.
   /// </summary>
   /// <returns>
-  ///   Returns null if:
-  ///   no transition found by specified <paramref name="event" /> from the current state
-  ///   dynamic transition returns 'null'
+  /// Returns null if:
+  /// no transition found by specified <paramref name="event" /> from the current state
+  /// dynamic transition returns 'null'
   /// </returns>
   /// <exception cref="TransitionException"> Throws if passed argument doesn't match the 'enter' action of the target state. </exception>
   private TransitionData? PrepareTransition<TArgument>(TEvent @event, TArgument argument, bool argumentIsFallback)
@@ -73,8 +73,8 @@ internal partial class StateMachine<TState, TEvent>
   }
 
   /// <summary>
-  ///   Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
-  ///   into the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{System.Exception})" />
+  /// Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
+  /// into the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{System.Exception})" />
   /// </summary>
   private bool PerformTransition(TransitionData transitionData)
   {
@@ -94,7 +94,12 @@ internal partial class StateMachine<TState, TEvent>
         // exit all active states which are not parent for the new state
         while(currentActiveState != commonAncestor)
         {
-          currentActiveState!.ExitSafe(_onException); // currentActiveState can't become null earlier then be equal to commonAncestor
+          if(currentActiveState is null)
+            throw new InvalidOperationException(
+              "This exception should never be thrown, because currentActiveState can't become null earlier then be equal to commonAncestor"
+            );
+
+          currentActiveState.ExitSafe(_onException);
           currentActiveState = currentActiveState.ParentState;
         }
 
@@ -106,9 +111,14 @@ internal partial class StateMachine<TState, TEvent>
 
         while(targetState != commonAncestor)
         {
-          var enterAction = ActivateStateNotGuarded(targetState!, argumentsBag); // targetState can't become null earlier then be equal to commonAncestor
+          if(targetState is null)
+            throw new InvalidOperationException(
+              "This exception should never be thrown, because targetState can't become null earlier then be equal to commonAncestor"
+            );
+
+          var enterAction = ActivateStateNotGuarded(targetState, argumentsBag);
           enterActions.Add(enterAction);
-          targetState = targetState!.ParentState;
+          targetState = targetState.ParentState;
         }
       }
       finally // no exception should be thrown here, but paranoia is my life
@@ -125,7 +135,7 @@ internal partial class StateMachine<TState, TEvent>
       _onException(exception);
     }
 
-    return true; // just to reduce amount of code calling this method
+    return true; // just to reduce the amount of code calling this method
   }
 
   private static void CallEnterActions(List<Action> enterActions)
@@ -135,7 +145,7 @@ internal partial class StateMachine<TState, TEvent>
   }
 
   /// <summary>
-  ///   Doesn't acquire lock itself, caller should care about safe context
+  /// Doesn't acquire lock itself, caller should care about safe context
   /// </summary>
   /// <returns> Returns 'enter' action of the state </returns>
   private Action ActivateStateNotGuarded(IState state, Argument.Bag argumentsBag)
@@ -147,7 +157,7 @@ internal partial class StateMachine<TState, TEvent>
     return () =>
     {
       var setArgument = argumentsBag.GetValueSafe(state);
-      setArgument?.Invoke();   // set the Argument property of the state if Argument is required
+      setArgument?.Invoke(); // set the Argument property of the state if Argument is required
 
       // set Argument property before calling EnterSafe, due to it uses this property
       state.EnterSafe(controller, _onException);

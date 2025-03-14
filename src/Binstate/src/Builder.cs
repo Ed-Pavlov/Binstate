@@ -5,7 +5,7 @@ using System.Linq;
 namespace Binstate;
 
 /// <summary>
-///   This class is used to configure and build a state machine.
+/// This class is used to configure and build a state machine.
 /// </summary>
 public class Builder<TState, TEvent> where TState : notnull where TEvent : notnull
 {
@@ -13,18 +13,18 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
   private readonly Dictionary<TState, Config<TState, TEvent>.State> _stateConfigs = new Dictionary<TState, Config<TState, TEvent>.State>();
 
   /// <summary>
-  ///   Creates a builder of a state machine, use it to define state and configure transitions.
+  /// Creates a builder of a state machine, use it to define state and configure transitions.
   /// </summary>
   /// <param name="onException">
-  ///   All exception thrown from enter and exit actions passed to the state machine are caught in order to not break the state of the
-  ///   state machine. Use this action to be notified about these exceptions.
+  /// All exception thrown from enter and exit actions passed to the state machine are caught in order not break the state of the state machine.
+  /// Use this action to be notified about these exceptions.
   /// </param>
   public Builder(Action<Exception> onException) => _onException = onException ?? throw new ArgumentNullException(nameof(onException));
 
   /// <summary>
-  ///   Defines the new state in the state machine, if it is already defined throws an exception
+  /// Defines the new state in the state machine, if it is already defined throws an exception.
   /// </summary>
-  /// <param name="stateId"> Id of the state, is used to reference it from other elements of the state machine. </param>
+  /// <param name="stateId"> ID of the state; is used to reference it from other elements of the state machine. </param>
   /// <remarks> Use returned syntax-sugar object to configure the new state. </remarks>
   public Config<TState, TEvent>.IState DefineState(TState stateId)
   {
@@ -36,9 +36,9 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
   }
 
   /// <summary>
-  ///   Defines the new state in the state machine, if it is already defined, returns the configurator.
+  /// Defines the new state in the state machine, if it is already defined, returns the configurator.
   /// </summary>
-  /// <param name="stateId"> Id of the state, is used to reference it from other elements of the state machine. </param>
+  /// <param name="stateId"> ID of the state; is used to reference it from other elements of the state machine. </param>
   /// <remarks> Use returned syntax-sugar object to configure the new state. </remarks>
   public Config<TState, TEvent>.IState GetOrDefineState(TState stateId)
   {
@@ -48,7 +48,7 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
   }
 
   /// <summary>
-  ///   Validates consistency and builds the state machine using provided configuration.
+  /// Validates consistency and builds the state machine using provided configuration.
   /// </summary>
   /// <param name="initialStateId"> The initial state of the state machine. </param>
   /// <param name="initialStateArgument"> If initial state requires argument use this overload to pass it </param>
@@ -58,10 +58,8 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
   {
     if(initialStateId is null) throw new ArgumentNullException(nameof(initialStateId));
 
-    if(! _stateConfigs.ContainsKey(initialStateId))
+    if(! _stateConfigs.TryGetValue(initialStateId, out var initialStateConfig))
       throw new ArgumentException($"No state '{initialStateId}' is defined");
-
-    var initialStateConfig = _stateConfigs[initialStateId];
 
     if(! IfTransitionDefined(initialStateConfig.StateConfig))
       throw new ArgumentException("No transitions defined from the initial state nor from its parents.");
@@ -81,6 +79,15 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
     return stateMachine;
   }
 
+  /// <summary>
+  /// Validates consistency and builds the state machine using provided configuration.
+  /// </summary>
+  /// <param name="initialStateId"> The initial state of the state machine. </param>
+  /// <param name="argumentTransferMode">The mode of transferring arguments to new newly activated states. See <see cref="ArgumentTransferMode"/> for details.</param>
+  /// <exception cref="InvalidOperationException"> Throws if there are any inconsistencies in the provided configuration. </exception>
+  public IStateMachine<TEvent> Build(TState initialStateId, ArgumentTransferMode argumentTransferMode = ArgumentTransferMode.Strict)
+    => Build<Unit>(initialStateId, default, argumentTransferMode);
+
   private IState<TState, TEvent> CreateStateAndAddToMap(Config<TState, TEvent>.StateConfig stateConfig, Dictionary<TState, IState<TState, TEvent>> states)
   {
     if(! states.TryGetValue(stateConfig.StateId, out var state)) // state could be already created during creating parent states
@@ -96,15 +103,6 @@ public class Builder<TState, TEvent> where TState : notnull where TEvent : notnu
 
     return state;
   }
-
-  /// <summary>
-  ///   Validates consistency and builds the state machine using provided configuration.
-  /// </summary>
-  /// <param name="initialStateId"> The initial state of the state machine. </param>
-  /// <param name="argumentTransferMode">The mode of transferring arguments to new newly activated states. See <see cref="ArgumentTransferMode"/> for details.</param>
-  /// <exception cref="InvalidOperationException"> Throws if there are any inconsistencies in the provided configuration. </exception>
-  public IStateMachine<TEvent> Build(TState initialStateId, ArgumentTransferMode argumentTransferMode = ArgumentTransferMode.Strict)
-    => Build<Unit>(initialStateId, default, argumentTransferMode);
 
   private bool IfTransitionDefined(Config<TState, TEvent>.StateConfig stateConfig)
   {
@@ -185,8 +183,8 @@ public enum ArgumentTransferMode
   Invalid = 0,
 
   /// <summary>
-  ///   All actions performed on 'enter', 'exit', and/or 'transition' of a state involved in child/parent relation should have parameter of the same type
-  ///   in the declared method used as the action. Also it's possible that some of states requires an argument but some not.
+  /// All actions performed on 'enter', 'exit', and/or 'transition' of a state involved in child/parent relation should have parameter of the same type
+  /// in the declared method used as the action. Also, it's possible that some states require an argument but some not.
   /// </summary>
   Strict = 2,
 

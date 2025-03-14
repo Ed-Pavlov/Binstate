@@ -12,14 +12,14 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   private readonly object? _enterAction;
 
   /// <summary>
-  ///   This event is used to wait while state's 'enter' action is finished before call 'exit' action and change the active state of the state machine.
-  ///   See usages for details.
+  /// This event is used to wait while state's 'enter' action is finished before call 'exit' action and change the active state of the state machine.
+  /// See usages for details.
   /// </summary>
   private readonly ManualResetEvent _enterActionFinished = new ManualResetEvent(true);
 
   /// <summary>
-  ///   This event is used to avoid race condition when <see cref="ExitSafe" /> method is called before <see cref="EnterSafe{T}" /> method.
-  ///   See usages for details.
+  /// This event is used to avoid race condition when <see cref="ExitSafe" /> method is called before <see cref="EnterSafe{T}" /> method.
+  /// See usages for details.
   /// </summary>
   private readonly ManualResetEvent _entered = new ManualResetEvent(true);
 
@@ -30,9 +30,9 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   private volatile bool _isActive;
 
   /// <summary>
-  ///   This task is used to wait while state's 'enter' action is finished before call 'exit' action and change the active state of the state machine in
-  ///   case of async OnEnter action.
-  ///   See usages for details.
+  /// This task is used to wait while state's 'enter' action is finished before call 'exit' action and change the active state of the state machine in
+  /// case of async OnEnter action.
+  /// See usages for details.
   /// </summary>
   private Task? _task;
 
@@ -65,8 +65,8 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   public IState<TState, TEvent>? ParentState { get; }
 
   /// <summary>
-  ///   This property is set from protected by lock part of the code so it's no need synchronization
-  ///   see <see cref="StateMachine{TState,TEvent}.ActivateStateNotGuarded" /> implementation for details.
+  /// This property is set from protected by lock part of the code so it's no need synchronization
+  /// see <see cref="StateMachine{TState,TEvent}.ActivateStateNotGuarded" /> implementation for details.
   /// </summary>
   public bool IsActive
   {
@@ -105,15 +105,15 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   }
 
   /// <summary>
-  ///   <see cref="ExitSafe" /> can be called earlier then <see cref="Config{TState,TEvent}.Enter" /> of the activated state,
-  ///   see <see cref="StateMachine{TState,TEvent}.PerformTransition" /> implementation for details.
-  ///   In this case it should wait till <see cref="Config{TState,TEvent}.Enter" /> will be called and exited, before call exit action
+  /// <see cref="ExitSafe" /> can be called earlier then <see cref="Config{TState,TEvent}.Enter" /> of the activated state,
+  /// see <see cref="StateMachine{TState,TEvent}.PerformTransition" /> implementation for details.
+  /// In this case it should wait till <see cref="Config{TState,TEvent}.Enter" /> will be called and exited, before call exit action
   /// </summary>
   public void ExitSafe(Action<Exception> onException)
   {
     try
     {
-      IsActive = false; // signal that current state is no more active and blocking enter action can finish
+      IsActive = false; // signal that the current state is no more active and blocking enter action can finish
 
       // if action is set as active but enter action still is not called, wait for it
       _entered.WaitOne();

@@ -41,56 +41,41 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Update="src\Config.Transitions.cs">
-      <DependentUpon>Config.cs</DependentUpon>
+    <Compile Update="src\Builder.ConfiguratorOf.cs">
+      <DependentUpon>Builder.cs</DependentUpon>
     </Compile>
-    <Compile Update="src\Config.Enter.cs">
-      <DependentUpon>Config.cs</DependentUpon>
+    <Compile Update="src\Builder.ConfiguratorOf.TransitionsImpl.cs">
+      <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
     </Compile>
-    <Compile Update="src\Config.Exit.cs">
-      <DependentUpon>Config.cs</DependentUpon>
+    <Compile Update="src\Builder.ConfiguratorOf.IEnterAction.cs">
+      <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
     </Compile>
-    <Compile Update="src\Config.State.cs">
-      <DependentUpon>Config.cs</DependentUpon>
+    <Compile Update="src\Builder.ConfiguratorOf.ExitAction.cs">
+      <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
     </Compile>
-    <Compile Update="src\StateMachine.Controller.cs">
-      <DependentUpon>StateMachine.cs</DependentUpon>
-    </Compile>
-    <Compile Update="src\StateMachine.Transition.cs">
-      <DependentUpon>StateMachine.cs</DependentUpon>
-    </Compile>
-    <Compile Update="src\IGetArgument.cs">
-      <DependentUpon>State.cs</DependentUpon>
+    <Compile Update="src\Builder.ConfiguratorOf.State.cs">
+      <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
     </Compile>
     <Compile Include="..\..\build\GlobalAssemblyInfo.cs">
       <Link>build\GlobalAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Update="src\Config.Exit`1.cs">
-      <DependentUpon>Config.cs</DependentUpon>
+    <Compile Update="src\Builder.ConfiguratorOf.Transitions.cs">
+      <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
     </Compile>
-    <Compile Update="src\Config.ITransitions.cs">
-      <DependentUpon>Config.cs</DependentUpon>
+    <Compile Update="src\Builder.ConfiguratorOf.IExitAction.cs">
+      <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
     </Compile>
-    <Compile Update="src\Config.IExit.cs">
-      <DependentUpon>Config.cs</DependentUpon>
+    <Compile Update="src\Builder.ConfiguratorOf.ITransitions.cs">
+      <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
     </Compile>
-    <Compile Update="src\Config.ITransitions.cs">
-      <DependentUpon>Config.cs</DependentUpon>
+    <Compile Update="src\Builder.ConfiguratorOf.EnterAction.cs">
+      <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
     </Compile>
-    <Compile Update="src\Config.IEnter.cs">
-      <DependentUpon>Config.cs</DependentUpon>
+    <Compile Update="src\Builder.ConfiguratorOf.Transitions`1.cs">
+      <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
     </Compile>
-    <Compile Update="src\Config.Transitions`1.cs">
-      <DependentUpon>Config.cs</DependentUpon>
-    </Compile>
-    <Compile Update="src\Config.IState.cs">
-      <DependentUpon>Config.cs</DependentUpon>
-    </Compile>
-    <Compile Update="src\Config.StateConfig.cs">
-      <DependentUpon>Config.cs</DependentUpon>
-    </Compile>
-    <Compile Update="src\GetState.cs">
-      <DependentUpon>Config.cs</DependentUpon>
+    <Compile Update="src\Builder.StateData.cs">
+      <DependentUpon>Builder.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 

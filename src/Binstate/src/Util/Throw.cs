@@ -18,6 +18,6 @@ internal static class Throw
                                          + $"Target state = {targetState}");
 
   [DoesNotReturn]
-  public static void ImpossibleException()
-    => throw new InvalidOperationException("This exception should never be thrown, because all verifications should be performed in the caller part. ");
+  public static void ImpossibleException(string reason)
+    => throw new InvalidOperationException("This exception should never be thrown, because " + reason);
 }

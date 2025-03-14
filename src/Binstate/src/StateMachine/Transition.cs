@@ -3,11 +3,6 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Binstate;
 
-internal interface ITransition
-{
-  void InvokeActionSafe<T>(T argument, Action<Exception> onException);
-}
-
 internal class Transition<TState, TEvent> : ITransition
 {
   private readonly object? _action;

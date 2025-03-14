@@ -3,36 +3,42 @@ using System;
 namespace Binstate;
 
 /// <summary>
-/// This interface is used in 'enter' actions to control execution and to execute 'auto transitions'
+/// This interface is used in 'enter' actions to control execution and to perform 'auto transitions'
 /// </summary>
 public interface IStateController<in TEvent>
 {
   /// <summary>
-  /// Returns true if the state machine is in the state for which currently executing enter action is defined.
+  /// Gets a value indicating whether the state machine is currently in the state for which the executing 'enter' action is defined.
   /// </summary>
   bool InMyState { get; }
 
   /// <summary>
-  /// Passing the event to the state machine asynchronously.
+  /// Asynchronously raises an event to trigger a state transition.
   /// </summary>
-  /// <returns> Synchronously returns false if a transition was not found and true if the transition will be performed. </returns>
+  /// <param name="event">The event to raise.</param>
+  /// <returns>Synchronously returns <c>true</c> if a transition will be performed; otherwise, <c>false</c> if no transition was found.</returns>
   /// <exception cref="TransitionException">
-  /// Throws if the 'enter' action of the target state requires argument.
-  /// All user's exceptions from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-  /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception})" />
+  /// Thrown if the 'enter' action of the target state requires an argument.
+  /// User-defined exceptions from 'enter', 'exit', and 'dynamic transition' actions are caught and reported using the delegate
+  /// passed to <see cref="Builder{TState,TEvent}(System.Action{Exception}, bool)"/>.
   /// </exception>
   bool RaiseAsync(TEvent @event);
 
   /// <summary>
-  /// Passing the event with an argument to the state machine asynchronously. The argument is needed if the 'enter' action of the
-  /// target state requires one.
-  /// See <see cref="Config{TState, TEvent}.Enter.OnEnter{T}(System.Action{IStateController{TEvent}, T})" />,
+  /// Asynchronously raises an event with an argument to trigger a state transition.
   /// </summary>
-  /// <returns> Synchronously returns false if a transition was not found and true if the transition will be performed. </returns>
+  /// <typeparam name="T">The type of the argument.</typeparam>
+  /// <param name="event">The event to raise.</param>
+  /// <param name="argument">The argument to pass with the event.</param>
+  /// <param name="argumentIsFallback">Indicates whether this argument is used only as a fallback; if a state-specific argument is available, it will be used instead.</param>
+  /// <returns>Synchronously returns <c>true</c> if a transition will be performed; otherwise, <c>false</c> if no transition was found.</returns>
   /// <exception cref="TransitionException">
-  /// Throws if the 'enter' action of the target state requires argument.
-  /// All user's exceptions from the 'enter', 'exit' and 'dynamic transition' actions are caught and reported
-  /// using the delegate passed into <see cref="Builder{TState,TEvent}(System.Action{Exception})" />
+  /// Thrown if the 'enter' action of the target state requires an argument.
+  /// User-defined exceptions from 'enter', 'exit', and 'dynamic transition' actions are caught and reported using the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{Exception}, bool)"/>.
   /// </exception>
+  /// <remarks>
+  /// The argument is required if the 'enter' action of the target state or 'exit' action of the current state is configured to accept it.
+  /// See <see cref="Builder{TState,TEvent}.ConfiguratorOf.IEnterAction.OnEnter{T}(System.Action{IStateController{TEvent}, T})"/>.
+  /// </remarks>
   bool RaiseAsync<T>(TEvent @event, T argument, bool argumentIsFallback = false);
 }

@@ -21,8 +21,6 @@ internal class ArgumentProvider<T> : IGetArgument<T>
   public T Argument { get; }
 }
 
-internal enum TuplePart { Invalid, Argument, Relay }
-
 internal class OneTupleItemArgumentProvider<T, TA, TR> : IGetArgument<T>
 {
   public OneTupleItemArgumentProvider(IState state)
@@ -32,7 +30,7 @@ internal class OneTupleItemArgumentProvider<T, TA, TR> : IGetArgument<T>
     {
       { ItemX: T arg }   => arg,
       { ItemY: T relay } => relay,
-      _                   => throw new ArgumentOutOfRangeException(nameof(tuple))
+      _                  => throw new ArgumentOutOfRangeException(nameof(tuple))
     };
   }
 

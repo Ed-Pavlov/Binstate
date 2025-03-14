@@ -74,7 +74,7 @@ internal partial class StateMachine<TState, TEvent>
 
   /// <summary>
   /// Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
-  /// into the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{System.Exception})" />
+  /// into the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{System.Exception}, bool)" />
   /// </summary>
   private bool PerformTransition(TransitionData transitionData)
   {

@@ -117,7 +117,7 @@ internal static class Argument
       if(_argumentSourcesCache.TryGetValue(targetArgumentType, out providers))
         return true;
 
-      // if argument is provided and suitable, set it, don't search active states
+      // if an argument is provided and suitable, set it, don't search active states
       if(! argumentIsFallback && targetArgumentType.IsAssignableFrom(typeof(TArgument)))
       {
         providers = new Tuple<IArgumentProvider, IArgumentProvider?>(new ArgumentProvider<TArgument>(argument), null);
@@ -125,7 +125,7 @@ internal static class Argument
         return true;
       }
 
-      // search for a state provides argument of assignable type, if target requires a Tuple and there is a source with suitable Tuple, it will be found
+      // search for a state provides argument of an assignable type if target requires a Tuple and there is a source with suitable Tuple, it will be found
       if(GetArgumentProviderForSingleArgument(rootState, targetArgumentType, out var provider))
       {
         providers = new Tuple<IArgumentProvider, IArgumentProvider?>(provider, null);
@@ -135,7 +135,7 @@ internal static class Argument
 
       var passedArgumentType = typeof(TArgument);
 
-      // if still not found, and target argument type is a Tuple, try to compose it from different source states
+      // if still not found, and the target argument type is a Tuple, try to compose it from different source states
       if(targetArgumentType.IsTuple(out var typeX, out var typeY))
       {
         GetArgumentProviderForSingleArgument(rootState, typeX, out var providerX);
@@ -157,7 +157,7 @@ internal static class Argument
         return true;
       }
 
-      // if still no result and there is the fallback is provided, use it
+      // if still no result and there is a fallback value is provided, use it
       if(targetArgumentType.IsAssignableFrom(passedArgumentType))
       {
         providers = new Tuple<IArgumentProvider, IArgumentProvider?>(new ArgumentProvider<TArgument>(argument), null);

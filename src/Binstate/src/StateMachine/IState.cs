@@ -17,9 +17,9 @@ internal interface IState : IArgumentProvider
   void EnterSafe<TEvent>(IStateController<TEvent> stateController, Action<Exception> onException);
 
   /// <summary>
-  /// <see cref="State{TState,TEvent,TArgument}.ExitSafe" /> can be called earlier then <see cref="Config{TState,TEvent}.Enter" /> of the activated state,
+  /// <see cref="State{TState,TEvent,TArgument}.ExitSafe" /> can be called earlier then <see cref="Builder{TState,TEvent}.ConfiguratorOf.IEnterAction" /> of the activated state,
   /// see <see cref="StateMachine{TState,TEvent}.PerformTransition" /> implementation for details.
-  /// In this case it should wait till <see cref="Config{TState,TEvent}.Enter" /> be called and exited, before call exit action
+  /// In this case it should wait till <see cref="Builder{TState,TEvent}.ConfiguratorOf.IEnterAction" /> be called and exited, before call exit action
   /// </summary>
   void ExitSafe(Action<Exception> onException);
 

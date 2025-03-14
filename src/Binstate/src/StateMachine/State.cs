@@ -104,12 +104,12 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     }
   }
 
-  /// <summary>
-  /// <see cref="ExitSafe" /> can be called earlier then <see cref="Config{TState,TEvent}.Enter" /> of the activated state,
+/// <summary>
+  /// <see cref="ExitSafe" /> can be called earlier then <see cref="Builder{TState,TEvent}.ConfiguratorOf.EnterAction" /> of the activated state,
   /// see <see cref="StateMachine{TState,TEvent}.PerformTransition" /> implementation for details.
-  /// In this case it should wait till <see cref="Config{TState,TEvent}.Enter" /> will be called and exited, before call exit action
+  /// In this case it should wait till <see cref="Builder{TState,TEvent}.ConfiguratorOf.EnterAction" /> will be called and exited, before call exit action
   /// </summary>
-  public void ExitSafe(Action<Exception> onException)
+public void ExitSafe(Action<Exception> onException)
   {
     try
     {

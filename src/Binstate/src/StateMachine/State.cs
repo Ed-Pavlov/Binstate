@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -148,8 +149,7 @@ public void ExitSafe(Action<Exception> onException)
 
   public void CallTransitionActionSafe(ITransition transition, Action<Exception> onException) => transition.InvokeActionSafe(Argument, onException);
 
-  // use [NotNullWhen(returnValue: true)] when upgrading to .netstandard 2.1 and update usages
-  public bool FindTransitionTransitive(TEvent @event, out Transition<TState, TEvent>? transition)
+  public bool FindTransitionTransitive(TEvent @event, [NotNullWhen(returnValue: true)] out Transition<TState, TEvent>? transition)
   {
     IState<TState, TEvent>? state = this;
 

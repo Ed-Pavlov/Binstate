@@ -9,7 +9,7 @@ internal static class Throw
   public static void NoArgument(IState state)
     => throw new TransitionException(
          $"The state '{state}' requires argument of type '{state.GetArgumentType()}' but no argument of compatible type has passed to "
-       + $"the Raise(Async) method and no compatible argument is found in the currently active states"
+       + $"the Raise(Async) method and no compatible argument is found in the currently active states."
        );
 
   [DoesNotReturn]

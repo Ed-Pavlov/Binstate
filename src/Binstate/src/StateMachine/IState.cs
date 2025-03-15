@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace BeatyBit.Binstate;
 
@@ -34,5 +35,5 @@ internal interface IState<TState, TEvent> : IState
 
   Dictionary<TEvent, Transition<TState, TEvent>> Transitions { get; }
 
-  bool FindTransitionTransitive(TEvent @event, out Transition<TState, TEvent>? transition);
+  bool FindTransitionTransitive(TEvent @event, [NotNullWhen(true)]out Transition<TState, TEvent>? transition);
 }

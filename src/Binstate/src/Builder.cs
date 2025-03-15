@@ -19,7 +19,7 @@ public partial class Builder<TState, TEvent> : Builder
   private readonly Action<Exception> _onException;
   private readonly Options           _options;
 
-  private readonly Dictionary<TState, ConfiguratorOf.State> _stateConfigs = new();
+  private readonly Dictionary<TState, ConfiguratorOf.State> _stateConfigurators = new();
 
   /// <summary>
   /// Creates a builder of a state machine, use it to define state and configure transitions.
@@ -58,7 +58,7 @@ public partial class Builder<TState, TEvent> : Builder
       throw new ArgumentException($"'{nameof(stateId)}' cannot be default value", nameof(stateId));
 
     var state = new ConfiguratorOf.State(new StateData(stateId));
-    _stateConfigs.Add(stateId, state);
+    _stateConfigurators.Add(stateId, state);
     return state;
   }
 
@@ -71,7 +71,7 @@ public partial class Builder<TState, TEvent> : Builder
   {
     if(stateId is null) throw new ArgumentNullException(nameof(stateId));
 
-    return _stateConfigs.TryGetValue(stateId, out var state) ? state : DefineState(stateId);
+    return _stateConfigurators.TryGetValue(stateId, out var state) ? state : DefineState(stateId);
   }
 
   /// <summary>
@@ -84,16 +84,16 @@ public partial class Builder<TState, TEvent> : Builder
   {
     if(initialStateId is null) throw new ArgumentNullException(nameof(initialStateId));
 
-    if(! _stateConfigs.TryGetValue(initialStateId, out var initialStateConfig))
+    if(! _stateConfigurators.TryGetValue(initialStateId, out var initialStateConfigurator))
       throw new ArgumentException($"No state '{initialStateId}' is defined");
 
-    if(! IfTransitionDefined(initialStateConfig.StateData))
+    if(! IsTransitionDefined(initialStateConfigurator.StateData))
       throw new ArgumentException("No transitions defined from the initial state nor from its parents.");
 
     // create all states
     var states = new Dictionary<TState, IState<TState, TEvent>>();
-    foreach(var stateConfig in _stateConfigs.Values)
-      CreateStateAndAddToMap(stateConfig.StateData, states);
+    foreach(var stateConfigurator in _stateConfigurators.Values)
+      CreateStateAndAddToMap(stateConfigurator.StateData, states);
 
     ValidateTransitions(states);
 
@@ -119,7 +119,7 @@ public partial class Builder<TState, TEvent> : Builder
     {
       state = stateData.CreateState(
         stateData.ParentStateId.HasValue
-          ? CreateStateAndAddToMap(_stateConfigs[stateData.ParentStateId.Value].StateData, states) // recursive call to create the parent state;
+          ? CreateStateAndAddToMap(_stateConfigurators[stateData.ParentStateId.Value].StateData, states) // recursive call to create the parent state;
           : null
       );
 
@@ -129,7 +129,7 @@ public partial class Builder<TState, TEvent> : Builder
     return state;
   }
 
-  private bool IfTransitionDefined(StateData stateData)
+  private bool IsTransitionDefined(StateData stateData)
   {
     var parent = stateData;
     while(parent is not null)
@@ -137,7 +137,7 @@ public partial class Builder<TState, TEvent> : Builder
       if(parent.TransitionList.Count > 0)
         return true;
 
-      parent = parent.ParentStateId.HasValue ? _stateConfigs[parent.ParentStateId.Value].StateData : null;
+      parent = parent.ParentStateId.HasValue ? _stateConfigurators[parent.ParentStateId.Value].StateData : null;
     }
 
     return false;
@@ -179,7 +179,7 @@ public partial class Builder<TState, TEvent> : Builder
   /// <exception cref="InvalidOperationException" />
   private void ValidateTransitions(Dictionary<TState, IState<TState, TEvent>> states)
   {
-    foreach(var stateConfig in _stateConfigs.Values.Select(_ => _.StateData))
+    foreach(var stateConfig in _stateConfigurators.Values.Select(_ => _.StateData))
     foreach(var transition in stateConfig.TransitionList.Values.Where(_ => _.IsStatic)) // do not check dynamic transitions because they depend on the app state
     {
       if(! transition.GetTargetStateId(out var targetStateId))

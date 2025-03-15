@@ -15,19 +15,20 @@ internal static partial class Argument
 
     public readonly Bag ArgumentsBag = new Bag();
 
-    public void FindArgumentFor<TArgument>(
+    public void PrepareArgumentForState<TArgument>(
       IState    targetState,
       TArgument argument,
       bool      argumentIsFallback,
       IState    sourceState)
     {
       var targetArgumentType = targetState.GetArgumentTypeSafe();
-      if(targetArgumentType is null) return;
+      if(targetArgumentType is not null)
+      {
+        if(! GetArgumentProviders(targetArgumentType, argument, argumentIsFallback, sourceState, out var argumentProviders))
+          Throw.NoArgument(targetState);
 
-      if(! GetArgumentProviders(targetArgumentType, argument, argumentIsFallback, sourceState, out var argumentProviders))
-        Throw.NoArgument(targetState);
-
-      ArgumentsBag.Add(targetState, () => SetArgumentByReflection(targetState, argumentProviders));
+        ArgumentsBag.Add(targetState, () => SetArgumentByReflection(targetState, argumentProviders));
+      }
     }
 
     private bool GetArgumentProviders<TArgument>(
@@ -40,13 +41,14 @@ internal static partial class Argument
       if(_argumentSourcesCache.TryGetValue(targetArgumentType, out providers))
         return true;
 
-      // if an argument is provided and suitable, set it, don't search active states
-      if(! argumentIsFallback && targetArgumentType.IsAssignableFrom(typeof(TArgument)))
-      {
-        providers = new Tuple<IArgumentProvider, IArgumentProvider?>(new ArgumentProvider<TArgument>(argument), null);
-        _argumentSourcesCache.Add(targetArgumentType, providers);
-        return true;
-      }
+      // if a not fallback argument is passed to Raise method and suitable, set it, don't search active states
+      if(! argumentIsFallback)
+        if(targetArgumentType.IsAssignableFrom(typeof(TArgument)))
+        {
+          providers = new Tuple<IArgumentProvider, IArgumentProvider?>(new ArgumentProvider<TArgument>(argument), null);
+          _argumentSourcesCache.Add(targetArgumentType, providers);
+          return true;
+        }
 
       // search for a state provides argument of an assignable type if target requires a Tuple and there is a source with suitable Tuple, it will be found
       if(GetArgumentProviderForSingleArgument(rootState, targetArgumentType, out var provider))

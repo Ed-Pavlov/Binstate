@@ -79,7 +79,7 @@ jobs:
       -
         name: Store PDB
         run: |
-          robocopy src\Armature\bin\Release\netstandard2.1\ ${{ env.pdb-dir }} *.pdb
+          robocopy src\Binstate\bin\Release\netstandard2.0\ ${{ env.pdb-dir }} *.pdb
           if ($lastexitcode -lt 8) { $global:lastexitcode = 0 }
 
       -

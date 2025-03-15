@@ -18,12 +18,12 @@ internal partial class StateMachine<TState, TEvent>
   {
     try
     {
-      _lock.WaitOne();
+      _lock.WaitOne(); // if all goes well, it will be set after PerformTransition finished
 
       if(! _activeState.FindTransitionTransitive(@event, out var transition) // looks for a transition through all parent states
-      || ! transition!.GetTargetStateId(out var stateId))
+      || ! transition.GetTargetStateId(out var stateId))
       {
-        // no transition by specified event is found or dynamic transition returns null as target state id
+        // no transition by specified event is found or dynamic transition cancelled it
         _lock.Set();
 
         return null;
@@ -65,7 +65,7 @@ internal partial class StateMachine<TState, TEvent>
     {
       if(state is null) Throw.ParanoiaException("it can't be null before it is equal to commonAncestor");
 
-      argumentResolver.FindArgumentFor(state, argument, argumentIsFallback, sourceState);
+      argumentResolver.PrepareArgumentForState(state, argument, argumentIsFallback, sourceState);
       state = state.ParentState;
     }
 
@@ -79,7 +79,7 @@ internal partial class StateMachine<TState, TEvent>
   private bool PerformTransition(TransitionData transitionData)
   {
     var currentActiveState = transitionData.CurrentActiveState;
-    var prevActiveState    = currentActiveState;
+    var prevActiveState    = transitionData.CurrentActiveState;
     var transition         = transitionData.Transition;
     var targetState        = transitionData.TargetState;
     var commonAncestor     = transitionData.CommonAncestor;
@@ -123,8 +123,7 @@ internal partial class StateMachine<TState, TEvent>
       }
 
       // call 'enter' actions out of the lock due to it can block execution
-
-      CallEnterActions(enterActions);
+      CallEnterActionsInReverseOrder(enterActions);
     }
     catch(Exception exception)
     {
@@ -134,7 +133,7 @@ internal partial class StateMachine<TState, TEvent>
     return true; // just to reduce the amount of code calling this method
   }
 
-  private static void CallEnterActions(List<Action> enterActions)
+  private static void CallEnterActionsInReverseOrder(List<Action> enterActions)
   { // call them in reverse order, parent's 'enter' is called first, child's one last
     for(var i = enterActions.Count - 1; i >= 0; i--)
       enterActions[i]();
@@ -144,19 +143,24 @@ internal partial class StateMachine<TState, TEvent>
   /// Doesn't acquire lock itself, caller should care about safe context
   /// </summary>
   /// <returns> Returns 'enter' action of the state </returns>
-  private Action ActivateStateNotGuarded(IState state, Argument.Bag argumentsBag)
+  private Action ActivateStateNotGuarded(IState state, Argument.Bag argumentsBag, bool callEnterAction = true)
   {
     state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
-    var controller = new Controller(state, this);
+
+    var setArgument = argumentsBag.GetValueSafe(state);
 
     // prepare 'enter' action - will be called later
     return () =>
     {
-      var setArgument = argumentsBag.GetValueSafe(state);
-      setArgument?.Invoke(); // set the Argument property of the state if Argument is required
+      // set the Argument property of the state if Argument is required
+      setArgument?.Invoke();
 
       // set Argument property before calling EnterSafe, due to it uses this property
-      state.EnterSafe(controller, _onException);
+      if(callEnterAction)
+      {
+        var controller = new Controller(state, this);
+        state.EnterSafe(controller, _onException);
+      }
     };
   }
 

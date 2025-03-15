@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace BeatyBit.Binstate;
 
 /// <summary>
-/// The state machine. Use <see cref="Builder{TState, TEvent}" /> to configure and build a state machine.
+/// The state machine implementation. Use <see cref="Builder{TState, TEvent}" /> to configure and build a state machine.
 /// </summary>
-[SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
 internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
   where TState : notnull
   where TEvent : notnull
@@ -26,8 +24,8 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
 
   internal StateMachine(Dictionary<TState, IState<TState, TEvent>> states, Action<Exception> onException, TState initialStateId)
   {
-    _states      = states;
-    _onException = onException;
+    _states      = states      ?? throw new ArgumentNullException(nameof(states));
+    _onException = onException ?? throw new ArgumentNullException(nameof(onException));
     _activeState = GetStateById(initialStateId);
   }
 
@@ -63,34 +61,39 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
     return PerformTransitionAsync(@event, argument, argumentIsFallback);
   }
 
-  internal void EnterInitialState<T>(T initialStateArgument)
+  /// <summary>
+  /// This is implemented as a separate method rather than constructor logic to be able specifying generic argument <typeparamref name="T"/>.
+  /// On the other hand, the <see cref="_activeState"/> is set in constructor to use not nullable type for it.
+  /// </summary>
+  /// <param name="initialStateArgument"></param>
+  /// <param name="callEnterActions">Specifies if 'enter' action of all activated states should be called.</param>
+  internal void EnterInitialState<T>(T initialStateArgument, bool callEnterActions = true)
   {
-    var argumentType = typeof(T);
-    var argumentsBag = new Argument.Bag();
-    var enterActions = new List<Action>();
+    var argumentType      = typeof(T);
+    var argumentsBag      = new Argument.Bag();
+    var initializeActions = new List<Action>();
 
     try
     {
       // activate all parent states of the initial state
-      var parentState = _activeState;
-      while(parentState is not null)
+      var state = _activeState;
+      while(state is not null)
       {
-        var stateArgumentType = parentState.GetArgumentTypeSafe();
-        if(stateArgumentType is not null)
-          if(! stateArgumentType.IsAssignableFrom(argumentType))
-            Throw.NoArgument(parentState);
-          else
-          {
-            var copy = parentState;
-            argumentsBag.Add(parentState, () => ( (ISetArgument<T>)copy ).Argument = initialStateArgument);
-          }
+        var stateCopy         = state;
+        var stateArgumentType = state.GetArgumentTypeSafe();
+        if(stateArgumentType is not null) // requires argument
+        {
+          if(! stateArgumentType.IsAssignableFrom(argumentType)) // but we have not suia
+            Throw.NoArgument(state);
+          argumentsBag.Add(state, () => ( (ISetArgument<T>)stateCopy ).Argument = initialStateArgument);
+        }
 
-        enterActions.Add(ActivateStateNotGuarded(parentState, argumentsBag));
+        initializeActions.Add(ActivateStateNotGuarded(state, argumentsBag, callEnterActions));
 
-        parentState = parentState.ParentState;
+        state = state.ParentState;
       }
 
-      CallEnterActions(enterActions);
+      CallEnterActionsInReverseOrder(initializeActions);
     }
     catch(Exception exception)
     {

@@ -5,6 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace BeatyBit.Binstate;
 
+/// <summary>
+/// This class contains tools and logic for passing arguments to their consumers.
+/// </summary>
 internal static partial class Argument
 {
   private static readonly MethodInfo PassArgumentMethodFactory
@@ -13,7 +16,7 @@ internal static partial class Argument
   private static readonly MethodInfo PassTupleArgumentMethodFactory
     = typeof(Argument).GetMethod(nameof(PassTupleArgument), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-  private static readonly string TupleInterfaceName = typeof(ITuple<,>).Name;
+  private static readonly Type TupleInterfaceTypeDefinition = typeof(ITuple<,>);
 
   /// <summary>
   /// Gets the third generic type parameter from the type <see cref="State{TState,TEvent,TArgument}"/> which is the type of the argument.
@@ -74,7 +77,7 @@ internal static partial class Argument
 
   private static bool IsTuple(this Type type, [NotNullWhen(true)] out Type? typeX, [NotNullWhen(true)] out Type? typeY)
   {
-    if(type.Name == TupleInterfaceName)
+    if(type.IsGenericType && type.GetGenericTypeDefinition() == TupleInterfaceTypeDefinition)
     {
       var genericArguments = type.GetGenericArguments();
       typeX = genericArguments[0];

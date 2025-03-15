@@ -138,7 +138,7 @@ public class ArgumentPassingTest : StateMachineTestBase
   public void should_throw_exception_if_parent_and_child_state_has_not_assignable_arguments_enable_free_mode_and_argument_is_passed(RaiseWay way)
   {
     // --arrange
-    var builder = new Builder<string, int>(OnException);
+    var builder = new Builder<string, int>(OnException, new Builder.Options{ArgumentTransferMode = ArgumentTransferMode.Free});
 
     builder.DefineState(Initial).AddTransition(GoToStateX, Child);
 
@@ -150,7 +150,7 @@ public class ArgumentPassingTest : StateMachineTestBase
            .OnEnter<string>(value => { });
 
     // --act
-    var sm = builder.Build(Initial, ArgumentTransferMode.Free);
+    var sm = builder.Build(Initial);
 
     Action target = () => sm.Raise(GoToStateX, "stringArgument");
 

@@ -58,7 +58,7 @@ public class BuilderTest : StateMachineTestBase
   public void should_not_throw_exception_if_parent_and_child_states_have_not_compatible_enter_arguments_and_enable_loose_relaying_is_true()
   {
     // --arrange
-    var builder = new Builder<string, int>(OnException);
+    var builder = new Builder<string, int>(OnException, new Builder.Options{ArgumentTransferMode = ArgumentTransferMode.Free});
 
     builder.DefineState(Initial).AddTransition(GoToStateX, Child);
 
@@ -70,7 +70,7 @@ public class BuilderTest : StateMachineTestBase
            .OnEnter<string>(value => { });
 
     // --act
-    var target = builder.Build(Initial, ArgumentTransferMode.Free);
+    var target = builder.Build(Initial);
 
     // --assert
     target.Should().NotBeNull();

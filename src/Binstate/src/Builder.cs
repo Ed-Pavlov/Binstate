@@ -5,15 +5,21 @@ using System.Linq;
 namespace BeatyBit.Binstate;
 
 /// <summary>
+/// Just the base type for the <see cref="Builder{TState, TEvent}"/> to simplify the syntax of instantiating <see cref="Options"/>
+/// </summary>
+public partial class Builder;
+
+/// <summary>
 /// This class is used to configure and build a state machine.
 /// </summary>
-public partial class Builder<TState, TEvent>
+public partial class Builder<TState, TEvent> : Builder
   where TState : notnull
   where TEvent : notnull
 {
-  private readonly Action<Exception>                        _onException;
-  private readonly bool                                     _allowDefaultValue;
-  private readonly Dictionary<TState, ConfiguratorOf.State> _stateConfigs = new Dictionary<TState, ConfiguratorOf.State>();
+  private readonly Action<Exception> _onException;
+  private readonly Options           _options;
+
+  private readonly Dictionary<TState, ConfiguratorOf.State> _stateConfigs = new();
 
   /// <summary>
   /// Creates a builder of a state machine, use it to define state and configure transitions.
@@ -22,13 +28,22 @@ public partial class Builder<TState, TEvent>
   /// All exception thrown from 'enter', 'exit', and 'transition' actions passed to the state machine are caught in order not break the state of the state machine.
   /// Use this action to be notified about these exceptions.
   /// </param>
-  /// <param name="allowDefaultValue">Specifies if the 'default' value can be used as a valid State ID
-  /// in case of <typeparamref name="TState"/> is a <see cref="ValueType"/>, e.g. <see cref="Enum"/>.</param>
-  public Builder(Action<Exception> onException, bool allowDefaultValue = false)
+  /// <param name="options"> Configuration options for the state machine builder. </param>
+  public Builder(Action<Exception> onException, Options options)
   {
-    _onException       = onException ?? throw new ArgumentNullException(nameof(onException));
-    _allowDefaultValue = allowDefaultValue;
+    _onException = onException ?? throw new ArgumentNullException(nameof(onException));
+    _options     = options     ?? throw new ArgumentNullException(nameof(options));
   }
+
+  /// <summary>
+  /// Creates a builder of a state machine, use it to define state and configure transitions.
+  /// </summary>
+  /// <param name="onException">
+  /// All exception thrown from 'enter', 'exit', and 'transition' actions passed to the state machine are caught in order not break the state of the state machine.
+  /// Use this action to be notified about these exceptions.
+  /// </param>
+  /// <remarks>Default <see cref="Builder.Options"/> is used. </remarks>
+  public Builder(Action<Exception> onException) : this(onException, new Options()) {}
 
   /// <summary>
   /// Defines the new state in the state machine, if it is already defined throws an exception.
@@ -39,7 +54,7 @@ public partial class Builder<TState, TEvent>
   {
     if(stateId is null) throw new ArgumentNullException(nameof(stateId));
 
-    if(! _allowDefaultValue && EqualityComparer<TState>.Default.Equals(stateId, default!))
+    if(! _options.AllowDefaultValueAsStateId && EqualityComparer<TState>.Default.Equals(stateId, default!))
       throw new ArgumentException($"'{nameof(stateId)}' cannot be default value", nameof(stateId));
 
     var state = new ConfiguratorOf.State(new StateData(stateId));
@@ -64,9 +79,8 @@ public partial class Builder<TState, TEvent>
   /// </summary>
   /// <param name="initialStateId"> The initial state of the state machine. </param>
   /// <param name="initialStateArgument"> If initial state requires argument use this overload to pass it </param>
-  /// <param name="argumentTransferMode">The mode of transferring arguments to new newly activated states. See <see cref="ArgumentTransferMode"/> for details.</param>
   /// <exception cref="InvalidOperationException"> Throws if there are any inconsistencies in the provided configuration. </exception>
-  public IStateMachine<TEvent> Build<T>(TState initialStateId, T initialStateArgument, ArgumentTransferMode argumentTransferMode = ArgumentTransferMode.Strict)
+  public IStateMachine<TEvent> Build<T>(TState initialStateId, T initialStateArgument)
   {
     if(initialStateId is null) throw new ArgumentNullException(nameof(initialStateId));
 
@@ -83,7 +97,7 @@ public partial class Builder<TState, TEvent>
 
     ValidateTransitions(states);
 
-    if(argumentTransferMode == ArgumentTransferMode.Strict)
+    if(_options.ArgumentTransferMode == ArgumentTransferMode.Strict)
       ValidateSubstateEnterArgument(states.Values);
 
     var stateMachine = new StateMachine<TState, TEvent>(states, _onException, initialStateId);
@@ -95,10 +109,9 @@ public partial class Builder<TState, TEvent>
   /// Validates consistency and builds the state machine using provided configuration.
   /// </summary>
   /// <param name="initialStateId"> The initial state of the state machine. </param>
-  /// <param name="argumentTransferMode">The mode of transferring arguments to new newly activated states. See <see cref="ArgumentTransferMode"/> for details.</param>
   /// <exception cref="InvalidOperationException"> Throws if there are any inconsistencies in the provided configuration. </exception>
-  public IStateMachine<TEvent> Build(TState initialStateId, ArgumentTransferMode argumentTransferMode = ArgumentTransferMode.Strict)
-    => Build<Unit>(initialStateId, default, argumentTransferMode);
+  public IStateMachine<TEvent> Build(TState initialStateId)
+    => Build<Unit>(initialStateId, default);
 
   private IState<TState, TEvent> CreateStateAndAddToMap(StateData stateData, Dictionary<TState, IState<TState, TEvent>> states)
   {
@@ -170,7 +183,7 @@ public partial class Builder<TState, TEvent>
     foreach(var transition in stateConfig.TransitionList.Values.Where(_ => _.IsStatic)) // do not check dynamic transitions because they depend on the app state
     {
       if(! transition.GetTargetStateId(out var targetStateId))
-        Throw.ImpossibleException("it's impossible to have a transition without target state");
+        Throw.ParanoiaException("it's impossible to have a transition without target state");
 
       if(! states.ContainsKey(targetStateId))
         throw new InvalidOperationException(

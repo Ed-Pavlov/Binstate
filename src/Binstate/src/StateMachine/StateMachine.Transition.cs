@@ -63,7 +63,7 @@ internal partial class StateMachine<TState, TEvent>
     var state = targetState;
     while(state != commonAncestor)
     {
-      if(state is null) throw new InvalidOperationException("It can't be null before it is equal to commonAncestor");
+      if(state is null) Throw.ParanoiaException("it can't be null before it is equal to commonAncestor");
 
       argumentResolver.FindArgumentFor(state, argument, argumentIsFallback, sourceState);
       state = state.ParentState;
@@ -74,7 +74,7 @@ internal partial class StateMachine<TState, TEvent>
 
   /// <summary>
   /// Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
-  /// into the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{System.Exception}, bool)" />
+  /// into the delegate passed to <see cref="Builder{TState,TEvent}(Action{System.Exception}, Builder{TState,TEvent}.Options)" />
   /// </summary>
   private bool PerformTransition(TransitionData transitionData)
   {
@@ -95,9 +95,7 @@ internal partial class StateMachine<TState, TEvent>
         while(currentActiveState != commonAncestor)
         {
           if(currentActiveState is null)
-            throw new InvalidOperationException(
-              "This exception should never be thrown, because currentActiveState can't become null earlier then be equal to commonAncestor"
-            );
+            Throw.ParanoiaException("currentActiveState can't become null earlier then be equal to commonAncestor");
 
           currentActiveState.ExitSafe(_onException);
           currentActiveState = currentActiveState.ParentState;
@@ -112,9 +110,7 @@ internal partial class StateMachine<TState, TEvent>
         while(targetState != commonAncestor)
         {
           if(targetState is null)
-            throw new InvalidOperationException(
-              "This exception should never be thrown, because targetState can't become null earlier then be equal to commonAncestor"
-            );
+            Throw.ParanoiaException("targetState can't become null earlier then be equal to commonAncestor");
 
           var enterAction = ActivateStateNotGuarded(targetState, argumentsBag);
           enterActions.Add(enterAction);

@@ -13,11 +13,9 @@ internal static class Throw
        );
 
   [DoesNotReturn]
-  public static void ImpossibleException(IState targetState)
-    => throw new InvalidOperationException("This exception should never be thrown, because all verifications should be performed in the caller part. "
-                                         + $"Target state = {targetState}");
+  public static void ParanoiaException(IState targetState)
+    => ParanoiaException($"all verifications should be performed in the caller part. Target state = {targetState}");
 
   [DoesNotReturn]
-  public static void ImpossibleException(string reason)
-    => throw new InvalidOperationException("This exception should never be thrown, because " + reason);
+  public static void ParanoiaException(string reason) => throw new InvalidOperationException("This exception should never be thrown, because " + reason);
 }

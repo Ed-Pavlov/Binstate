@@ -173,7 +173,7 @@ public class TransitionTest : StateMachineTestBase
     var actual = new List<int>();
 
     // --arrange
-    var builder = new Builder<int, int>(OnException, true);
+    var builder = new Builder<int, int>(OnException, new Builder.Options{AllowDefaultValueAsStateId = true});
 
     builder
      .DefineState(initialStateId)

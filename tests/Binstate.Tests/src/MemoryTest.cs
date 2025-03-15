@@ -24,7 +24,7 @@ public class BoxingTest : StateMachineTestBase
     ITuple<ValueType2, ValueType1>? actualTuple = null;
 
     // --arrange
-    var builder = new Builder<string, int>(OnException);
+    var builder = new Builder<string, int>(OnException, new Builder.Options{ArgumentTransferMode = ArgumentTransferMode.Free});
 
     builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
 
@@ -43,7 +43,7 @@ public class BoxingTest : StateMachineTestBase
            .AsSubstateOf(Child)
            .OnEnter<ITuple<ValueType2, ValueType1>>(value => actualTuple = value);
 
-    var target = builder.Build(Initial, ArgumentTransferMode.Free);
+    var target = builder.Build(Initial);
 
     var startPoint = dotMemory.Check();
 

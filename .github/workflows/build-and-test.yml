@@ -33,15 +33,14 @@ jobs:
 
       -
         name: Install GitVersion
-        uses: gittools/actions/gitversion/setup@v1.1.1
+        uses: gittools/actions/gitversion/setup@v3.1.11
         with:
-          versionSpec: '5.x'
-          preferLatestVersion: true
+          versionSpec: '6.0.x'
 
       -
         name: Use GitVersion
         id:   gitversion # step id used as reference for output values
-        uses: gittools/actions/gitversion/execute@v1.1.1
+        uses: gittools/actions/gitversion/execute@v3.1.11
 
       # Build
       -

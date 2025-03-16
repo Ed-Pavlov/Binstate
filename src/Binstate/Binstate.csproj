@@ -2,38 +2,47 @@
   <PropertyGroup>
     <AssemblyName>BeatyBit.Binstate</AssemblyName>
     <RootNamespace>BeatyBit.Binstate</RootNamespace>
-    <LangVersion>preview</LangVersion>
-    <Nullable>enable</Nullable>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
-  <PropertyGroup>
+  <PropertyGroup Label="dev">
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+  </PropertyGroup>
+
+  <PropertyGroup Label="build">
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors/>
+    <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <BaseIntermediateOutputPath>$(SolutionDir)\.out\obj\</BaseIntermediateOutputPath>
+    <OutputPath>$(SolutionDir)\.out\bin\</OutputPath>
+    <UseCommonOutputDirectory>true</UseCommonOutputDirectory>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Label="signing">
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\..\build\binstate.public.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>$(SolutionDir)\.build\beatybit.public.snk</AssemblyOriginatorKeyFile>
     <PublicSign>true</PublicSign>
   </PropertyGroup>
 
-
-  <PropertyGroup>
-    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors />
-    <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
-  </PropertyGroup>
 
   <PropertyGroup Label="nuspec">
     <IsPackable>true</IsPackable>
     <MinClientVersion>2.8</MinClientVersion>
     <PackageVersion>0.0.0</PackageVersion>
     <RepositoryType>git</RepositoryType>
-    <PackageProjectUrl>https://github.com/Ed-Pavlov/Binstate</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/Ed-Pavlov/Binstate</RepositoryUrl>
     <Authors>Ed Pavlov</Authors>
-    <copyright>Copyright © 2020-2025 Ed Pavlov</copyright>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <PackageIcon>icon.png</PackageIcon>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <PackageProjectUrl>https://github.com/Ed-Pavlov/Binstate</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/Ed-Pavlov/Binstate</RepositoryUrl>
+    <copyright>Copyright © 2020-2025 Ed Pavlov</copyright>
     <PackageTags>fsm finite-state-machine state-machine state-machine-dsl hierarchical-state-machine hierarchical-states thread-safe async dotnet-core dotnet</PackageTags>
     <description>Hierarchical state machine for .NET.</description>
 
@@ -41,23 +50,15 @@
     </PackageReleaseNotes>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
-  </PropertyGroup>
-
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
-    <DocumentationFile>bin\Debug\BeatyBit.Binstate.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DocumentationFile>bin\Release\BeatyBit.Binstate.xml</DocumentationFile>
-  </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\build\AssemblyInfo.cs">
-      <Link>build\AssemblyInfo.cs</Link>
+    <PackageReference Include="BeatyBit.Bits" Version="0.0.17" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Compile Include="..\..\.build\AssemblyInfo.cs">
+      <Link>.build\AssemblyInfo.cs</Link>
     </Compile>
     <Compile Update="src\Builder.Options.cs">
       <DependentUpon>Builder.cs</DependentUpon>
@@ -104,8 +105,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\build\icon.png" Link="build\icon.png" Pack="true" PackagePath="\icon.png" />
-    <None Include="..\..\build\nuget-readme.md" Link="build\nuget-readme.md" Pack="true" PackagePath="\readme.md" />
+    <None Include="..\..\.build\icon.png" Link=".build\icon.png" Pack="true" PackagePath="\icon.png" />
+    <None Include="..\..\.build\nuget-readme.md" Link=".build\nuget-readme.md" Pack="true" PackagePath="\readme.md" />
   </ItemGroup>
 
 </Project>

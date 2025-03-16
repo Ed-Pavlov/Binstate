@@ -1,25 +1,31 @@
 <p align='right'>If <b>Binstate</b> has done you any good, consider buying me a cup of coffee</p>
 <p align="right">
   <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ed@pavlov.is&lc=US&item_name=Kudos+for+Binstate&no_note=0&cn=&currency_code=EUR">
-    <img src="https://ed.pavlov.is/Images/donate-button-60.png" />
+    <img src="/.build/button.png" width="76" height="32">
   </a>
 </p>
 
 ___
 
+# Binstate
+
+<p align="center">
+  <img src="/.build/icon.png" width="86" height="86">
+</p>
+
+**Binstate** *(pronounced as "Be in state")* is a simple but yet powerful state machine for .NET. Thread safe. Supports async methods. Supports hierarchically nested states.
+___
+
 [![Nuget](https://img.shields.io/nuget/dt/Binstate)](https://www.nuget.org/packages/Binstate/)
 [![Build & Test](https://github.com/Ed-Pavlov/Binstate/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/Ed-Pavlov/Binstate/actions/workflows/build-and-test.yml)
 
-___
-<p align="center">
- <a href="https://github.com/Ed-Pavlov/Binstate/releases">
-  <img src="build/icon.png" width="128" height="128">
- </a>
+
+## Powered by
+<p align="right">
+  <img src="https://resources.jetbrains.com/storage/products/company/brand/logos/Rider.png" width="185" height="64">
 </p>
 
-# Binstate
-
-Binstate *(pronounced as "Be in state")* is a simple but yet powerful state machine for .NET. Thread safe. Supports async methods. Supports hierarchically nested states.
+___
 
 ## Features
 

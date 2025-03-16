@@ -61,7 +61,7 @@ jobs:
       # Create and place nuget packages into env.nugets-dir directory
       -
         name: Pack
-        run: dotnet pack --no-build -o:${{ env.nugets-dir }} -p:PackageVersion=${{ steps.gitversion.outputs.nuGetVersionV2 }}
+        run: dotnet pack --no-build -o:${{ env.nugets-dir }} -p:PackageVersion=${{ steps.gitversion.outputs.assemblySemVer }}
 
       -
         name: Store Version
@@ -72,7 +72,7 @@ jobs:
             {
             "assembly-version": "${{ steps.gitversion.outputs.assemblySemVer }}",
             "assembly-file-version": "${{ steps.gitversion.outputs.assemblySemFileVer }}",
-            "nuget-version": "${{ steps.gitversion.outputs.nuGetVersionV2 }}"
+            "nuget-version": "${{ steps.gitversion.outputs.assemblySemVer }}"
             }
           dir:  ${{ env.artifacts-dir }}
 

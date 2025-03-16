@@ -1,4 +1,5 @@
 using System;
+using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 

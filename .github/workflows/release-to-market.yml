@@ -30,7 +30,12 @@ jobs:
 
       -
         name: Publish Nugets to nuget.org
-        run:  dotnet nuget push "${{ env.nugets-dir }}/*.nupkg" -k ${{ secrets.nuget_api_key }} -s https://api.nuget.org/v3/index.json
+        run: |
+          for file in nupkgs/*.nupkg; do
+            echo "$file"
+            dotnet nuget push "$file" -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
+          done
+        shell: bash
 
       -
         name: Make Github Release

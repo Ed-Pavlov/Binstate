@@ -15,12 +15,13 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors/>
     <DefineConstants>TRACE;JETBRAINS_ANNOTATIONS</DefineConstants>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <BaseIntermediateOutputPath>$(SolutionDir)\.out\obj\</BaseIntermediateOutputPath>
     <OutputPath>$(SolutionDir)\.out\bin\</OutputPath>
     <UseCommonOutputDirectory>true</UseCommonOutputDirectory>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>
 
   <PropertyGroup Label="signing">
@@ -108,5 +109,7 @@
     <None Include="..\..\.build\icon.png" Link=".build\icon.png" Pack="true" PackagePath="\icon.png" />
     <None Include="..\..\.build\nuget-readme.md" Link=".build\nuget-readme.md" Pack="true" PackagePath="\readme.md" />
   </ItemGroup>
-
+  <ItemGroup>
+    <None Remove="obj\**" />
+  </ItemGroup>
 </Project>

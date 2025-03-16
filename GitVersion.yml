@@ -1,11 +1,12 @@
 mode: ContinuousDeployment
-increment: Inherit
+increment: Patch
+assembly-versioning-scheme: MajorMinorPatch
 update-build-number: True
 
 branches:
   main:
     regex:                                      ^master$|^main$
-    mode:                                       ContinuousDeployment
+    mode:                                       ContinuousDelivery
     label:                                      'alpha'
     increment:                                  Patch
     prevent-increment:
@@ -22,7 +23,7 @@ branches:
   release:
     regex:                                      ^release\/\d+\.\d+\.\d+$
     mode:                                       ContinuousDeployment
-    label:                                      'beta'
+    label:                                      ''
     increment:                                  None
     prevent-increment:
       of-merged-branch: true

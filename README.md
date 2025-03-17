@@ -16,7 +16,7 @@ ___
 **Binstate** *(pronounced as "Be in state")* is a simple but yet powerful state machine for .NET. Thread safe. Supports async methods. Supports hierarchically nested states.
 ___
 
-[![Nuget](https://img.shields.io/nuget/dt/Binstate)](https://www.nuget.org/packages/Binstate/)
+[![Nuget](https://img.shields.io/nuget/dt/Binstate)](https://www.nuget.org/packages/BeatyBit.Binstate/)
 [![Build & Test](https://github.com/Ed-Pavlov/Binstate/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/Ed-Pavlov/Binstate/actions/workflows/build-and-test.yml)
 
 

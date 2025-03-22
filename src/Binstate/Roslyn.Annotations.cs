@@ -4,7 +4,7 @@
 namespace System.Diagnostics.CodeAnalysis;
 
 [AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
-public sealed class NotNullWhenAttribute : Attribute
+internal sealed class NotNullWhenAttribute : Attribute
 {
   public NotNullWhenAttribute(bool returnValue) => ReturnValue = returnValue;
 
@@ -12,4 +12,4 @@ public sealed class NotNullWhenAttribute : Attribute
 }
 
 [AttributeUsage(AttributeTargets.Method, Inherited = false)]
-public sealed class DoesNotReturnAttribute : Attribute { }
+internal  sealed class DoesNotReturnAttribute : Attribute { }

@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text.Json;
 using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
@@ -8,7 +11,24 @@ namespace BeatyBit.Binstate;
 /// <summary>
 /// Just the base type for the <see cref="Builder{TState, TEvent}"/> to simplify the syntax of instantiating <see cref="Options"/>
 /// </summary>
-public partial class Builder;
+public partial class Builder
+{
+#pragma warning disable CS8622
+  internal static GetState<TState> CreateStaticGetState<TState>(TState value)
+    => (out TState? state) =>
+    {
+      state = value;
+      return true;
+    };
+
+  internal static GetState<TState> CreateDynamicGetState<TState>(Func<TState?> getState)
+    => (out TState? state) =>
+    {
+      state = getState();
+      return ! EqualityComparer<TState?>.Default.Equals(state, default);
+    };
+#pragma warning restore CS8622
+}
 
 /// <summary>
 /// This class is used to configure and build a state machine.
@@ -44,7 +64,7 @@ public partial class Builder<TState, TEvent> : Builder
   /// Use this action to be notified about these exceptions.
   /// </param>
   /// <remarks>Default <see cref="Builder.Options"/> is used. </remarks>
-  public Builder(Action<Exception> onException) : this(onException, new Options()) {}
+  public Builder(Action<Exception> onException) : this(onException, new Options()) { }
 
   /// <summary>
   /// Defines the new state in the state machine, if it is already defined throws an exception.
@@ -91,19 +111,65 @@ public partial class Builder<TState, TEvent> : Builder
     if(! IsTransitionDefined(initialStateConfigurator.StateData))
       throw new ArgumentException("No transitions defined from the initial state nor from its parents.");
 
-    // create all states
+    var states = CreateStates();
+
+    var stateMachine = new StateMachine<TState, TEvent>(states, _onException, initialStateId, CalculatePersistanceSignature());
+    stateMachine.ActivateNew(initialStateArgument);
+    return stateMachine;
+  }
+
+  /// <summary>
+  /// Restores a state machine instance from serialized data.
+  /// </summary>
+  /// <param name="serializedData">A JSON string representing the previously saved state machine's state.</param>
+  /// <returns>A restored instance of the state machine configured with the states and active state from the provided serialized data.</returns>
+  /// <exception cref="ArgumentException">
+  /// Throws if the provided JSON string is null, empty, or doesn't contain valid serialized state machine data.
+  /// </exception>
+  public IStateMachine<TEvent> Restore(string serializedData)
+  {
+    if(! _options.EnableStateMachinePersistence)
+      throw new InvalidOperationException(
+        $"This {nameof(Builder)} is not configured for persistence. "
+      + $"Set {nameof(Builder)}.{nameof(Options)}.{nameof(Options.EnableStateMachinePersistence)} to true to enable it."
+      );
+
+    var persistedStateMachine = JsonSerializer.Deserialize<Persistance<TState>.StateMachineData>(serializedData);
+    if(persistedStateMachine is null) throw new ArgumentException($"'{nameof(serializedData)}' is not a valid serialized state machine");
+
+    var persistenceSignature = CalculatePersistanceSignature();
+    if(persistedStateMachine.Signature != persistenceSignature)
+      throw new ArgumentException($"The passed {nameof(serializedData)} doesn't match the configuration of this {nameof(Builder)}");
+
+    var states = CreateStates();
+
+    persistedStateMachine.RestoreStateArguments(states.Values);
+
+    var stateMachine = new StateMachine<TState, TEvent>(states, _onException, persistedStateMachine.ActiveStateId, persistenceSignature);
+    stateMachine.ActivateNew<Unit>(default);
+    return stateMachine;
+  }
+
+  /// <summary>
+  /// Creates and initializes the states of the state machine using the configuration data provided in the builder.
+  /// This method also validates the state transitions and ensures that the argument transfer rules are consistent.
+  /// </summary>
+  /// <returns>
+  /// Returns a dictionary containing the states of the state machine, where the key is the state ID and the value is the corresponding state object.
+  /// </returns>
+  private Dictionary<TState, IState<TState, TEvent>> CreateStates()
+  {
     var states = new Dictionary<TState, IState<TState, TEvent>>();
+
     foreach(var stateConfigurator in _stateConfigurators.Values)
-      CreateStateAndAddToMap(stateConfigurator.StateData, states);
+      CreateStateAndAddToMapRecursively(stateConfigurator.StateData, states);
 
     ValidateTransitions(states);
 
     if(_options.ArgumentTransferMode == ArgumentTransferMode.Strict)
       ValidateSubstateEnterArgument(states.Values);
 
-    var stateMachine = new StateMachine<TState, TEvent>(states, _onException, initialStateId);
-    stateMachine.EnterInitialState(initialStateArgument);
-    return stateMachine;
+    return states;
   }
 
   /// <summary>
@@ -111,16 +177,17 @@ public partial class Builder<TState, TEvent> : Builder
   /// </summary>
   /// <param name="initialStateId"> The initial state of the state machine. </param>
   /// <exception cref="InvalidOperationException"> Throws if there are any inconsistencies in the provided configuration. </exception>
-  public IStateMachine<TEvent> Build(TState initialStateId)
-    => Build<Unit>(initialStateId, default);
+  public IStateMachine<TEvent> Build(TState initialStateId) => Build<Unit>(initialStateId, default);
 
-  private IState<TState, TEvent> CreateStateAndAddToMap(StateData stateData, Dictionary<TState, IState<TState, TEvent>> states)
+  private IState<TState, TEvent> CreateStateAndAddToMapRecursively(StateData stateData, Dictionary<TState, IState<TState, TEvent>> states)
   {
     if(! states.TryGetValue(stateData.StateId, out var state)) // state could be already created during creating parent states
     {
       state = stateData.CreateState(
         stateData.ParentStateId.HasValue
-          ? CreateStateAndAddToMap(_stateConfigurators[stateData.ParentStateId.Value].StateData, states) // recursive call to create the parent state;
+          ? CreateStateAndAddToMapRecursively(
+            _stateConfigurators[stateData.ParentStateId.Value].StateData, states
+          ) // recursive call to create the parent state;
           : null
       );
 
@@ -166,8 +233,8 @@ public partial class Builder<TState, TEvent> : Builder
         }
         else
           throw new InvalidOperationException(
-            $"Parent state '{parentState}' requires argument of type '{parentState.GetArgumentType()}' whereas it's child state '{state}' requires "
-          + $"argument of not assignable to the parent type '{state.GetArgumentType()}'. "
+            $"Parent state '{parentState}' requires argument of type '{parentState.GetArgumentTypeSafe()}' whereas it's child state '{state}' requires "
+          + $"argument of not assignable to the parent type '{state.GetArgumentTypeSafe()}'. "
           + $"Consider enabling {nameof(ArgumentTransferMode)}.{ArgumentTransferMode.Free}."
           );
       }
@@ -191,5 +258,51 @@ public partial class Builder<TState, TEvent> : Builder
           $"The transition '{transition.Event}' from the state '{stateConfig.StateId}' references not defined state '{targetStateId}'"
         );
     }
+  }
+
+  /// <summary>
+  /// Calculates a unique signature for this instance based on _options and _stateConfigurators.
+  /// </summary>
+  /// <returns>A string representing the unique signature.</returns>
+  private string? CalculatePersistanceSignature()
+  {
+    if(! _options.EnableStateMachinePersistence) return null;
+
+    using var sha256 = SHA256.Create();
+
+    using var stream = new MemoryStream();
+    using var writer = new StreamWriter(stream);
+
+    writer.Write(JsonSerializer.Serialize(_options));
+
+    foreach(var stateData in _stateConfigurators.Values.Select(_ => _.StateData))
+    {
+      writer.Write(JsonSerializer.Serialize(stateData.StateId));
+      stateData.ParentStateId
+               .Apply(
+                  _ =>
+                  {
+                    if(_.HasValue)
+                      writer.Write(JsonSerializer.Serialize(_.Value));
+                  }
+                );
+
+      foreach(var transition in stateData.TransitionList.Values)
+      {
+        writer.Write(JsonSerializer.Serialize(transition.Event));
+        if(transition.IsStatic)
+        {
+          transition.GetTargetStateId(out var targetStateId);
+          writer.Write(JsonSerializer.Serialize(targetStateId));
+        }
+      }
+
+    }
+
+    writer.Flush();
+    writer.BaseStream.Seek(0, SeekOrigin.Begin);
+
+    var hashBytes = sha256.ComputeHash(stream);
+    return Convert.ToBase64String(hashBytes);
   }
 }

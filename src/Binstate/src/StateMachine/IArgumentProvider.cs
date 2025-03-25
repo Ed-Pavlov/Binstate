@@ -1,8 +1,12 @@
 ﻿using System;
+using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 
-internal interface IArgumentProvider;
+internal interface IArgumentProvider
+{
+  Type? GetArgumentTypeSafe();
+}
 
 internal interface IGetArgument<out TArgument> : IArgumentProvider
 {
@@ -19,22 +23,26 @@ internal class ArgumentProvider<T> : IGetArgument<T>
   public ArgumentProvider(T argument) => Argument = argument;
 
   public T Argument { get; }
+
+  public Type? GetArgumentTypeSafe()
+  {
+    var argumentType = typeof(T);
+    return argumentType == typeof(Unit) ? null : argumentType;
+  }
 }
 
-internal class OneTupleItemArgumentProvider<T, TA, TR> : IGetArgument<T>
+internal class OneTupleItemArgumentProvider<T, TA, TR>(IState state)
+  : ArgumentProvider<T>(GetArgument(( (IGetArgument<ITuple<TA, TR>>)state ).Argument)) // base class constructor
 {
-  public OneTupleItemArgumentProvider(IState state)
+  private static T GetArgument(ITuple<TA, TR> tuple)
   {
-    var tuple = ( (IGetArgument<ITuple<TA, TR>>)state ).Argument;
-    Argument = tuple switch
+    return tuple switch
     {
       { ItemX: T arg }   => arg,
       { ItemY: T relay } => relay,
       _                  => throw new ArgumentOutOfRangeException(nameof(tuple))
     };
   }
-
-  public T Argument { get; }
 }
 
 internal static class StateTupleArgumentProvider

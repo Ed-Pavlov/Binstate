@@ -13,8 +13,9 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
   where TState : notnull
   where TEvent : notnull
 {
-  private readonly AutoResetEvent    _lock = new AutoResetEvent(true);
+  private readonly string?           _persistenceSignature;
   private readonly Action<Exception> _onException;
+  private readonly AutoResetEvent    _lock = new AutoResetEvent(true);
 
   /// <summary>
   /// The map of all defined states
@@ -23,11 +24,12 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
 
   private volatile IState<TState, TEvent> _activeState;
 
-  internal StateMachine(Dictionary<TState, IState<TState, TEvent>> states, Action<Exception> onException, TState initialStateId)
+  internal StateMachine(Dictionary<TState, IState<TState, TEvent>> states, Action<Exception> onException, TState initialStateId, string? persistenceSignature)
   {
-    _states      = states      ?? throw new ArgumentNullException(nameof(states));
-    _onException = onException ?? throw new ArgumentNullException(nameof(onException));
-    _activeState = GetStateById(initialStateId);
+    _states               = states      ?? throw new ArgumentNullException(nameof(states));
+    _onException          = onException ?? throw new ArgumentNullException(nameof(onException));
+    _persistenceSignature = persistenceSignature;
+    _activeState          = GetStateById(initialStateId);
   }
 
   /// <inheritdoc />
@@ -64,43 +66,15 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
 
   /// <summary>
   /// This is implemented as a separate method rather than constructor logic to be able specifying generic argument <typeparamref name="T"/>.
-  /// On the other hand, the <see cref="_activeState"/> is set in constructor to use not nullable type for it.
+  /// While the <see cref="_activeState"/> is set in constructor to use not nullable type for it.
   /// </summary>
-  /// <param name="initialStateArgument"></param>
-  /// <param name="callEnterActions">Specifies if 'enter' action of all activated states should be called.</param>
-  internal void EnterInitialState<T>(T initialStateArgument, bool callEnterActions = true)
+  /// <param name="initialStateArgument">Argument for the initial state</param>
+  internal void ActivateNew<T>(T initialStateArgument)
   {
-    var argumentType      = typeof(T);
-    var argumentsBag      = new Argument.Bag();
-    var initializeActions = new List<Action>();
+    var fake = Fake.CreateFakeInitialState<TState, TEvent>(_activeState.Id);
+    _activeState = fake;
 
-    try
-    {
-      // activate all parent states of the initial state
-      var state = _activeState;
-      while(state is not null)
-      {
-        var stateCopy         = state;
-        var stateArgumentType = state.GetArgumentTypeSafe();
-        if(stateArgumentType is not null) // requires argument
-        {
-          if(! stateArgumentType.IsAssignableFrom(argumentType)) // but we have not suia
-            Throw.NoArgument(state);
-          argumentsBag.Add(state, () => ( (ISetArgument<T>)stateCopy ).Argument = initialStateArgument);
-        }
-
-        initializeActions.Add(ActivateStateNotGuarded(state, argumentsBag, callEnterActions));
-
-        state = state.ParentState;
-      }
-
-      CallEnterActionsInReverseOrder(initializeActions);
-    }
-    catch(Exception exception)
-    {
-      _onException(exception);
-      throw;
-    }
+    PerformTransitionSync(default!, initialStateArgument, false);
   }
 
   private bool PerformTransitionSync<TArgument>(TEvent @event, TArgument argument, bool argumentIsFallback)

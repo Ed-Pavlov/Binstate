@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 
@@ -22,7 +23,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   /// This event is used to avoid race condition when <see cref="ExitSafe" /> method is called before <see cref="EnterSafe{T}" /> method.
   /// See usages for details.
   /// </summary>
-  private readonly ManualResetEvent _entered = new ManualResetEvent(true);
+  private readonly ManualResetEvent _enterActionStarted = new ManualResetEvent(true);
 
   private readonly object? _exitAction;
 
@@ -65,17 +66,13 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   public int                     DepthInTree { get; }
   public IState<TState, TEvent>? ParentState { get; }
 
-  /// <summary>
-  /// This property is set from protected by lock part of the code so it's no need synchronization
-  /// see <see cref="StateMachine{TState,TEvent}.ActivateStateNotGuarded" /> implementation for details.
-  /// </summary>
   public bool IsActive
   {
     get => _isActive;
-
     set
     {
-      if(value) _entered.Reset();
+      if(value)
+        _enterActionStarted.Reset();
       _isActive = value;
     }
   }
@@ -85,7 +82,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     try
     {
       _enterActionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
-      _entered.Set();               // it is safe to set the state as entered
+      _enterActionStarted.Set();               // it is safe to set the state as entered
 
       _task = _enterAction switch
       {
@@ -105,19 +102,19 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     }
   }
 
-/// <summary>
+  /// <summary>
   /// <see cref="ExitSafe" /> can be called earlier then <see cref="Builder{TState,TEvent}.ConfiguratorOf.EnterAction" /> of the activated state,
   /// see <see cref="StateMachine{TState,TEvent}.PerformTransition" /> implementation for details.
   /// In this case it should wait till <see cref="Builder{TState,TEvent}.ConfiguratorOf.EnterAction" /> will be called and exited, before call exit action
   /// </summary>
-public void ExitSafe(Action<Exception> onException)
+  public void ExitSafe(Action<Exception> onException)
   {
     try
     {
       IsActive = false; // signal that the current state is no more active and blocking enter action can finish
 
       // if action is set as active but enter action still is not called, wait for it
-      _entered.WaitOne();
+      _enterActionStarted.WaitOne();
 
       // wait till State.Enter function finishes
       // if enter action is blocking or no action: _enterFunctionFinished is set means it finishes
@@ -147,7 +144,14 @@ public void ExitSafe(Action<Exception> onException)
     }
   }
 
-  public void CallTransitionActionSafe(ITransition transition, Action<Exception> onException) => transition.InvokeActionSafe(Argument, onException);
+  public void    CallTransitionActionSafe(ITransition transition, Action<Exception> onException) => transition.InvokeActionSafe(Argument, onException);
+  public object? GetArgumentAsObject() => Argument;
+
+  public Type? GetArgumentTypeSafe()
+  {
+    var argumentType = typeof(TArgument);
+    return argumentType == typeof(Unit) ? null : argumentType;
+  }
 
   public bool FindTransitionTransitive(TEvent @event, [NotNullWhen(returnValue: true)] out Transition<TState, TEvent>? transition)
   {

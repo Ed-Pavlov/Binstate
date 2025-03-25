@@ -54,6 +54,7 @@
 
   <ItemGroup>
     <PackageReference Include="BeatyBit.Bits" Version="0.0.17" />
+    <PackageReference Include="System.Text.Json" Version="9.0.3" />
   </ItemGroup>
 
 
@@ -101,6 +102,9 @@
       <DependentUpon>StateMachine.cs</DependentUpon>
     </Compile>
     <Compile Update="src\StateMachine\StateMachine.Transition.cs">
+      <DependentUpon>StateMachine.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\StateMachine\StateMachine.Persistence.cs">
       <DependentUpon>StateMachine.cs</DependentUpon>
     </Compile>
   </ItemGroup>

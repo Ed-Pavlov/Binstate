@@ -130,7 +130,7 @@ public class InitialStateTest : StateMachineTestBase
   public void should_throw_exception_if_initial_state_requires_argument_but_no_argument_is_specified()
   {
     // --arrange
-    var builder = new Builder<string, int>(_ => { });
+    var builder = new Builder<string, int>(_ => {Assert.Fail(_.ToString()); });
 
     builder.DefineState(Initial).OnEnter<string>(_ => { }).AllowReentrancy(GoToStateX);
 

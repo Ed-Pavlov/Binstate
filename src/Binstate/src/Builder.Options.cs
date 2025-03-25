@@ -22,5 +22,11 @@ public partial class Builder
     /// See <see cref="BeatyBit.Binstate.ArgumentTransferMode"/> for details.
     /// </summary>
     public ArgumentTransferMode ArgumentTransferMode { get; set; } = ArgumentTransferMode.Strict;
+
+    /// <summary>
+    /// Specifies whether the state machine supports persistence. When enabled, the state machine can be persisted and restored.
+    /// To serialize the state machine in the current state call <see cref="IStateMachine{TEvent}.Serialize"/>.
+    /// </summary>
+    public bool EnableStateMachinePersistence { get; set; } = false;
   }
 }

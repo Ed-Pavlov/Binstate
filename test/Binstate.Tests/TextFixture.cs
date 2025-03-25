@@ -7,7 +7,6 @@ namespace Binstate.Tests;
 [TestFixture]
 public class TextFixture
 {
-
   [OneTimeSetUp]
   public void BeforeAllTestsRun()
   {

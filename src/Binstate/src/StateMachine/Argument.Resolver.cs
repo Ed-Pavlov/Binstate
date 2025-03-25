@@ -1,19 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 
 internal static partial class Argument
 {
-  public class Bag : Dictionary<IState, Action>;
+  public static IArgumentBag CreateBag() => new Bag();
 
   public class Resolver
   {
     private readonly Dictionary<Type, ITuple<IArgumentProvider, IArgumentProvider?>> _argumentSourcesCache  = new();
     private readonly Dictionary<Type, IArgumentProvider>                             _argumentProviderCache = new();
 
-    public readonly Bag ArgumentsBag = new Bag();
+    public readonly IArgumentBag ArgumentsBag = new Bag();
 
     public void PrepareArgumentForState<TArgument>(
       IState    targetState,
@@ -27,7 +28,7 @@ internal static partial class Argument
         if(! GetArgumentProviders(targetArgumentType, argument, argumentIsFallback, sourceState, out var argumentProviders))
           Throw.NoArgument(targetState);
 
-        ArgumentsBag.Add(targetState, () => SetArgumentByReflection(targetState, argumentProviders));
+        ArgumentsBag.Add(targetState, state => SetArgumentByReflection(state, argumentProviders));
       }
     }
 
@@ -92,6 +93,8 @@ internal static partial class Argument
       return false;
     }
 
+//    public static void SetArgumentByReflection(IState target, ITuple<IArgumentProvider, IArgumentProvider?> tuple)
+
     private bool GetArgumentProviderForSingleArgument(
       IState                                     sourceRoot,
       Type                                       targetArgumentType,
@@ -135,5 +138,14 @@ internal static partial class Argument
 
       return false;
     }
+  }
+
+  private class Bag : IArgumentBag
+  {
+    private readonly Dictionary<IState, Action<IState>> _dictionary = new Dictionary<IState, Action<IState>>();
+
+    public void Add(IState state, Action<IState> setArgument) => _dictionary.Add(state, setArgument);
+
+    public Action<IState>? GetValueSafe(IState state) => _dictionary.GetValueSafe(state);
   }
 }

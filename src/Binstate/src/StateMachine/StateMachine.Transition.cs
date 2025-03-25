@@ -26,7 +26,6 @@ internal partial class StateMachine<TState, TEvent>
       {
         // no transition by specified event is found or dynamic transition cancelled it
         _lock.Set();
-
         return null;
       }
 
@@ -52,7 +51,7 @@ internal partial class StateMachine<TState, TEvent>
     }
   }
 
-  private static Argument.Bag PrepareArgument<TArgument>(
+  private static IArgumentBag PrepareArgument<TArgument>(
     TArgument argument,
     bool      argumentIsFallback,
     IState    targetState,
@@ -82,7 +81,7 @@ internal partial class StateMachine<TState, TEvent>
     var currentActiveState = transitionData.CurrentActiveState;
     var prevActiveState    = transitionData.CurrentActiveState;
     var transition         = transitionData.Transition;
-    var targetState        = transitionData.TargetState;
+    var state              = transitionData.TargetState;
     var commonAncestor     = transitionData.CommonAncestor;
     var argumentsBag       = transitionData.ArgumentsBag;
 
@@ -106,16 +105,17 @@ internal partial class StateMachine<TState, TEvent>
         prevActiveState.CallTransitionActionSafe(transition, _onException);
 
         // and then activate new active states
-        _activeState = targetState;
+        _activeState = state;
 
-        while(targetState != commonAncestor)
+        while(state != commonAncestor)
         {
-          if(targetState is null)
-            Throw.ParanoiaException("targetState can't become null earlier then be equal to commonAncestor");
+          if(state is null)
+            Throw.ParanoiaException($"{nameof(state)} can't become null earlier then be equal to {nameof(commonAncestor)}");
 
-          var enterAction = ActivateStateNotGuarded(targetState, argumentsBag);
+          var setArgumentAction = argumentsBag.GetValueSafe(state);
+          var enterAction       = CreateActivateStateNotGuardedAction(state, setArgumentAction);
           enterActions.Add(enterAction);
-          targetState = targetState.ParentState;
+          state = state.ParentState;
         }
       }
       finally // no exception should be thrown here, but paranoia is my life
@@ -131,7 +131,7 @@ internal partial class StateMachine<TState, TEvent>
       _onException(exception);
     }
 
-    return true; // just to reduce the amount of code calling this method
+    return true; // just to reduce the amount of a caller method code
   }
 
   private static void CallEnterActionsInReverseOrder(List<Action> enterActions)
@@ -143,25 +143,19 @@ internal partial class StateMachine<TState, TEvent>
   /// <summary>
   /// Doesn't acquire lock itself, caller should care about safe context
   /// </summary>
-  /// <returns> Returns 'enter' action of the state </returns>
-  private Action ActivateStateNotGuarded(IState state, Argument.Bag argumentsBag, bool callEnterAction = true)
+  /// <returns> Returns an action which should be called to call 'enter' action of the state </returns>
+  private Action CreateActivateStateNotGuardedAction(IState state, Action<IState>? setArgument)
   {
     state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
 
-    var setArgument = argumentsBag.GetValueSafe(state);
+    var controller = new Controller(state, this);
 
     // prepare 'enter' action - will be called later
     return () =>
     {
-      // set the Argument property of the state if Argument is required
-      setArgument?.Invoke();
-
-      // set Argument property before calling EnterSafe, due to it uses this property
-      if(callEnterAction)
-      {
-        var controller = new Controller(state, this);
-        state.EnterSafe(controller, _onException);
-      }
+      // set the Argument property of the state if Argument is required, do it BEFORE calling EnterSafe, due to it uses this property
+      setArgument?.Invoke(state);
+      state.EnterSafe(controller, _onException);
     };
   }
 
@@ -171,14 +165,14 @@ internal partial class StateMachine<TState, TEvent>
     public readonly ITransition            Transition;
     public readonly IState<TState, TEvent> TargetState;
     public readonly IState?                CommonAncestor;
-    public readonly Argument.Bag           ArgumentsBag;
+    public readonly IArgumentBag           ArgumentsBag;
 
     public TransitionData(
       IState                 currentActiveState,
       ITransition            transition,
       IState<TState, TEvent> targetState,
       IState?                commonAncestor,
-      Argument.Bag           argumentsBag)
+      IArgumentBag           argumentsBag)
     {
       CurrentActiveState = currentActiveState;
       Transition         = transition;

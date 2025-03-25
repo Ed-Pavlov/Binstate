@@ -78,4 +78,10 @@ public interface IStateMachine<in TEvent>
   /// User-defined exceptions from 'enter', 'exit', and 'dynamic transition' actions are caught and reported using the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{Exception}, Builder{TState,TEvent}.Options)"/>.
   /// </exception>
   Task<bool> RaiseAsync<T>(TEvent @event, T argument, bool argumentIsFallback = false);
+
+  /// <summary>
+  /// Serializes this object to its string representation.
+  /// </summary>
+  /// <returns>The string representation of the object.</returns>
+  string Serialize();
 }

@@ -11,7 +11,7 @@ internal interface IState : IArgumentProvider
 
   /// <summary>
   /// This property is set from protected by lock part of the code so it's no need synchronization
-  /// see <see cref="StateMachine{TState,TEvent}.ActivateStateNotGuarded" /> implementation for details.
+  /// see <see cref="StateMachine{TState,TEvent}.CreateActivateStateNotGuardedAction" /> implementation for details.
   /// </summary>
   bool IsActive { get; set; }
 
@@ -25,6 +25,8 @@ internal interface IState : IArgumentProvider
   void ExitSafe(Action<Exception> onException);
 
   void CallTransitionActionSafe(ITransition transition, Action<Exception> onException);
+
+  object? GetArgumentAsObject();
 }
 
 internal interface IState<TState, TEvent> : IState
@@ -35,5 +37,5 @@ internal interface IState<TState, TEvent> : IState
 
   Dictionary<TEvent, Transition<TState, TEvent>> Transitions { get; }
 
-  bool FindTransitionTransitive(TEvent @event, [NotNullWhen(true)]out Transition<TState, TEvent>? transition);
+  bool FindTransitionTransitive(TEvent @event, [NotNullWhen(true)] out Transition<TState, TEvent>? transition);
 }

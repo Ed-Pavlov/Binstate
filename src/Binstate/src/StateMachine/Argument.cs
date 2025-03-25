@@ -2,7 +2,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 
@@ -11,25 +10,17 @@ namespace BeatyBit.Binstate;
 /// </summary>
 internal static partial class Argument
 {
+  private static readonly string IGetArgumentInterfaceName = typeof(IGetArgument<>).Name;
+
   private static readonly MethodInfo PassArgumentMethodFactory
     = typeof(Argument).GetMethod(nameof(PassArgument), BindingFlags.NonPublic | BindingFlags.Static)!;
 
   private static readonly MethodInfo PassTupleArgumentMethodFactory
     = typeof(Argument).GetMethod(nameof(PassTupleArgument), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-  private static readonly Type TupleInterfaceTypeDefinition = typeof(ITuple<,>);
+  private static readonly MethodInfo GetArgumentFactory = typeof(IGetArgument<>).GetProperty(nameof(IGetArgument<object>.Argument))!.GetGetMethod();
 
-  /// <summary>
-  /// Gets the third generic type parameter from the type <see cref="State{TState,TEvent,TArgument}"/> which is the type of the argument.
-  /// Argument of the type <see cref="Unit"/> means no argument.
-  /// </summary>
-  /// <returns>Returns null if the State doesn't require an Argument.</returns>
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Type? GetArgumentTypeSafe(this IState state)
-  {
-    var type = state.GetType().GetGenericArguments()[2];
-    return type == typeof(Unit) ? null : type;
-  }
+  private static readonly Type TupleInterfaceTypeDefinition = typeof(ITuple<,>);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static Type GetArgumentType(this IState state) => state.GetArgumentTypeSafe() ?? throw new ArgumentException();
@@ -39,11 +30,33 @@ internal static partial class Argument
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool CanAcceptArgumentFrom(this IState argumentTarget, IState argumentSource)
-    => argumentTarget.GetArgumentType().IsAssignableFrom(argumentSource.GetArgumentType());
+    => argumentTarget.GetArgumentType().IsAssignableFrom(argumentSource.GetArgumentTypeSafe());
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   private static Type GetArgumentType(this IArgumentProvider argumentProvider)
-    => argumentProvider.GetType().GetInterface(typeof(IGetArgument<>).Name).GetGenericArguments()[0];
+    => argumentProvider.GetType().GetInterface(IGetArgumentInterfaceName).GetGenericArguments()[0];
+
+  public static bool GetArgumentByReflection(this IState target, out object? argument)
+  {
+    argument = null;
+
+    var targetArgumentType = target.GetArgumentTypeSafe();
+    if(targetArgumentType is null)
+      return false;
+
+    argument = GetArgumentFactory.MakeGenericMethod(targetArgumentType).Invoke(target, null);
+    return true;
+  }
+
+  /// <summary>
+  /// Validation of the argument should be performed on the caller side
+  /// </summary>
+  public static void SetArgumentByReflectionUnsafe(IState target, object? argument)
+  {
+    var targetArgumentType = target.GetArgumentTypeSafe();
+    var passArgumentMethod = PassArgumentMethodFactory.MakeGenericMethod(targetArgumentType);
+    passArgumentMethod.Invoke(null, [target, argument]);
+  }
 
   private static void SetArgumentByReflection(IState target, ITuple<IArgumentProvider, IArgumentProvider?> tuple)
   {

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace BeatyBit.Binstate;
 
@@ -20,7 +19,7 @@ public partial class Builder<TState, TEvent>
         if(@event is null) throw new ArgumentNullException(nameof(@event));
         if(stateId is null) throw new ArgumentNullException(nameof(stateId));
 
-        AddTransitionToList(@event, StaticGetState(stateId), true, action);
+        AddTransitionToList(@event, CreateStaticGetState(stateId), true, action);
         return this;
       }
 
@@ -47,28 +46,9 @@ public partial class Builder<TState, TEvent>
         if(@event is null) throw new ArgumentNullException(nameof(@event));
         if(getState is null) throw new ArgumentNullException(nameof(getState));
 
-#pragma warning disable CS8622
-        var getStateWrapper = new GetState<TState>(
-          (out TState state) =>
-          {
-            state = getState() ?? default!;
-            return ! EqualityComparer<TState?>.Default.Equals(state, default);
-          }
-        );
-#pragma warning restore CS8622
-
-        AddTransitionToList(@event, getStateWrapper, false, null);
+        AddTransitionToList(@event, CreateDynamicGetState(getState), false, null);
         return this;
       }
-
-#pragma warning disable CS8622
-      protected static GetState<TState> StaticGetState(TState stateId)
-        => (out TState? state) =>
-        {
-          state = stateId;
-          return true;
-        };
-#pragma warning restore CS8622
 
       protected void AddTransitionToList(TEvent @event, GetState<TState> getState, bool isStatic, object? action)
         => StateData.TransitionList.Add(@event, new Transition<TState, TEvent>(@event, getState, isStatic, action));

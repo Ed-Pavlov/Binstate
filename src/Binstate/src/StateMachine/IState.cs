@@ -16,8 +16,6 @@ internal interface IState : IArgumentProvider
   /// </summary>
   bool IsActive { get; set; }
 
-  void EnterSafe<TEvent>(IStateController<TEvent> stateController, Action<Exception> onException);
-
   /// <summary>
   /// <see cref="State{TState,TEvent,TArgument}.ExitSafe" /> can be called earlier then <see cref="Builder{TState,TEvent}.ConfiguratorOf.IEnterAction" /> of the activated state,
   /// see <see cref="StateMachine{TState,TEvent}.PerformTransition" /> implementation for details.
@@ -39,4 +37,6 @@ internal interface IState<TState, TEvent> : IState
   IReadOnlyDictionary<TEvent, Transition<TState, TEvent>> Transitions { get; }
 
   bool FindTransitionTransitive(TEvent @event, [NotNullWhen(true)] out Transition<TState, TEvent>? transition);
+
+  void EnterSafe(IStateController<TEvent> stateController, Action<Exception> onException);
 }

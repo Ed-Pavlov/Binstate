@@ -51,7 +51,7 @@ internal static partial class Argument
     // target argument can accept PassedArgument, so should be set, and we are good
     if(targetArgumentType.IsAssignableFrom(source1ArgumentType))
     {
-      if(tuple.ItemY is not null) Throw.ParanoiaException(target);
+      if(tuple.ItemY is not null) throw Paranoia.GetInvalidTargetException(target);
 
       var passArgumentMethod = SetArgumentMethodFactory.MakeGenericMethod(targetArgumentType);
       passArgumentMethod.Invoke(null, [target, tuple.ItemX]);
@@ -62,7 +62,7 @@ internal static partial class Argument
     if(targetArgumentType.IsTuple(out var typeX, out var typeY))
     {
       var source2ArgumentType = tuple.ItemY?.GetArgumentType();
-      if(source2ArgumentType is null) Throw.ParanoiaException(target);
+      if(source2ArgumentType is null) throw Paranoia.GetInvalidTargetException(target);
 
       var passTupleArgumentMethod = SetTupleArgumentMethodFactory.MakeGenericMethod(typeX, typeY);
       passTupleArgumentMethod.Invoke(null, [target, tuple.ItemX, tuple.ItemY!]);

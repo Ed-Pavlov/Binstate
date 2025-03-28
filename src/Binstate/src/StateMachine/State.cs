@@ -22,7 +22,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   private readonly ManualResetEvent _enterActionFinished = new ManualResetEvent(true);
 
   /// <summary>
-  /// This event is used to avoid race condition when <see cref="ExitSafe" /> method is called before <see cref="EnterSafe{T}" /> method.
+  /// This event is used to avoid race condition when <see cref="ExitSafe" /> method is called before <see cref="EnterSafe" /> method.
   /// See usages for details.
   /// </summary>
   private readonly ManualResetEvent _enterActionStarted = new ManualResetEvent(true);
@@ -87,7 +87,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     }
   }
 
-  public void EnterSafe<TE>(IStateController<TE> stateController, Action<Exception> onException)
+  public void EnterSafe(IStateController<TEvent> stateController, Action<Exception> onException)
   {
     try
     {
@@ -97,8 +97,8 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
       _task = _enterAction switch
       {
         null                                               => null,
-        Func<IStateController<TE>, TArgument, Task?> enter => enter(stateController, Argument),
-        Func<IStateController<TE>, Task?> enter            => enter(stateController),
+        Func<IStateController<TEvent>, TArgument, Task?> enter => enter(stateController, Argument),
+        Func<IStateController<TEvent>, Task?> enter            => enter(stateController),
         _                                                  => throw new ArgumentOutOfRangeException(),
       };
     }
@@ -158,7 +158,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   {
     try
     {
-      switch(transition.OnTransitionAction)
+      switch(transition.TransitionAction)
       {
         case null: break; // no action
 
@@ -193,7 +193,6 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
 
     // no transition found through all parents
     transition = null;
-
     return false;
   }
 

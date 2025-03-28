@@ -27,7 +27,7 @@ public partial class Builder<TState, TEvent>
 
       set
       {
-        if(_parentStateId is not null) Throw.ParanoiaException("code written in the way that property is set only once.");
+        if(_parentStateId is not null) throw Paranoia.GetException("code written in the way that property is set only once.");
         _parentStateId = value;
       }
     }
@@ -38,7 +38,7 @@ public partial class Builder<TState, TEvent>
 
       set
       {
-        if(_enterAction.HasValue) Throw.ParanoiaException("code written in the way that property is set only once.");
+        if(_enterAction.HasValue) throw Paranoia.GetException("code written in the way that property is set only once.");
         _enterAction = value.ToMaybe();
       }
     }
@@ -49,7 +49,7 @@ public partial class Builder<TState, TEvent>
 
       set
       {
-        if(_exitAction.HasValue) Throw.ParanoiaException("code written in the way that property is set only once.");
+        if(_exitAction.HasValue) throw Paranoia.GetException("code written in the way that property is set only once.");
         _exitAction = value.ToMaybe();
       }
     }

@@ -23,7 +23,7 @@ internal static partial class Argument
       if(targetArgumentType is not null)
       {
         if(! GetArgumentProviders(targetArgumentType, argument, argumentIsFallback, sourceState, out var argumentProviders))
-          Throw.NoArgument(targetState);
+          throw TransitionException.NoArgumentException(targetState);
 
         ArgumentsBag.Add(targetState, state => SetArgumentByReflection(state, argumentProviders));
       }

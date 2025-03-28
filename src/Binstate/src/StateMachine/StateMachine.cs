@@ -20,11 +20,15 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
   /// <summary>
   /// The map of all defined states
   /// </summary>
-  private readonly Dictionary<TState, IState<TState, TEvent>> _states;
+  private readonly IReadOnlyDictionary<TState, IState<TState, TEvent>> _states;
 
   private volatile IState<TState, TEvent> _activeState;
 
-  internal StateMachine(Dictionary<TState, IState<TState, TEvent>> states, Action<Exception> onException, TState initialStateId, string? persistenceSignature)
+  internal StateMachine(
+    IReadOnlyDictionary<TState, IState<TState, TEvent>> states,
+    Action<Exception> onException,
+    TState initialStateId,
+    string? persistenceSignature)
   {
     _states               = states      ?? throw new ArgumentNullException(nameof(states));
     _onException          = onException ?? throw new ArgumentNullException(nameof(onException));

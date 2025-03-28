@@ -1,16 +1,15 @@
-using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace BeatyBit.Binstate;
 
 internal class Transition<TState, TEvent> : ITransition
 {
-  public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, object? action)
+  public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, object? transitionAction)
   {
-    Event              = @event;
-    GetTargetStateId   = getTargetStateId;
-    IsStatic           = isStatic;
-    OnTransitionAction = action;
+    Event            = @event;
+    GetTargetStateId = getTargetStateId;
+    IsStatic         = isStatic;
+    TransitionAction = transitionAction;
   }
 
   public TEvent Event { get; }
@@ -22,7 +21,7 @@ internal class Transition<TState, TEvent> : ITransition
 
   public readonly GetState<TState> GetTargetStateId;
 
-  public object? OnTransitionAction { get; }
+  public object? TransitionAction { get; }
 
   [ExcludeFromCodeCoverage]
   public override string ToString()

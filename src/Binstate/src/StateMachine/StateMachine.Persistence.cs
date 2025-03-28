@@ -6,6 +6,7 @@ namespace BeatyBit.Binstate;
 
 internal partial class StateMachine<TState, TEvent>
 {
+  /// <inheritdoc />
   public string Serialize()
   {
     if(_persistenceSignature is null)
@@ -22,7 +23,7 @@ internal partial class StateMachine<TState, TEvent>
                              state =>
                              {
                                var argument = state.GetArgumentAsObject();
-                               return argument.HasValue ? new Persistence<TState>.StateData(state.Id, argument) : null;
+                               return argument.HasValue ? new Persistence<TState>.StateData(state.Id, argument) : null; // store only states with arguments
                              }
                            )
                           .Where(_ => _ is not null)

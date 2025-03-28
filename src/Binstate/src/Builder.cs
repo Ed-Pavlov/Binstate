@@ -99,9 +99,16 @@ public partial class Builder<TState, TEvent> : Builder
   /// Validates consistency and builds the state machine using provided configuration.
   /// </summary>
   /// <param name="initialStateId"> The initial state of the state machine. </param>
+  /// <exception cref="InvalidOperationException"> Throws if there are any inconsistencies in the provided configuration. </exception>
+  public IStateMachine<TEvent> Build(TState initialStateId) => Build<Unit>(initialStateId, default);
+
+  /// <summary>
+  /// Validates consistency and builds the state machine using provided configuration.
+  /// </summary>
+  /// <param name="initialStateId"> The initial state of the state machine. </param>
   /// <param name="initialStateArgument"> If initial state requires argument use this overload to pass it </param>
   /// <exception cref="InvalidOperationException"> Throws if there are any inconsistencies in the provided configuration. </exception>
-  public IStateMachine<TEvent> Build<T>(TState initialStateId, T initialStateArgument)
+  public IStateMachine<TEvent> Build<TArgument>(TState initialStateId, TArgument initialStateArgument)
   {
     if(initialStateId is null) throw new ArgumentNullException(nameof(initialStateId));
 
@@ -113,7 +120,7 @@ public partial class Builder<TState, TEvent> : Builder
 
     var states = CreateStates();
 
-    var stateMachine = new StateMachine<TState, TEvent>(states, _onException, initialStateId, CalculatePersistanceSignature());
+    var stateMachine = new StateMachine<TState, TEvent>(states, _onException, initialStateId, CreatePersistenceSignature());
     stateMachine.EnterInitialState(initialStateArgument);
     return stateMachine;
   }
@@ -137,7 +144,7 @@ public partial class Builder<TState, TEvent> : Builder
     var persistedStateMachine = JsonSerializer.Deserialize<Persistence<TState>.StateMachineData>(serializedData);
     if(persistedStateMachine is null) throw new ArgumentException($"'{nameof(serializedData)}' is not a valid serialized state machine");
 
-    var persistenceSignature = CalculatePersistanceSignature();
+    var persistenceSignature = CreatePersistenceSignature();
     if(persistedStateMachine.Signature != persistenceSignature)
       throw new ArgumentException($"The passed {nameof(serializedData)} doesn't match the configuration of this {nameof(Builder)}");
 
@@ -171,13 +178,6 @@ public partial class Builder<TState, TEvent> : Builder
 
     return states;
   }
-
-  /// <summary>
-  /// Validates consistency and builds the state machine using provided configuration.
-  /// </summary>
-  /// <param name="initialStateId"> The initial state of the state machine. </param>
-  /// <exception cref="InvalidOperationException"> Throws if there are any inconsistencies in the provided configuration. </exception>
-  public IStateMachine<TEvent> Build(TState initialStateId) => Build<Unit>(initialStateId, default);
 
   private IState<TState, TEvent> CreateStateAndAddToMapRecursively(StateData stateData, Dictionary<TState, IState<TState, TEvent>> states)
   {
@@ -251,7 +251,7 @@ public partial class Builder<TState, TEvent> : Builder
     foreach(var transition in stateConfig.TransitionList.Values.Where(_ => _.IsStatic)) // do not check dynamic transitions because they depend on the app state
     {
       if(! transition.GetTargetStateId(out var targetStateId))
-        Throw.ParanoiaException("it's impossible to have a transition without target state");
+        throw Paranoia.GetException("it's impossible to have a transition without target state");
 
       if(! states.ContainsKey(targetStateId))
         throw new InvalidOperationException(
@@ -261,10 +261,9 @@ public partial class Builder<TState, TEvent> : Builder
   }
 
   /// <summary>
-  /// Calculates a unique signature for this instance based on _options and _stateConfigurators.
+  /// Create a unique signature for this instance based on _options and _stateConfigurators.
   /// </summary>
-  /// <returns>A string representing the unique signature.</returns>
-  private string? CalculatePersistanceSignature()
+  private string? CreatePersistenceSignature()
   {
     if(! _options.EnableStateMachinePersistence) return null;
 

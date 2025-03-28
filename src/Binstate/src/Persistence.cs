@@ -6,7 +6,7 @@ using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 
-internal abstract class Persistence<TState>
+internal static class Persistence<TState>
 {
   internal class StateMachineData
   {
@@ -36,7 +36,11 @@ internal abstract class Persistence<TState>
         if(argumentType is not null) // requires argument
         {
           var persistedState = _statesMap.GetValueSafe(state.Id);
-          if(persistedState is null) Throw.ParanoiaException($"persistence signature matches but state {state.Id} is not found in serialized data.");
+          if(persistedState is null)
+          {
+            string reason = $"persistence signature matches but state {state.Id} is not found in serialized data.";
+            throw Paranoia.GetException(reason);
+          }
 
           var argument = persistedState.GerArgumentFor(argumentType);
           Argument.SetArgumentByReflectionUnsafe(state, argumentType, argument);
@@ -63,12 +67,12 @@ internal abstract class Persistence<TState>
     {
       if(Argument is null)
       {
-        if(stateArgumentType.IsValueType) Throw.ParanoiaException("value type argument can't be null.");
+        if(stateArgumentType.IsValueType) throw Paranoia.GetException("value type argument can't be null.");
       }
       else
       {
         if(! stateArgumentType.IsInstanceOfType(Argument))
-          Throw.ParanoiaException($"persisted argument should be instance of the state argument type {stateArgumentType}, but it is {Argument.GetType()}.");
+          throw Paranoia.GetException($"persisted argument should be instance of the state argument type {stateArgumentType}, but it is {Argument.GetType()}.");
       }
 
       return Argument;

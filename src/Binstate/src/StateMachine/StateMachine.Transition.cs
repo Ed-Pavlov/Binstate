@@ -51,27 +51,6 @@ internal partial class StateMachine<TState, TEvent>
     }
   }
 
-  private static Argument.Bag PrepareArgument<TArgument>(
-    TArgument argument,
-    bool      argumentIsFallback,
-    IState    targetState,
-    IState?   commonAncestor,
-    IState    sourceState)
-  {
-    var argumentResolver = new Argument.Resolver();
-
-    var state = targetState;
-    while(state != commonAncestor)
-    {
-      if(state is null) Throw.ParanoiaException("it can't be null before it is equal to commonAncestor");
-
-      argumentResolver.PrepareArgumentForState(state, argument, argumentIsFallback, sourceState);
-      state = state.ParentState;
-    }
-
-    return argumentResolver.ArgumentsBag;
-  }
-
   /// <summary>
   /// Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
   /// into the delegate passed to <see cref="Builder{TState,TEvent}(Action{System.Exception}, Builder{TState,TEvent}.Options)" />
@@ -94,8 +73,7 @@ internal partial class StateMachine<TState, TEvent>
         // exit all active states which are not parent for the new state
         while(currentActiveState != commonAncestor)
         {
-          if(currentActiveState is null)
-            Throw.ParanoiaException("currentActiveState can't become null earlier then be equal to commonAncestor");
+          if(currentActiveState is null) throw Paranoia.GetException("currentActiveState can't become null earlier then be equal to commonAncestor");
 
           currentActiveState.ExitSafe(_onException);
           currentActiveState = currentActiveState.ParentState;
@@ -110,8 +88,7 @@ internal partial class StateMachine<TState, TEvent>
         var state = targetState;
         while(state != commonAncestor)
         {
-          if(state is null)
-            Throw.ParanoiaException($"{nameof(state)} can't become null earlier then be equal to {nameof(commonAncestor)}");
+          if(state is null) throw Paranoia.GetException($"{nameof(state)} can't become null earlier then be equal to {nameof(commonAncestor)}");
 
           var setArgumentAction = argumentsBag.GetValueSafe(state);
           var enterAction       = CreateActivateStateNotGuardedAction(state, setArgumentAction);
@@ -135,6 +112,27 @@ internal partial class StateMachine<TState, TEvent>
     return true; // just to reduce the amount of a caller method code
   }
 
+  private static Argument.Bag PrepareArgument<TArgument>(
+    TArgument argument,
+    bool      argumentIsFallback,
+    IState    targetState,
+    IState?   commonAncestor,
+    IState    sourceState)
+  {
+    var argumentResolver = new Argument.Resolver();
+
+    var state = targetState;
+    while(state != commonAncestor)
+    {
+      if(state is null) throw Paranoia.GetException("it can't be null before it is equal to commonAncestor");
+
+      argumentResolver.PrepareArgumentForState(state, argument, argumentIsFallback, sourceState);
+      state = state.ParentState;
+    }
+
+    return argumentResolver.ArgumentsBag;
+  }
+
   private static void CallEnterActionsInReverseOrder(List<Action> enterActions)
   { // call them in reverse order, parent's 'enter' is called first, child's one last
     for(var i = enterActions.Count - 1; i >= 0; i--)
@@ -145,11 +143,11 @@ internal partial class StateMachine<TState, TEvent>
   /// Doesn't acquire lock itself, caller should care about safe context
   /// </summary>
   /// <returns> Returns an action which should be called to call 'enter' action of the state </returns>
-  private Action CreateActivateStateNotGuardedAction(IState state, Action<IState>? setArgument)
+  private Action CreateActivateStateNotGuardedAction(IState<TState, TEvent> state, Action<IState>? setArgument)
   {
     state.IsActive = true; // set is as active inside the lock, see implementation of State class for details
 
-    var controller = new Controller(state, this);
+    var controller = new Controller(this, state);
 
     // prepare 'enter' action - will be called later
     return () =>

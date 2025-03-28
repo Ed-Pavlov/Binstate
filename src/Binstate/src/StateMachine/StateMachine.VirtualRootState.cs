@@ -7,6 +7,9 @@ namespace BeatyBit.Binstate;
 
 internal partial class StateMachine<TState, TEvent>
 {
+  /// <summary>
+  /// See usage for details
+  /// </summary>
   internal class VirtualRootState(TState targetStateId) : IState<TState, TEvent>
   {
     public IState<TState, TEvent>? ParentState           => null;
@@ -41,7 +44,7 @@ internal partial class StateMachine<TState, TEvent>
     public IReadOnlyDictionary<TEvent, Transition<TState, TEvent>> Transitions => throw Paranoia.GetException("this method should not be called ever.");
     IState? IState.                                       ParentState => ParentState;
 
-    public void EnterSafe<TEvent1>(IStateController<TEvent1> stateController, Action<Exception> onException)
+    public void EnterSafe(IStateController<TEvent> stateController, Action<Exception> onException)
       => throw Paranoia.GetException("this method should not be called ever.");
 
     public Maybe<object?> GetArgumentAsObject() => throw Paranoia.GetException("this method should not be called ever.");

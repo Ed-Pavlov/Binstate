@@ -69,11 +69,12 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
   /// While the <see cref="_activeState"/> is set in constructor to use not nullable type for it.
   /// </summary>
   /// <param name="initialStateArgument">Argument for the initial state</param>
-  internal void ActivateNew<T>(T initialStateArgument)
+  internal void EnterInitialState<T>(T initialStateArgument)
   {
-    var fake = Fake.CreateFakeInitialState<TState, TEvent>(_activeState.Id);
+    var fake = new VirtualRootState(_activeState.Id);
     _activeState = fake;
 
+    // reuse the common logic to bootstrap the state machine to the initial state
     PerformTransitionSync(default!, initialStateArgument, false);
   }
 

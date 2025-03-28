@@ -107,6 +107,9 @@
     <Compile Update="src\StateMachine\StateMachine.Persistence.cs">
       <DependentUpon>StateMachine.cs</DependentUpon>
     </Compile>
+    <Compile Update="src\StateMachine\StateMachine.VirtualRootState.cs">
+      <DependentUpon>StateMachine.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
 
   <ItemGroup>

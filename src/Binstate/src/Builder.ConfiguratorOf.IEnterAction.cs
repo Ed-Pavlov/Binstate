@@ -96,23 +96,23 @@ public partial class Builder<TState, TEvent>
 
       /// <inheritdoc cref="OnEnter{TArgument}(System.Action{TArgument})"/>
       /// <remarks>Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method documentation.</remarks>
-      IExitAction<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Action<TArgument, TRelay> enterAction);
+      IExitAction<ITuple<TArgument, TPropagate>> OnEnter<TArgument, TPropagate>(Action<TArgument, TPropagate> enterAction);
 
 #pragma warning disable CS1574
       /// <inheritdoc cref="OnEnter{TArgument}(System.Action{IStateController{TEvent}, TArgument})"/>
       /// <remarks>Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method documentation.</remarks>
 #pragma warning restore CS1574
-      IExitAction<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Action<IStateController<TEvent>, TArgument, TRelay> enterAction);
+      IExitAction<ITuple<TArgument, TPropagate>> OnEnter<TArgument, TPropagate>(Action<IStateController<TEvent>, TArgument, TPropagate> enterAction);
 
       /// <inheritdoc cref="OnEnter{TArgument}(System.Func{TArgument, Task})"/>
       /// <remarks>Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method documentation.</remarks>
-      IExitAction<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Func<TArgument, TRelay, Task> enterAction);
+      IExitAction<ITuple<TArgument, TPropagate>> OnEnter<TArgument, TPropagate>(Func<TArgument, TPropagate, Task> enterAction);
 
 #pragma warning disable CS1574
       /// <inheritdoc cref="OnEnter{TArgument}(System.Func{IStateController{TEvent}, TArgument, Task})"/>
       /// <remarks>Read about arguments in <see cref="IStateMachine{TEvent}.Raise{TArgument}"/> method documentation.</remarks>
 #pragma warning restore CS1574
-      IExitAction<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Func<IStateController<TEvent>, TArgument, TRelay, Task> enterAction);
+      IExitAction<ITuple<TArgument, TPropagate>> OnEnter<TArgument, TPropagate>(Func<IStateController<TEvent>, TArgument, TPropagate, Task> enterAction);
     }
   }
 }

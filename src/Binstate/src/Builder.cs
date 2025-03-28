@@ -114,7 +114,7 @@ public partial class Builder<TState, TEvent> : Builder
     var states = CreateStates();
 
     var stateMachine = new StateMachine<TState, TEvent>(states, _onException, initialStateId, CalculatePersistanceSignature());
-    stateMachine.ActivateNew(initialStateArgument);
+    stateMachine.EnterInitialState(initialStateArgument);
     return stateMachine;
   }
 
@@ -134,7 +134,7 @@ public partial class Builder<TState, TEvent> : Builder
       + $"Set {nameof(Builder)}.{nameof(Options)}.{nameof(Options.EnableStateMachinePersistence)} to true to enable it."
       );
 
-    var persistedStateMachine = JsonSerializer.Deserialize<Persistance<TState>.StateMachineData>(serializedData);
+    var persistedStateMachine = JsonSerializer.Deserialize<Persistence<TState>.StateMachineData>(serializedData);
     if(persistedStateMachine is null) throw new ArgumentException($"'{nameof(serializedData)}' is not a valid serialized state machine");
 
     var persistenceSignature = CalculatePersistanceSignature();
@@ -146,7 +146,7 @@ public partial class Builder<TState, TEvent> : Builder
     persistedStateMachine.RestoreStateArguments(states.Values);
 
     var stateMachine = new StateMachine<TState, TEvent>(states, _onException, persistedStateMachine.ActiveStateId, persistenceSignature);
-    stateMachine.ActivateNew<Unit>(default);
+    stateMachine.EnterInitialState<Unit>(default);
     return stateMachine;
   }
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 
@@ -24,11 +23,7 @@ internal class ArgumentProvider<T> : IGetArgument<T>
 
   public T Argument { get; }
 
-  public Type? GetArgumentTypeSafe()
-  {
-    var argumentType = typeof(T);
-    return argumentType == typeof(Unit) ? null : argumentType;
-  }
+  public Type GetArgumentTypeSafe() => typeof(T);
 }
 
 internal class OneTupleItemArgumentProvider<T, TA, TR>(IState state)
@@ -38,9 +33,9 @@ internal class OneTupleItemArgumentProvider<T, TA, TR>(IState state)
   {
     return tuple switch
     {
-      { ItemX: T arg }   => arg,
-      { ItemY: T relay } => relay,
-      _                  => throw new ArgumentOutOfRangeException(nameof(tuple))
+      { ItemX: T arg }       => arg,
+      { ItemY: T propagate } => propagate,
+      _                      => throw new ArgumentOutOfRangeException(nameof(tuple))
     };
   }
 }
@@ -49,9 +44,9 @@ internal static class StateTupleArgumentProvider
 {
   private static readonly Type GenericDefinition = typeof(OneTupleItemArgumentProvider<,,>);
 
-  public static IArgumentProvider Create(Type t, Type ta, Type tr, IState state)
+  public static IArgumentProvider Create(Type t, Type ta, Type tp, IState state)
   {
-    var type = GenericDefinition.MakeGenericType(t, ta, tr);
+    var type = GenericDefinition.MakeGenericType(t, ta, tp);
     var ctor = type.GetConstructors()[0];
     return (IArgumentProvider)ctor.Invoke([state]);
   }

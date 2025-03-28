@@ -11,6 +11,8 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   where TState : notnull
   where TEvent : notnull
 {
+  private readonly Type? _argumentType;
+
   private readonly object? _enterAction;
 
   /// <summary>
@@ -39,11 +41,11 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   private Task? _task;
 
   public State(
-    TState                                         id,
-    object?                                        enterAction,
-    object?                                        exitAction,
-    Dictionary<TEvent, Transition<TState, TEvent>> transitions,
-    IState<TState, TEvent>?                        parentState)
+    TState                                                  id,
+    object?                                                 enterAction,
+    object?                                                 exitAction,
+    IReadOnlyDictionary<TEvent, Transition<TState, TEvent>> transitions,
+    IState<TState, TEvent>?                                 parentState)
   {
     Id           = id ?? throw new ArgumentNullException(nameof(id));
     _enterAction = enterAction;
@@ -52,9 +54,14 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     ParentState  = parentState;
     DepthInTree  = parentState?.DepthInTree + 1 ?? 0;
 
-    if(typeof(TArgument) == typeof(Unit))
-      _argument = default(TArgument)!.ToMaybe();
+    var argumentType = typeof(TArgument);
+    _argumentType = argumentType == typeof(Unit) ? null : argumentType;
   }
+
+  public TState Id { get; }
+
+  public int                     DepthInTree { get; }
+  public IState<TState, TEvent>? ParentState { get; }
 
   public TArgument Argument
   {
@@ -62,20 +69,20 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     set => _argument = value.ToMaybe();
   }
 
-  public Dictionary<TEvent, Transition<TState, TEvent>> Transitions { get; }
+  public Maybe<object?> GetArgumentAsObject() => _argument.HasValue ? _argument.Value.ToMaybe<object?>() : Maybe<object?>.Nothing;
+  public Type?          GetArgumentTypeSafe() => _argumentType;
 
-  public TState Id { get; }
-
-  public int                     DepthInTree { get; }
-  public IState<TState, TEvent>? ParentState { get; }
+  public IReadOnlyDictionary<TEvent, Transition<TState, TEvent>> Transitions { get; }
 
   public bool IsActive
   {
     get => _isActive;
+
     set
     {
       if(value)
         _enterActionStarted.Reset();
+
       _isActive = value;
     }
   }
@@ -85,7 +92,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     try
     {
       _enterActionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
-      _enterActionStarted.Set();               // it is safe to set the state as entered
+      _enterActionStarted.Set();    // it is safe to set the state as entered
 
       _task = _enterAction switch
       {
@@ -147,13 +154,29 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     }
   }
 
-  public void    CallTransitionActionSafe(ITransition transition, Action<Exception> onException) => transition.InvokeActionSafe(Argument, onException);
-  public object? GetArgumentAsObject() => Argument;
-
-  public Type? GetArgumentTypeSafe()
+  public void CallTransitionActionSafe(ITransition transition, Action<Exception> onException)
   {
-    var argumentType = typeof(TArgument);
-    return argumentType == typeof(Unit) ? null : argumentType;
+    try
+    {
+      switch(transition.OnTransitionAction)
+      {
+        case null: break; // no action
+
+        case Action action:
+          action();
+          break;
+
+        case Action<TArgument> actionT: // action requires argument
+          actionT(Argument);
+          break;
+
+        default: throw new ArgumentOutOfRangeException();
+      }
+    }
+    catch(Exception exc)
+    { // transition action can throw "user" exception
+      onException(exc);
+    }
   }
 
   public bool FindTransitionTransitive(TEvent @event, [NotNullWhen(returnValue: true)] out Transition<TState, TEvent>? transition)
@@ -169,8 +192,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     }
 
     // no transition found through all parents
-    // ReSharper disable once RedundantAssignment // it's a R# fault in fact
-    transition = default;
+    transition = null;
 
     return false;
   }

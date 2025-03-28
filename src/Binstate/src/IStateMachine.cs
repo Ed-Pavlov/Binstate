@@ -80,8 +80,8 @@ public interface IStateMachine<in TEvent>
   Task<bool> RaiseAsync<T>(TEvent @event, T argument, bool argumentIsFallback = false);
 
   /// <summary>
-  /// Serializes this object to its string representation.
+  /// Serializes the StateMachine in its current state to string representation.
+  /// It can be restored using <see cref="Builder{TState,TEvent}.Restore"/> method.
   /// </summary>
-  /// <returns>The string representation of the object.</returns>
   string Serialize();
 }

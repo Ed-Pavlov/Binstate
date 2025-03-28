@@ -39,7 +39,7 @@ public class Tuple<TX, TY> : ITuple<TX, TY>
     && EqualityComparer<TX>.Default.Equals(ItemX, other.ItemX)
     && EqualityComparer<TY>.Default.Equals(ItemY, other.ItemY);
 
-  /// <remarks> Equals doesn't check the exact type of the other object, only if it can be cast to <see cref="ITuple{TPassed,TRelay}" /> </remarks>
+  /// <remarks> Equals doesn't check the exact type of the other object, only if it can be cast to <see cref="ITuple{TPassed,TPropagate}" /> </remarks>
   public override bool Equals(object? obj)
   {
     if(ReferenceEquals(null, obj)) return false;

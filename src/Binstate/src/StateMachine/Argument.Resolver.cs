@@ -33,7 +33,7 @@ internal static partial class Argument
       Type                                                                   targetArgumentType,
       TArgument                                                              argument,
       bool                                                                   argumentIsFallback,
-      IState                                                                 rootState,
+      IState                                                                 sourceState,
       [NotNullWhen(true)] out ITuple<IArgumentProvider, IArgumentProvider?>? providers)
     {
       if(_argumentSourcesCache.TryGetValue(targetArgumentType, out providers))
@@ -49,7 +49,7 @@ internal static partial class Argument
         }
 
       // search for a state provides argument of an assignable type if target requires a Tuple and there is a source with suitable Tuple, it will be found
-      if(GetArgumentProviderForSingleArgument(rootState, targetArgumentType, out var provider))
+      if(GetArgumentProviderForSingleArgument(sourceState, targetArgumentType, out var provider))
       {
         providers = new Tuple<IArgumentProvider, IArgumentProvider?>(provider, null);
         _argumentSourcesCache.Add(targetArgumentType, providers);
@@ -61,8 +61,8 @@ internal static partial class Argument
       // if still not found, and the target argument type is a Tuple, try to compose it from different source states
       if(targetArgumentType.IsTuple(out var typeX, out var typeY))
       {
-        GetArgumentProviderForSingleArgument(rootState, typeX, out var providerX);
-        GetArgumentProviderForSingleArgument(rootState, typeY, out var providerY);
+        GetArgumentProviderForSingleArgument(sourceState, typeX, out var providerX);
+        GetArgumentProviderForSingleArgument(sourceState, typeY, out var providerY);
 
         if(providerX is null)
           if(typeX.IsAssignableFrom(passedArgumentType))
@@ -90,10 +90,8 @@ internal static partial class Argument
       return false;
     }
 
-//    public static void SetArgumentByReflection(IState target, ITuple<IArgumentProvider, IArgumentProvider?> tuple)
-
     private bool GetArgumentProviderForSingleArgument(
-      IState                                     sourceRoot,
+      IState                                     sourceState,
       Type                                       targetArgumentType,
       [NotNullWhen(true)] out IArgumentProvider? provider)
     {
@@ -103,7 +101,7 @@ internal static partial class Argument
 
       provider = null;
 
-      var state = sourceRoot;
+      var state = sourceState;
       while(state is not null)
       {
         var stateArgumentType = state.GetArgumentTypeSafe();
@@ -137,7 +135,5 @@ internal static partial class Argument
     }
   }
 
-  public class Bag : Dictionary<IState, Action<IState>>
-  {
-  }
+  public class Bag : Dictionary<IState, Action<IState>> { }
 }

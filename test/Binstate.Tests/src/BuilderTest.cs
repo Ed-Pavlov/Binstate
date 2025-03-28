@@ -30,7 +30,7 @@ public class BuilderTest : StateMachineTestBase
   }
 
   [Test]
-  public void should_throw_exception_if_parent_and_child_states_have_not_compatible_enter_arguments_and_enable_loose_relaying_is_false()
+  public void should_throw_exception_if_parent_and_child_states_have_not_compatible_enter_arguments_and_argument_transfer_mode_is_strict()
   {
     // --arrange
     var builder = new Builder<string, int>(OnException);
@@ -55,7 +55,7 @@ public class BuilderTest : StateMachineTestBase
   }
 
   [Test]
-  public void should_not_throw_exception_if_parent_and_child_states_have_not_compatible_enter_arguments_and_enable_loose_relaying_is_true()
+  public void should_not_throw_exception_if_parent_and_child_states_have_not_compatible_enter_arguments_and_argument_transfer_mode_is_free()
   {
     // --arrange
     var builder = new Builder<string, int>(OnException, new Builder.Options{ArgumentTransferMode = ArgumentTransferMode.Free});

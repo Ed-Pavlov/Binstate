@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 
@@ -26,7 +27,7 @@ internal interface IState : IArgumentProvider
 
   void CallTransitionActionSafe(ITransition transition, Action<Exception> onException);
 
-  object? GetArgumentAsObject();
+  Maybe<object?> GetArgumentAsObject();
 }
 
 internal interface IState<TState, TEvent> : IState
@@ -35,7 +36,7 @@ internal interface IState<TState, TEvent> : IState
 
   new IState<TState, TEvent>? ParentState { get; }
 
-  Dictionary<TEvent, Transition<TState, TEvent>> Transitions { get; }
+  IReadOnlyDictionary<TEvent, Transition<TState, TEvent>> Transitions { get; }
 
   bool FindTransitionTransitive(TEvent @event, [NotNullWhen(true)] out Transition<TState, TEvent>? transition);
 }

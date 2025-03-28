@@ -21,20 +21,15 @@ internal partial class StateMachine<TState, TEvent>
       var states = _states.Values.Select(
                              state =>
                              {
-                               var argumentIsSet = state.GetArgumentTypeSafe() is not null;
-                               if(argumentIsSet)
-                               {
-                                 var argument= state.GetArgumentAsObject();
-                                 return new Persistance<TState>.StateData(state.Id, argumentIsSet, argument);
-                               }
-                               return null;
+                               var argument = state.GetArgumentAsObject();
+                               return argument.HasValue ? new Persistence<TState>.StateData(state.Id, argument) : null;
                              }
                            )
                           .Where(_ => _ is not null)
-                          .Cast<Persistance<TState>.StateData>()
+                          .Cast<Persistence<TState>.StateData>()
                           .ToArray();
 
-      var data = new Persistance<TState>.StateMachineData(_persistenceSignature, _activeState.Id, states);
+      var data = new Persistence<TState>.StateMachineData(_persistenceSignature, _activeState.Id, states);
       return JsonSerializer.Serialize(data);
     }
     finally

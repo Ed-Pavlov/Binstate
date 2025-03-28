@@ -58,7 +58,7 @@ https://github.com/Ed-Pavlov/Binstate#readme
           .OnEnter<string>(TrackGame)
           ...
 
-* ### Relaying arguments attached to a state through states upon activation
-  * Argument for relaying can be gotten from one of the parent of the active state if the active state itself has no argument.
-  * Argument will be relayed to all parent states of the newly activated state if they require an argument.
-  * If a state already has 'tuple' argument, it can be split by two when relaying to the newly activated state (and its parents) depending on their 'enter' actions argument
+* ### Propagating arguments attached to a state through states upon activation
+  * Argument for propagating can be got from one of the parents of the active state if the active state itself has no argument.
+  * Argument will be propagated to all parent states of the newly activated state if they require an argument.
+  * If a state already has 'tuple' argument, it can be split by two when propagating to the newly activated state (and its parents) depending on their 'enter' actions argument

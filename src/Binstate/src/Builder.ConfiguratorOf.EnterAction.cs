@@ -81,34 +81,34 @@ public partial class Builder<TState, TEvent>
         return new ExitAction<TArgument>(StateData);
       }
 
-      public IExitAction<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Action<TArgument, TRelay> enterAction)
+      public IExitAction<ITuple<TArgument, TPropagate>> OnEnter<TArgument, TPropagate>(Action<TArgument, TPropagate> enterAction)
       {
         if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-        return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.ItemX, tuple.ItemY));
+        return OnEnter<ITuple<TArgument, TPropagate>>(tuple => enterAction(tuple!.ItemX, tuple.ItemY));
       }
 
-      public IExitAction<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Action<IStateController<TEvent>, TArgument, TRelay> enterAction)
+      public IExitAction<ITuple<TArgument, TPropagate>> OnEnter<TArgument, TPropagate>(Action<IStateController<TEvent>, TArgument, TPropagate> enterAction)
       {
         if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-        return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.ItemX, tuple.ItemY));
+        return OnEnter<ITuple<TArgument, TPropagate>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.ItemX, tuple.ItemY));
       }
 
-      public IExitAction<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Func<TArgument, TRelay, Task> enterAction)
+      public IExitAction<ITuple<TArgument, TPropagate>> OnEnter<TArgument, TPropagate>(Func<TArgument, TPropagate, Task> enterAction)
       {
         if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-        return OnEnter<ITuple<TArgument, TRelay>>(tuple => enterAction(tuple!.ItemX, tuple.ItemY));
+        return OnEnter<ITuple<TArgument, TPropagate>>(tuple => enterAction(tuple!.ItemX, tuple.ItemY));
       }
 
-      public IExitAction<ITuple<TArgument, TRelay>> OnEnter<TArgument, TRelay>(Func<IStateController<TEvent>, TArgument, TRelay, Task> enterAction)
+      public IExitAction<ITuple<TArgument, TPropagate>> OnEnter<TArgument, TPropagate>(Func<IStateController<TEvent>, TArgument, TPropagate, Task> enterAction)
       {
         if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-        return OnEnter<ITuple<TArgument, TRelay>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.ItemX, tuple.ItemY));
+        return OnEnter<ITuple<TArgument, TPropagate>>((stateMachine, tuple) => enterAction(stateMachine, tuple!.ItemX, tuple.ItemY));
       }
 
       private static bool IsAsyncMethod(MemberInfo method) => method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) is not null;

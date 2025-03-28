@@ -81,7 +81,7 @@ internal partial class StateMachine<TState, TEvent>
     var currentActiveState = transitionData.CurrentActiveState;
     var prevActiveState    = transitionData.CurrentActiveState;
     var transition         = transitionData.Transition;
-    var state              = transitionData.TargetState;
+    var targetState        = transitionData.TargetState;
     var commonAncestor     = transitionData.CommonAncestor;
     var argumentsBag       = transitionData.ArgumentsBag;
 
@@ -105,8 +105,9 @@ internal partial class StateMachine<TState, TEvent>
         prevActiveState.CallTransitionActionSafe(transition, _onException);
 
         // and then activate new active states
-        _activeState = state;
+        _activeState = targetState;
 
+        var state = targetState;
         while(state != commonAncestor)
         {
           if(state is null)

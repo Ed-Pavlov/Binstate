@@ -51,7 +51,7 @@ internal partial class StateMachine<TState, TEvent>
     }
   }
 
-  private static IArgumentBag PrepareArgument<TArgument>(
+  private static Argument.Bag PrepareArgument<TArgument>(
     TArgument argument,
     bool      argumentIsFallback,
     IState    targetState,
@@ -165,14 +165,14 @@ internal partial class StateMachine<TState, TEvent>
     public readonly ITransition            Transition;
     public readonly IState<TState, TEvent> TargetState;
     public readonly IState?                CommonAncestor;
-    public readonly IArgumentBag           ArgumentsBag;
+    public readonly Argument.Bag           ArgumentsBag;
 
     public TransitionData(
       IState                 currentActiveState,
       ITransition            transition,
       IState<TState, TEvent> targetState,
       IState?                commonAncestor,
-      IArgumentBag           argumentsBag)
+      Argument.Bag           argumentsBag)
     {
       CurrentActiveState = currentActiveState;
       Transition         = transition;

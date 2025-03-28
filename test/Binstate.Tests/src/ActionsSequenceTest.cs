@@ -21,7 +21,7 @@ public class EnterExitActionsTest : StateMachineTestBase
 
     // --arrange
     var builder = new Builder<string, int>(OnException);
-    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
+    builder.DefineState(Initial).AddTransition(GoToX, StateX);
 
     builder
      .DefineState(StateX)
@@ -39,16 +39,16 @@ public class EnterExitActionsTest : StateMachineTestBase
           actual.Add(exit1);
         }
       )
-     .AddTransition(GoToStateY, StateY);
+     .AddTransition(GoToY, StateY);
 
     builder.DefineState(StateY)
            .OnEnter(_ => actual.Add(enter2));
 
     var target = builder.Build(Initial);
-    target.Raise(raiseWay, GoToStateX);
+    target.Raise(raiseWay, GoToX);
 
     // --act
-    target.Raise(raiseWay, GoToStateY);
+    target.Raise(raiseWay, GoToY);
 
     // --assert
     actual.Should().BeEquivalentTo(enter1, exit1, enter2);
@@ -65,19 +65,19 @@ public class EnterExitActionsTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
+    builder.DefineState(Initial).AddTransition(GoToX, StateX);
 
     builder
      .DefineState(StateX)
      .OnEnter(_ => actual.Add(enter))
      .OnExit(() => actual.Add(exit))
-     .AllowReentrancy(GoToStateX);
+     .AllowReentrancy(GoToX);
 
     var target = builder.Build(Initial);
-    target.Raise(raiseWay, GoToStateX);
+    target.Raise(raiseWay, GoToX);
 
     // --act
-    target.Raise(raiseWay, GoToStateX);
+    target.Raise(raiseWay, GoToX);
 
     // --assert
     actual.Should().BeEquivalentTo(enter, exit, enter);
@@ -92,18 +92,18 @@ public class EnterExitActionsTest : StateMachineTestBase
 
     // --arrange
     var builder = new Builder<string, int>(OnException);
-    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
+    builder.DefineState(Initial).AddTransition(GoToX, StateX);
     builder.DefineState(StateY);
     builder.DefineState(StateX)
            .OnEnter(onEnter)
            .OnExit(onExit)
-           .AddTransition(GoToStateY, StateY, onTransition);
+           .AddTransition(GoToY, StateY, onTransition);
 
     var target = builder.Build(Initial);
 
     // --act
-    target.Raise(raiseWay, GoToStateX);
-    target.Raise(raiseWay, GoToStateY);
+    target.Raise(raiseWay, GoToX);
+    target.Raise(raiseWay, GoToY);
 
     // --assert
     A.CallTo(() => onEnter()).MustHaveHappenedOnceExactly()

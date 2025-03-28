@@ -26,11 +26,11 @@ public class BoxingTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException, new Builder.Options{ArgumentTransferMode = ArgumentTransferMode.Free});
 
-    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
+    builder.DefineState(Initial).AddTransition(GoToX, StateX);
 
     builder.DefineState(StateX)
            .OnEnter<ValueType1>(_ => { })
-           .AddTransition(GoToStateY, StateY);
+           .AddTransition(GoToY, StateY);
 
     builder.DefineState(Parent)
            .OnEnter<ValueType2>(value => actual2 = value);
@@ -48,9 +48,9 @@ public class BoxingTest : StateMachineTestBase
     var startPoint = dotMemory.Check();
 
     // --act
-    target.Raise(raiseWay, GoToStateX, expected1); // pass to State1
+    target.Raise(raiseWay, GoToX, expected1); // pass to State1
 
-    target.Raise(raiseWay, GoToStateY, expected2); // pass everywhere
+    target.Raise(raiseWay, GoToY, expected2); // pass everywhere
 
     // --assert
     dotMemory.Check(

@@ -18,7 +18,7 @@ public class BuilderTest : StateMachineTestBase
 
     builder
      .DefineState(Initial)
-     .AddTransition(GoToStateX, wrongState);
+     .AddTransition(GoToX, wrongState);
 
     // --act
     Action target = () => builder.Build(Initial);
@@ -26,7 +26,7 @@ public class BuilderTest : StateMachineTestBase
     // --assert
     target.Should()
           .ThrowExactly<InvalidOperationException>()
-          .WithMessage($"The transition '{GoToStateX}' from the state '{Initial}' references not defined state '{wrongState}'");
+          .WithMessage($"The transition '{GoToX}' from the state '{Initial}' references not defined state '{wrongState}'");
   }
 
   [Test]
@@ -35,7 +35,7 @@ public class BuilderTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).AddTransition(GoToStateX, Child);
+    builder.DefineState(Initial).AddTransition(GoToX, Child);
 
     builder.DefineState(Parent)
            .OnEnter<int>((sm, value) => { });
@@ -60,7 +60,7 @@ public class BuilderTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException, new Builder.Options{ArgumentTransferMode = ArgumentTransferMode.Free});
 
-    builder.DefineState(Initial).AddTransition(GoToStateX, Child);
+    builder.DefineState(Initial).AddTransition(GoToX, Child);
 
     builder.DefineState(Parent)
            .OnEnter<int>((sm, value) => { });

@@ -6,24 +6,19 @@ using System.Runtime.CompilerServices;
 namespace BeatyBit.Binstate;
 
 /// <summary>
-/// This class contains tools and logic for passing arguments to their consumers.
+/// This class contains tools and logic for setting arguments to their consumers.
 /// </summary>
 internal static partial class Argument
 {
   private static readonly string IGetArgumentInterfaceName = typeof(IGetArgument<>).Name;
 
-  private static readonly MethodInfo PassArgumentMethodFactory
-    = typeof(Argument).GetMethod(nameof(PassArgument), BindingFlags.NonPublic | BindingFlags.Static)!;
+  private static readonly MethodInfo SetArgumentMethodFactory
+    = typeof(Argument).GetMethod(nameof(SetArgument), BindingFlags.NonPublic | BindingFlags.Static)!;
 
-  private static readonly MethodInfo PassTupleArgumentMethodFactory
-    = typeof(Argument).GetMethod(nameof(PassTupleArgument), BindingFlags.NonPublic | BindingFlags.Static)!;
-
-  private static readonly MethodInfo GetArgumentFactory = typeof(IGetArgument<>).GetProperty(nameof(IGetArgument<object>.Argument))!.GetGetMethod();
+  private static readonly MethodInfo SetTupleArgumentMethodFactory
+    = typeof(Argument).GetMethod(nameof(SetTupleArgument), BindingFlags.NonPublic | BindingFlags.Static)!;
 
   private static readonly Type TupleInterfaceTypeDefinition = typeof(ITuple<,>);
-
-  [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static Type GetArgumentType(this IState state) => state.GetArgumentTypeSafe() ?? throw new ArgumentException();
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsRequireArgument(this IState state) => state.GetArgumentTypeSafe() is not null;
@@ -36,25 +31,13 @@ internal static partial class Argument
   private static Type GetArgumentType(this IArgumentProvider argumentProvider)
     => argumentProvider.GetType().GetInterface(IGetArgumentInterfaceName).GetGenericArguments()[0];
 
-  public static bool GetArgumentByReflection(this IState target, out object? argument)
-  {
-    argument = null;
-
-    var targetArgumentType = target.GetArgumentTypeSafe();
-    if(targetArgumentType is null)
-      return false;
-
-    argument = GetArgumentFactory.MakeGenericMethod(targetArgumentType).Invoke(target, null);
-    return true;
-  }
-
   /// <summary>
   /// Validation of the argument should be performed on the caller side
   /// </summary>
   public static void SetArgumentByReflectionUnsafe(IState target, object? argument)
   {
     var targetArgumentType = target.GetArgumentTypeSafe();
-    var passArgumentMethod = PassArgumentMethodFactory.MakeGenericMethod(targetArgumentType);
+    var passArgumentMethod = SetArgumentMethodFactory.MakeGenericMethod(targetArgumentType);
     passArgumentMethod.Invoke(null, [target, argument]);
   }
 
@@ -68,7 +51,7 @@ internal static partial class Argument
     {
       if(tuple.ItemY is not null) Throw.ParanoiaException(target);
 
-      var passArgumentMethod = PassArgumentMethodFactory.MakeGenericMethod(targetArgumentType);
+      var passArgumentMethod = SetArgumentMethodFactory.MakeGenericMethod(targetArgumentType);
       passArgumentMethod.Invoke(null, [target, tuple.ItemX]);
       return;
     }
@@ -79,14 +62,14 @@ internal static partial class Argument
       var source2ArgumentType = tuple.ItemY?.GetArgumentType();
       if(source2ArgumentType is null) Throw.ParanoiaException(target);
 
-      var passTupleArgumentMethod = PassTupleArgumentMethodFactory.MakeGenericMethod(typeX, typeY);
+      var passTupleArgumentMethod = SetTupleArgumentMethodFactory.MakeGenericMethod(typeX, typeY);
       passTupleArgumentMethod.Invoke(null, [target, tuple.ItemX, tuple.ItemY!]);
     }
   }
 
-  private static void PassArgument<T>(ISetArgument<T> target, IGetArgument<T> source) => target.Argument = source.Argument;
+  private static void SetArgument<T>(ISetArgument<T> target, IGetArgument<T> source) => target.Argument = source.Argument;
 
-  private static void PassTupleArgument<TX, TY>(ISetArgument<ITuple<TX, TY>> target, IGetArgument<TX> providerX, IGetArgument<TY> providerY)
+  private static void SetTupleArgument<TX, TY>(ISetArgument<ITuple<TX, TY>> target, IGetArgument<TX> providerX, IGetArgument<TY> providerY)
     => target.Argument = new Tuple<TX, TY>(providerX.Argument, providerY.Argument);
 
   private static bool IsTuple(this Type type, [NotNullWhen(true)] out Type? typeX, [NotNullWhen(true)] out Type? typeY)

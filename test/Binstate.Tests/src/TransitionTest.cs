@@ -22,7 +22,7 @@ public class TransitionTest : StateMachineTestBase
 
     builder.DefineState(Initial)
            .OnExit(onExitInitial)
-           .AddTransition(GoToStateX, StateX, onTransit);
+           .AddTransition(GoToX, StateX, onTransit);
 
     builder.DefineState(StateX)
            .OnEnter(onEnterState1);
@@ -30,7 +30,7 @@ public class TransitionTest : StateMachineTestBase
     var target = builder.Build(Initial);
 
     // --act
-    target.Raise(raiseWay, GoToStateX);
+    target.Raise(raiseWay, GoToX);
 
     // --assert
     A.CallTo(() => onExitInitial()).MustHaveHappenedOnceExactly()
@@ -53,7 +53,7 @@ public class TransitionTest : StateMachineTestBase
     builder.DefineState(Initial)
            .OnEnter<IDisposable>(_ => { })
            .OnExit(onExitInitial)
-           .AddTransition(GoToStateX, StateX, onTransit);
+           .AddTransition(GoToX, StateX, onTransit);
 
     builder.DefineState(StateX)
            .OnEnter(onEnterState1);
@@ -61,7 +61,7 @@ public class TransitionTest : StateMachineTestBase
     var target = builder.Build(Initial, expected);
 
     // --act
-    target.Raise(raiseWay, GoToStateX);
+    target.Raise(raiseWay, GoToX);
 
     // --assert
     A.CallTo(() => onExitInitial())
@@ -124,7 +124,7 @@ public class TransitionTest : StateMachineTestBase
     builder
      .DefineState(Initial)
      .AddTransition(
-        GoToStateX,
+        GoToX,
         () =>
         {
           var state = first ? StateX : StateY;
@@ -146,8 +146,8 @@ public class TransitionTest : StateMachineTestBase
     var target = builder.Build(Initial);
 
     // --act
-    target.Raise(raiseWay, GoToStateX);
-    target.Raise(raiseWay, GoToStateX);
+    target.Raise(raiseWay, GoToX);
+    target.Raise(raiseWay, GoToX);
 
     // --assert
     actual.Should().BeEquivalentTo(StateX, StateY);
@@ -177,7 +177,7 @@ public class TransitionTest : StateMachineTestBase
 
     builder
      .DefineState(initialStateId)
-     .AddTransition(GoToStateX, DynamicTransition);
+     .AddTransition(GoToX, DynamicTransition);
 
     builder
      .DefineState(stateId1)
@@ -191,8 +191,8 @@ public class TransitionTest : StateMachineTestBase
     var target = builder.Build(initialStateId);
 
     // --act
-    target.Raise(raiseWay, GoToStateX);
-    target.Raise(raiseWay, GoToStateX);
+    target.Raise(raiseWay, GoToX);
+    target.Raise(raiseWay, GoToX);
 
     // --assert
     actual.Should().Equal(stateId1, stateId2);
@@ -214,14 +214,14 @@ public class TransitionTest : StateMachineTestBase
     var builder = new Builder<int, int>(OnException);
 
     builder.DefineState(initialStateId)
-           .AddTransition(GoToStateX, DynamicTransition);
+           .AddTransition(GoToX, DynamicTransition);
 
     builder.DefineState(stateId).OnEnter(() => Assert.Fail("No transition should be performed"));
 
     var target = builder.Build(initialStateId);
 
     // --act
-    var actual = target.Raise(raiseWay, GoToStateX);
+    var actual = target.Raise(raiseWay, GoToX);
 
     // --assert
     actual.Should().BeFalse();
@@ -241,14 +241,14 @@ public class TransitionTest : StateMachineTestBase
     }
 
     builder.DefineState(Initial)
-           .AddTransition(GoToStateX, DynamicTransition);
+           .AddTransition(GoToX, DynamicTransition);
 
     builder.DefineState(StateX).OnEnter(() => Assert.Fail("No transition should be performed"));
 
     var target = builder.Build(Initial);
 
     // --act
-    var actual = target.Raise(raiseWay, GoToStateX);
+    var actual = target.Raise(raiseWay, GoToX);
 
     // --assert
     actual.Should().BeFalse();
@@ -261,14 +261,14 @@ public class TransitionTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
     builder.DefineState(Initial)
-           .AddTransition(GoToStateX, () => null);
+           .AddTransition(GoToX, () => null);
 
     builder.DefineState(StateX).OnEnter(() => Assert.Fail("No transition should be performed"));
 
     var target = builder.Build(Initial);
 
     // --act
-    var actual = target.Raise(raiseWay, GoToStateX);
+    var actual = target.Raise(raiseWay, GoToX);
 
     // --assert
     actual.Should().BeFalse();
@@ -284,14 +284,14 @@ public class TransitionTest : StateMachineTestBase
     var builder = new Builder<int, int>(OnException);
 
     builder.DefineState(initialStateId)
-           .AddTransition(GoToStateX, () => default!);
+           .AddTransition(GoToX, () => default!);
 
     builder.DefineState(stateId).OnEnter(() => Assert.Fail("No transition should be performed"));
 
     var target = builder.Build(initialStateId);
 
     // --act
-    var actual = target.Raise(raiseWay, GoToStateX);
+    var actual = target.Raise(raiseWay, GoToX);
 
     // --assert
     actual.Should().BeFalse();
@@ -332,7 +332,7 @@ public class TransitionTest : StateMachineTestBase
 
     builder.DefineState(initialStateId)
            .OnEnter(OnEnterInitialState)
-           .AddTransition(GoToStateX, () => default);
+           .AddTransition(GoToX, () => default);
 
     builder.DefineState(stateId).OnEnter(() => Assert.Fail("No transition should be performed"));
 
@@ -341,7 +341,7 @@ public class TransitionTest : StateMachineTestBase
     static void OnEnterInitialState(IStateController<int> stateMachine)
     {
       // --act
-      var actual = stateMachine.RaiseAsync(GoToStateX);
+      var actual = stateMachine.RaiseAsync(GoToX);
 
       // --assert
       actual.Should().BeFalse();
@@ -406,10 +406,10 @@ public class TransitionTest : StateMachineTestBase
 
     var config = builder
                 .DefineState(Initial)
-                .AddTransition(GoToStateX, StateX);
+                .AddTransition(GoToX, StateX);
 
     // --act
-    Action target = () => config.AddTransition(GoToStateX, StateY);
+    Action target = () => config.AddTransition(GoToX, StateY);
 
     // --assert
     target.Should().ThrowExactly<ArgumentException>().WithMessage("An item with the same key has already been added*");
@@ -425,12 +425,12 @@ public class TransitionTest : StateMachineTestBase
 
     builder
      .DefineState(Initial)
-     .AddTransition(GoToStateX, () => throw new TestException());
+     .AddTransition(GoToX, () => throw new TestException());
 
     var target = builder.Build(Initial);
 
     // --act
-    var result = target.Raise(raiseWay, GoToStateX);
+    var result = target.Raise(raiseWay, GoToX);
 
     // --assert
     result.Should().BeFalse();

@@ -24,13 +24,13 @@ public class ArgumentTypeTest : StateMachineTestBase
     target.DefineState(Initial)
           .OnEnter(onEnter)
           .OnExit(onExit)
-          .AddTransition(GoToStateX, StateX, onTransition);
+          .AddTransition(GoToX, StateX, onTransition);
 
     target.DefineState(StateX);
 
     // --act
     var sm = target.Build(Initial, expected);
-    sm.Raise(GoToStateX);
+    sm.Raise(GoToX);
 
     // --assert
     A.CallTo(() => onEnter(expected)).MustHaveHappenedOnceExactly();
@@ -54,13 +54,13 @@ public class ArgumentTypeTest : StateMachineTestBase
     target.DefineState(Initial)
           .OnEnter(onEnter)
           .OnExit(onExit)
-          .AddTransition(GoToStateX, StateX, onTransition);
+          .AddTransition(GoToX, StateX, onTransition);
 
     target.DefineState(StateX);
 
     // --act
     var sm = target.Build(Initial, expected);
-    sm.Raise(GoToStateX);
+    sm.Raise(GoToX);
 
     // --assert
     A.CallTo(() => onEnter()).MustHaveHappenedOnceExactly();
@@ -84,13 +84,13 @@ public class ArgumentTypeTest : StateMachineTestBase
     target.DefineState(Initial)
           .OnEnter(onEnter)
           .OnExit(onExit)
-          .AddTransition(GoToStateX, StateX, onTransition);
+          .AddTransition(GoToX, StateX, onTransition);
 
     target.DefineState(StateX);
 
     // --act
     var sm = target.Build(Initial, expected);
-    sm.Raise(GoToStateX);
+    sm.Raise(GoToX);
 
     // --assert
     A.CallTo(() => onEnter()).MustHaveHappenedOnceExactly();

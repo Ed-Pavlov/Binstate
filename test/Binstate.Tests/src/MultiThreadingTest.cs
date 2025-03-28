@@ -29,12 +29,12 @@ public class MultiThreadingTest : StateMachineTestBase
 
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
+    builder.DefineState(Initial).AddTransition(GoToX, StateX);
 
     builder.DefineState(StateX)
            .OnEnter(BlockingEnter)
            .OnExit(() => actual.Add(exit))
-           .AddTransition(GoToStateY, StateY);
+           .AddTransition(GoToY, StateY);
 
     builder
      .DefineState(StateY)
@@ -42,11 +42,11 @@ public class MultiThreadingTest : StateMachineTestBase
 
     var target = builder.Build(Initial);
 
-    target.RaiseAsync(GoToStateX); // raise async to not block test execution
+    target.RaiseAsync(GoToX); // raise async to not block test execution
     entered.WaitOne(1000);         // wait till OnEnter will block execution
 
     // --act
-    target.Raise(GoToStateY);
+    target.Raise(GoToY);
 
     // -- assert
     actual.Should().Equal(enter, exit, StateY);
@@ -66,24 +66,24 @@ public class MultiThreadingTest : StateMachineTestBase
     }
 
     var builder = new Builder<string, int>(OnException);
-    builder.DefineState(Initial).AddTransition(GoToStateX, StateX);
+    builder.DefineState(Initial).AddTransition(GoToX, StateX);
 
     builder
      .DefineState(StateX)
      .OnEnter(AsyncEnter)
-     .AddTransition(GoToStateY, StateY);
+     .AddTransition(GoToY, StateY);
 
     builder.DefineState(StateY);
 
     var target = builder.Build(Initial);
 
     // --act
-    target.Raise(raiseWay, GoToStateX);
+    target.Raise(raiseWay, GoToX);
 
     // --assert
     entered.WaitOne(TimeSpan.FromSeconds(4)).Should().BeTrue();
 
     // --cleanup
-    target.Raise(GoToStateY); // exit async method
+    target.Raise(GoToY); // exit async method
   }
 }

@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 
 internal static partial class Argument
 {
-  public static IArgumentBag CreateBag() => new Bag();
-
   public class Resolver
   {
     private readonly Dictionary<Type, ITuple<IArgumentProvider, IArgumentProvider?>> _argumentSourcesCache  = new();
     private readonly Dictionary<Type, IArgumentProvider>                             _argumentProviderCache = new();
 
-    public readonly IArgumentBag ArgumentsBag = new Bag();
+    public readonly Bag ArgumentsBag = new Bag();
 
     public void PrepareArgumentForState<TArgument>(
       IState    targetState,
@@ -140,12 +137,7 @@ internal static partial class Argument
     }
   }
 
-  private class Bag : IArgumentBag
+  public class Bag : Dictionary<IState, Action<IState>>
   {
-    private readonly Dictionary<IState, Action<IState>> _dictionary = new Dictionary<IState, Action<IState>>();
-
-    public void Add(IState state, Action<IState> setArgument) => _dictionary.Add(state, setArgument);
-
-    public Action<IState>? GetValueSafe(IState state) => _dictionary.GetValueSafe(state);
   }
 }

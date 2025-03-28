@@ -139,8 +139,8 @@ Supports hierarchically nested states,
     ...
 See "Elevator" example for more details.
 
-### Relaying arguments
-#### Relaying arguments attached to a state upon activation
+### Propagating arguments
+#### Propagating arguments attached to a state upon activation
 
          builder
            .DefineState(SomeState)
@@ -154,7 +154,7 @@ See "Elevator" example for more details.
 
          stateMachine.Raise(SomeEvent); // argument will be passed from SomeState to AnotherState
 
-#### Mixing arguments relaying and passing
+#### Mixing arguments propagating and passing
           builder
            .DefineState(SomeState)
            .OnEnter<string>(...) // argument passed to 'Raise' mtehod is passed to the 'enter' action and is 'attached' to the state
@@ -165,10 +165,10 @@ See "Elevator" example for more details.
            .OnEnter<ITuple<object, string>>(...) // this state requires two arguments; OnEnter<object, string>(...) overload can be used to simplify code
            ...
 
-         // one argument will be relayed from the SomeState and the second one passed through Raise method
+         // one argument will be propagated from the SomeState and the second one passed through Raise method
          stateMachine.Raise(SomeEvent, new object());
 
-#### Relay an argument to one of the activated states and pass to another
+#### Propagate an argument to one of the activated states and pass to another
           builder
             .DefineState(SomeState)
             .OnEnter<string>(...) // argument passed to the 'enter' action is 'attached' to the state
@@ -184,12 +184,12 @@ See "Elevator" example for more details.
            .OnEnter<string>(...)
            ...
 
-         // object passed to Raise will be passed to the Parent state and string argument from the SomeState will be relayed to the Child state
+         // object passed to Raise will be passed to the Parent state and string argument from the SomeState will be propagated to the Child state
          stateMachine.Raise(SomeEvent, new object()) // will be passed to Child
 
-* Argument for relaying can be gotten from one of the parent of the active state if the active state itself has no argument.
-* Argument will be relayed to all parent states of the newly activated state if they require an argument.
-* If a state already has 'tuple' argument, it can be split by two when relaying to the newly activated state (and its parents) depending on their 'enter' actions argument
+* Argument for propagating can be got from one of the parents of the active state if the active state itself has no argument.
+* Argument will be propagated to all parent states of the newly activated state if they require an argument.
+* If a state already has 'tuple' argument, it can be split by two when propagating to the newly activated state (and its parents) depending on their 'enter' actions argument
 
 
 ## Examples

@@ -16,13 +16,13 @@ public class ExitActionTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).OnExit(onExit).AddTransition(GoToStateX, StateX);
+    builder.DefineState(Initial).OnExit(onExit).AddTransition(GoToX, StateX);
     builder.DefineState(StateX);
 
     var target = builder.Build(Initial);
 
     // --act
-    target.Raise(raiseWay, GoToStateX);
+    target.Raise(raiseWay, GoToX);
 
     // --assert
     A.CallTo(() => onExit()).MustHaveHappenedOnceExactly();
@@ -37,13 +37,13 @@ public class ExitActionTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).OnExit(onExit).AddTransition(GoToStateX, StateX);
+    builder.DefineState(Initial).OnExit(onExit).AddTransition(GoToX, StateX);
     builder.DefineState(StateX);
 
     var target = builder.Build(Initial, expected);
 
     // --act
-    target.Raise(raiseWay, GoToStateX);
+    target.Raise(raiseWay, GoToX);
 
     // --assert
     A.CallTo(() => onExit(expected)).MustHaveHappenedOnceAndOnly();
@@ -59,15 +59,15 @@ public class ExitActionTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).OnExit(onExitInitial).AddTransition(GoToStateX, StateX);
-    builder.DefineState(StateX).OnExit(onExitX).AddTransition(GoToStateY, StateY);
+    builder.DefineState(Initial).OnExit(onExitInitial).AddTransition(GoToX, StateX);
+    builder.DefineState(StateX).OnExit(onExitX).AddTransition(GoToY, StateY);
     builder.DefineState(StateY);
 
     var target = builder.Build(Initial, expected);
-    target.Raise(raiseWay, GoToStateX);
+    target.Raise(raiseWay, GoToX);
 
     // --act
-    target.Raise(raiseWay, GoToStateY);
+    target.Raise(raiseWay, GoToY);
 
     // --assert
     A.CallTo(() => onExitX(expected)).MustHaveHappenedOnceAndOnly();

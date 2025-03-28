@@ -17,7 +17,7 @@ public class InitialStateTest : StateMachineTestBase
     // --arrange
     var target = new Builder<string, int>(OnException);
 
-    target.DefineState(Initial).OnEnter(onEnter).AddTransition(GoToStateX, StateX);
+    target.DefineState(Initial).OnEnter(onEnter).AddTransition(GoToX, StateX);
     target.DefineState(StateX);
 
     // --act
@@ -36,7 +36,7 @@ public class InitialStateTest : StateMachineTestBase
     // --arrange
     var target = new Builder<string, int>(OnException);
 
-    target.DefineState(Initial).OnEnter(onEnter).AddTransition(GoToStateX, StateX);
+    target.DefineState(Initial).OnEnter(onEnter).AddTransition(GoToX, StateX);
     target.DefineState(StateX);
 
     // --act
@@ -61,12 +61,12 @@ public class InitialStateTest : StateMachineTestBase
 
     target.DefineState(Root).With(_ => setupRoot(_, rootAction));
     target.DefineState(Parent).AsSubstateOf(Root).With(_ => setupParent(_, parentAction));
-    target.DefineState(Initial).AsSubstateOf(Parent).OnEnter(onEnter).AddTransition(GoToStateX, StateX);
+    target.DefineState(Initial).AsSubstateOf(Parent).OnEnter(onEnter).AddTransition(GoToX, StateX);
     target.DefineState(StateX);
 
     // --act
     var sm = target.Build(Initial, expected);
-    sm.Raise(GoToStateX); // exit initial state
+    sm.Raise(GoToX); // exit initial state
 
     // --assert
     A.CallTo(() => rootAction(expected)).MustHaveHappenedOnceAndOnly();
@@ -114,13 +114,13 @@ public class InitialStateTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Parent).AddTransition(GoToStateX, StateX);
+    builder.DefineState(Parent).AddTransition(GoToX, StateX);
     builder.DefineState(Initial).AsSubstateOf(Parent);
     builder.DefineState(StateX).OnEnter(onEnterX);
     var sm = builder.Build(Initial);
 
     // --act
-    sm.Raise(GoToStateX);
+    sm.Raise(GoToX);
 
     // --assert
     A.CallTo(() => onEnterX()).MustHaveHappenedOnceExactly();
@@ -132,7 +132,7 @@ public class InitialStateTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(_ => {Assert.Fail(_.ToString()); });
 
-    builder.DefineState(Initial).OnEnter<string>(_ => { }).AllowReentrancy(GoToStateX);
+    builder.DefineState(Initial).OnEnter<string>(_ => { }).AllowReentrancy(GoToX);
 
     // --act
     Action target = () => builder.Build(Initial);
@@ -149,7 +149,7 @@ public class InitialStateTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(_ => { });
 
-    builder.DefineState(Parent).OnEnter<string>(_ => { }).AllowReentrancy(GoToStateX);
+    builder.DefineState(Parent).OnEnter<string>(_ => { }).AllowReentrancy(GoToX);
     builder.DefineState(Initial).AsSubstateOf(Parent);
 
     // --act

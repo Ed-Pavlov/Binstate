@@ -54,7 +54,7 @@ public class ConfigurationTest : StateMachineTestBase
   {
     // --arrange
     var builder = new Builder<string, int>(OnException);
-    builder.DefineState(Initial).AllowReentrancy(GoToStateX);
+    builder.DefineState(Initial).AllowReentrancy(GoToX);
 
     // --act
     Action target = () => builder.Build(null!);
@@ -228,7 +228,7 @@ public class ConfigurationTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.GetOrDefineState(Initial).AllowReentrancy(GoToStateX);
+    builder.GetOrDefineState(Initial).AllowReentrancy(GoToX);
 
     // --act
     var actual = builder.Build(Initial);

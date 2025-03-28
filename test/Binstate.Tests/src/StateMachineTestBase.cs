@@ -11,12 +11,14 @@ public abstract class StateMachineTestBase
   protected const string Initial    = nameof(Initial);
   protected const string StateX     = nameof(StateX);
   protected const string StateY     = nameof(StateY);
+  protected const string StateZ     = nameof(StateZ);
   protected const string Final      = nameof(Final);
   protected const string Root       = nameof(Root);
   protected const string Parent     = nameof(Parent);
   protected const string Child      = nameof(Child);
-  protected const int    GoToStateX = 1;
-  protected const int    GoToStateY = 2;
+  protected const int    GoToX = 1;
+  protected const int    GoToY = 2;
+  protected const int    GoToZ = 3;
   protected const int    GoToParent  = 9;
   protected const int    GoToChild  = 3;
 

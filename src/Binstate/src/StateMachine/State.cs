@@ -27,7 +27,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
 
   private readonly object? _exitAction;
 
-  private TArgument? _argument;
+  private Maybe<TArgument> _argument;
 
   private volatile bool _isActive;
 
@@ -51,12 +51,15 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     Transitions  = transitions ?? throw new ArgumentNullException(nameof(transitions));
     ParentState  = parentState;
     DepthInTree  = parentState?.DepthInTree + 1 ?? 0;
+
+    if(typeof(TArgument) == typeof(Unit))
+      _argument = default(TArgument)!.ToMaybe();
   }
 
   public TArgument Argument
   {
-    get => _argument ?? throw new InvalidOperationException("Argument is not set");
-    set => _argument = value;
+    get => _argument.HasValue ? _argument.Value : throw new InvalidOperationException("Argument is not set");
+    set => _argument = value.ToMaybe();
   }
 
   public Dictionary<TEvent, Transition<TState, TEvent>> Transitions { get; }

@@ -83,5 +83,5 @@ public interface IStateMachine<in TEvent>
   /// Serializes the StateMachine in its current state to string representation.
   /// It can be restored using <see cref="Builder{TState,TEvent}.Restore"/> method.
   /// </summary>
-  string Serialize();
+  string Serialize(ICustomSerializer? customSerializer = null);
 }

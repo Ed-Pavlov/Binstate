@@ -186,8 +186,7 @@ public class ArgumentPassingTest : StateMachineTestBase
     target.Raise(GoToY);
 
     // --assert
-    A.CallTo(() => onEnter(expected))
-     .MustHaveHappenedOnceExactly()
+    A.CallTo(() => onEnter(expected)).MustHaveHappenedOnceExactly()
      .Then(A.CallTo(() => onExit(expected)).MustHaveHappenedOnceExactly())
      .Then(A.CallTo(() => onTransition(expected)).MustHaveHappenedOnceExactly());
   }

@@ -11,11 +11,6 @@ public partial class Builder<TState, TEvent>
   /// </summary>
   internal class StateData
   {
-    // paranoia mode on
-    private Maybe<TState>? _parentStateId;
-    private Maybe<object?> _enterAction;
-    private Maybe<object?> _exitAction;
-
     public StateData(TState stateId) => StateId = stateId;
 
     public readonly TState                                         StateId;
@@ -23,34 +18,31 @@ public partial class Builder<TState, TEvent>
 
     public Maybe<TState> ParentStateId
     {
-      get => _parentStateId ?? Maybe<TState>.Nothing;
-
+      get;
       set
       {
-        if(_parentStateId is not null) throw Paranoia.GetException("code written in the way that property is set only once.");
-        _parentStateId = value;
+        if(field.HasValue) throw Paranoia.GetException("code written in the way that property is set only once.");
+        field = value;
       }
     }
 
     public object? EnterAction
     {
-      get => _enterAction.GetValueSafe();
-
+      get;
       set
       {
-        if(_enterAction.HasValue) throw Paranoia.GetException("code written in the way that property is set only once.");
-        _enterAction = value.ToMaybe();
+        if(field is not null) throw Paranoia.GetException("code written in the way that property is set only once.");
+        field = value;
       }
     }
 
     public object? ExitAction
     {
-      get => _exitAction.GetValueSafe();
-
+      get;
       set
       {
-        if(_exitAction.HasValue) throw Paranoia.GetException("code written in the way that property is set only once.");
-        _exitAction = value.ToMaybe();
+        if(field is not null) throw Paranoia.GetException("code written in the way that property is set only once.");
+        field = value;
       }
     }
 

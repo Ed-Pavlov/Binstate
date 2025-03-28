@@ -50,21 +50,11 @@ public partial class Builder<TState, TEvent> : Builder
   /// Use this action to be notified about these exceptions.
   /// </param>
   /// <param name="options"> Configuration options for the state machine builder. </param>
-  public Builder(Action<Exception> onException, Options options)
+  public Builder(Action<Exception> onException, Options options = default)
   {
     _onException = onException ?? throw new ArgumentNullException(nameof(onException));
-    _options     = options     ?? throw new ArgumentNullException(nameof(options));
+    _options     = options;
   }
-
-  /// <summary>
-  /// Creates a builder of a state machine, use it to define state and configure transitions.
-  /// </summary>
-  /// <param name="onException">
-  /// All exception thrown from 'enter', 'exit', and 'transition' actions passed to the state machine are caught in order not break the state of the state machine.
-  /// Use this action to be notified about these exceptions.
-  /// </param>
-  /// <remarks>Default <see cref="Builder.Options"/> is used. </remarks>
-  public Builder(Action<Exception> onException) : this(onException, new Options()) { }
 
   /// <summary>
   /// Defines the new state in the state machine, if it is already defined throws an exception.
@@ -141,12 +131,14 @@ public partial class Builder<TState, TEvent> : Builder
       + $"Set {nameof(Builder)}.{nameof(Options)}.{nameof(Options.EnableStateMachinePersistence)} to true to enable it."
       );
 
-    var persistedStateMachine = JsonSerializer.Deserialize<Persistence<TState>.StateMachineData>(serializedData);
+    var persistedStateMachine = JsonSerializer.Deserialize<Persistence<TState>.Read.StateMachineData>(serializedData);
     if(persistedStateMachine is null) throw new ArgumentException($"'{nameof(serializedData)}' is not a valid serialized state machine");
 
     var persistenceSignature = CreatePersistenceSignature();
     if(persistedStateMachine.Signature != persistenceSignature)
-      throw new ArgumentException($"The passed {nameof(serializedData)} doesn't match the configuration of this {nameof(Builder)}");
+      throw new ArgumentException($"The passed {nameof(serializedData)} doesn't match the configuration of this {nameof(Builder)}. "
+                                + $"Check that the {nameof(Builder)} using for restoring is configured the same way as the one used for building "
+                                + $"the stored state machine.");
 
     var states = CreateStates();
 
@@ -286,6 +278,9 @@ public partial class Builder<TState, TEvent> : Builder
                   }
                 );
 
+      writer.Write(stateData.EnterAction?.GetType());
+      writer.Write(stateData.ExitAction?.GetType());
+
       foreach(var transition in stateData.TransitionList.Values)
       {
         writer.Write(JsonSerializer.Serialize(transition.Event));
@@ -293,9 +288,9 @@ public partial class Builder<TState, TEvent> : Builder
         {
           transition.GetTargetStateId(out var targetStateId);
           writer.Write(JsonSerializer.Serialize(targetStateId));
+          writer.Write(transition.TransitionAction?.GetType());
         }
       }
-
     }
 
     writer.Flush();

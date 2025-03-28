@@ -43,7 +43,7 @@ public partial class Builder<TState, TEvent>
       {
         if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-        StateData.EnterAction = WrapAction(enterAction);
+        StateData.EnterAction = enterAction;
         return this;
       }
 
@@ -76,7 +76,7 @@ public partial class Builder<TState, TEvent>
       {
         if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-        StateData.EnterAction = WrapAction(enterAction);
+        StateData.EnterAction = enterAction;
         StateData.Factory     = new StateFactory<TArgument>();
         return new ExitAction<TArgument>(StateData);
       }
@@ -126,11 +126,6 @@ public partial class Builder<TState, TEvent>
           enterAction(controller, argument);
           return null;
         };
-
-      private static Func<IStateController<TEvent>, Task?> WrapAction(Func<IStateController<TEvent>, Task> enterAction) => enterAction;
-
-      private static Func<IStateController<TEvent>, TArgument, Task?> WrapAction<TArgument>(Func<IStateController<TEvent>, TArgument, Task> enterAction)
-        => enterAction;
     }
   }
 }

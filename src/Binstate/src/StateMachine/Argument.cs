@@ -13,6 +13,9 @@ internal static partial class Argument
   private static readonly MethodInfo SetArgumentMethodFactory
     = typeof(Argument).GetMethod(nameof(SetArgument), BindingFlags.NonPublic | BindingFlags.Static)!;
 
+  private static readonly MethodInfo PropagateArgumentMethodFactory
+    = typeof(Argument).GetMethod(nameof(PropagateArgument), BindingFlags.NonPublic | BindingFlags.Static)!;
+
   private static readonly MethodInfo SetTupleArgumentMethodFactory
     = typeof(Argument).GetMethod(nameof(SetTupleArgument), BindingFlags.NonPublic | BindingFlags.Static)!;
 
@@ -29,7 +32,9 @@ internal static partial class Argument
   public static bool CanAcceptArgumentFrom(this IState argumentTarget, IState argumentSource)
     => argumentTarget.GetArgumentType().IsAssignableFrom(argumentSource.GetArgumentTypeSafe());
 
-  private static void SetArgument<T>(ISetArgument<T> target, IGetArgument<T> source) => target.Argument = source.Argument;
+  private static void SetArgument<T>(ISetArgument<T> target, T argument) => target.Argument = argument;
+
+  private static void PropagateArgument<T>(ISetArgument<T> target, IGetArgument<T> source) => target.Argument = source.Argument;
 
   private static void SetTupleArgument<TX, TY>(ISetArgument<ITuple<TX, TY>> target, IGetArgument<TX> providerX, IGetArgument<TY> providerY)
     => target.Argument = new Tuple<TX, TY>(providerX.Argument, providerY.Argument);
@@ -53,7 +58,7 @@ internal static partial class Argument
     {
       if(tuple.ItemY is not null) throw Paranoia.GetInvalidTargetException(target);
 
-      var passArgumentMethod = SetArgumentMethodFactory.MakeGenericMethod(targetArgumentType);
+      var passArgumentMethod = PropagateArgumentMethodFactory.MakeGenericMethod(targetArgumentType);
       passArgumentMethod.Invoke(null, [target, tuple.ItemX]);
       return;
     }

@@ -96,10 +96,10 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
 
       _task = _enterAction switch
       {
-        null                                               => null,
+        null                                                   => null,
         Func<IStateController<TEvent>, TArgument, Task?> enter => enter(stateController, Argument),
         Func<IStateController<TEvent>, Task?> enter            => enter(stateController),
-        _                                                  => throw new ArgumentOutOfRangeException(),
+        _                                                      => throw new ArgumentOutOfRangeException(),
       };
     }
     catch(Exception exception)
@@ -130,7 +130,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
       // if enter action is blocking or no action: _enterFunctionFinished is set means it finishes
       _enterActionFinished.WaitOne();
 
-      // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till action finishes
+      // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till the action finishes
       _task?.Wait();
 
       switch(_exitAction)

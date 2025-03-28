@@ -7,8 +7,11 @@ public partial class Builder
   /// <summary>
   /// Configuration options for the state machine builder.
   /// </summary>
-  public class Options
+  public struct Options
   {
+    /// <inheritdoc cref="Options"/>
+    public Options() { }
+
     /// <summary>
     /// Specifies whether the 'default' value can be used as a valid State ID when the type represented by TState
     /// is a <see cref="ValueType"/>, such as <see cref="Enum"/>.

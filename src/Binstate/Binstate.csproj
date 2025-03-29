@@ -48,6 +48,10 @@
     <description>A thread-safe, hierarchical state machine library for .NET. Features include support for async methods, argument passing, state serialization, and more.</description>
 
     <PackageReleaseNotes>
+      Added persistence support:
+      - Implemented serialization and deserialization for the state machine.
+      - Added interface `ICustomSerializer` for implementing custom persistence logic.
+      - Implemented `EnumSerializer` for handling enum persistence as an example of `ICustorSerializer` implementation.
     </PackageReleaseNotes>
   </PropertyGroup>
 

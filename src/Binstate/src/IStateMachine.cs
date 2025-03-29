@@ -83,5 +83,7 @@ public interface IStateMachine<in TEvent>
   /// Serializes the StateMachine in its current state to string representation.
   /// It can be restored using <see cref="Builder{TState,TEvent}.Restore"/> method.
   /// </summary>
+  /// <param name="customSerializer">If not primitive or string type is used as TState in <see cref="Builder{TState,TEvent}"/> or
+  /// an argument passed to <see cref="IStateMachine{TEvent}.Raise"/> custom serializer should be provided.</param>
   string Serialize(ICustomSerializer? customSerializer = null);
 }

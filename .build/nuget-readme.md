@@ -1,40 +1,41 @@
 # Binstate
 
-Binstate is a simple but yet powerful state machine for .NET. Thread safe. Supports async methods. Supports hierarchically nested states.
+
+**Binstate** is a simple but yet powerful thread-safe, hierarchical state machine for .NET.
+Features include support for async methods, argument passing, state serialization, and more.
 
 #### See documentation for full details
 https://github.com/Ed-Pavlov/Binstate#readme
 
 ## Features
 
-* ### Thread safety
-  The state machine is fully thread safe and allows calling any method from any thread.
+### Thread safety
 
-* ### Control on what thread enter and exit actions are executed
+The state machine is fully thread safe and allows calling any method from any thread.
 
-  Binstate don't use it's own thread to execute transitions. It gives an application full control over the threading model of the state machine.
+### Control on what thread enter and exit actions are executed
+
+**Binstate** doesn't use its own thread to execute actions.
+It gives an application full control over the threading model of the state machine, and only you decide will it be a passive or an active state machine.
 
 * ### Support async methods
 
+      .OnEnter(
+        new Func<Task<string>>( async () =>
+        {
+          var result = await HttGetRequest();
+          return GetOpponentName(result);
+        }
+       )
+
 * ### Hierarchically nested states
-  Supports hierarchically nested states, see "Elevator" example.
+
+      builder
+        .DefineState(States.OnFloor)
+        .AsSubstateOf(States.Healthy) // set parent state
+        .OnEnter(AnnounceFloor)
 
 * ### Conditional transitions using C# not DSL
-
-  Instead of introducing conditional transition into state machine's DSL like
-
-  ❌
-
-      .If(CallDialled, Ringing, () => IsValidNumber)
-      .If(CallDialled, Beeping, () => !IsValidNumber);
-
-      // or
-      .If(CheckOverload).Goto(MovingUp)
-      .Otherwise().Execute(AnnounceOverload)
-
-  Binstate allows using C#
-
-  ✔️
 
       .AddTransition(CallDialed, () => IsValidNumber ? Ringing : Beeping)
 
@@ -58,7 +59,7 @@ https://github.com/Ed-Pavlov/Binstate#readme
           .OnEnter<string>(TrackGame)
           ...
 
-* ### Propagating arguments attached to a state through states upon activation
-  * Argument for propagating can be got from one of the parents of the active state if the active state itself has no argument.
-  * Argument will be propagated to all parent states of the newly activated state if they require an argument.
-  * If a state already has 'tuple' argument, it can be split by two when propagating to the newly activated state (and its parents) depending on their 'enter' actions argument
+### Persistence
+Serialize the state machine's current state using `var serializedData = stateMachine.Serialize()`.<br>
+To restore it later, use `var stateMachine = builder.Restore(serializedData)`.<br>
+This recreates the state machine in its saved state, ready to resume operation.

@@ -17,39 +17,33 @@ internal partial class StateMachine<TState, TEvent>
 
     try
     {
-      _lock.WaitOne();
+      _lock.WaitOne(); // prevent state machine from being used
 
       var states = _states.Values.Select(
                              state =>
                              {
                                var maybe = state.GetArgumentAsObject();
-                               if(!maybe.HasValue) return null;
+                               if(! maybe.HasValue) return null; // no argument - no serialization needed
 
                                var argument = maybe.Value;
-                               if(argument is null) return null;
+                               if(argument is null) return null; // argument is null - no serialization needed
 
-                               var argumentType = argument.GetType().FullName;
-                               if(argumentType is null) throw Paranoia.GetException("ArgumentType is null");
-
-                               if(! argument.GetType().IsPrimitive && argument.GetType() != typeof(string))
-                               {
-                                 if(customSerializer is null) throw new InvalidOperationException("If not primitive types used as arguments, then the valid custom serializer must be provided");
-                                 argument = customSerializer.Serialize(argument);
-                               }
-
-                               return new Persistence<TState>.Write.StateData(state.Id, argumentType, argument);
+                               var stateIdData  = Persistence.CreateItem(state.Id, customSerializer);
+                               var argumentData = Persistence.CreateItem(argument, customSerializer);
+                               return new Persistence.StateData(stateIdData, argumentData);
                              }
                            )
                           .Where(_ => _ is not null)
-                          .Cast<Persistence<TState>.Write.StateData>()
+                          .Cast<Persistence.StateData>()
                           .ToArray();
 
-      var data = new Persistence<TState>.Write.StateMachineData(_persistenceSignature, _activeState.Id, states);
-      return JsonSerializer.Serialize(data);
+      var activeStateId    = Persistence.CreateItem(_activeState.Id, customSerializer);
+      var stateMachineData = new Persistence.StateMachineData(_persistenceSignature, activeStateId, states);
+      return stateMachineData.Serialize();
     }
     finally
     {
-      _lock.Set();
+      _lock.Set(); // allow state machine to be used again
     }
   }
 }

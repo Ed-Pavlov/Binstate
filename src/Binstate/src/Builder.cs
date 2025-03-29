@@ -33,6 +33,8 @@ public partial class Builder
 /// <summary>
 /// This class is used to configure and build a state machine.
 /// </summary>
+/// <typeparam name="TState">Objects of this type are used as dictionary keys, it's your responsibility to provide valid type and objects.</typeparam>
+/// <typeparam name="TEvent">Objects of this type are used as dictionary keys, it's your responsibility to provide valid type and objects.</typeparam>
 public partial class Builder<TState, TEvent> : Builder
   where TState : notnull
   where TEvent : notnull
@@ -53,7 +55,7 @@ public partial class Builder<TState, TEvent> : Builder
   public Builder(Action<Exception> onException, Options? options = null)
   {
     _onException = onException ?? throw new ArgumentNullException(nameof(onException));
-    _options     = options ?? new Options();
+    _options     = options     ?? new Options();
   }
 
   /// <summary>
@@ -118,34 +120,35 @@ public partial class Builder<TState, TEvent> : Builder
   /// <summary>
   /// Restores a state machine instance from serialized data.
   /// </summary>
-  /// <param name="serializedData">A JSON string representing the previously saved state machine's state.</param>
+  /// <param name="serializedData">A JSON string representing the previously saved state machine's state.
+  /// See <see cref="IStateMachine{TEvent}.Serialize"/>.</param>
+  /// <param name="customSerializer">An optional serializer used for state argument restoration. If not primitive or string type is used
+  /// as <typeparamref name="TState"/> or an argument passed to <see cref="IStateMachine{TEvent}.Raise"/> custom serializer should be provided.</param>
   /// <returns>A restored instance of the state machine configured with the states and active state from the provided serialized data.</returns>
-  /// <exception cref="ArgumentException">
-  /// Throws if the provided JSON string is null, empty, or doesn't contain valid serialized state machine data.
-  /// </exception>
-  public IStateMachine<TEvent> Restore(string serializedData)
+  public IStateMachine<TEvent> Restore(string serializedData, ICustomSerializer? customSerializer = null)
   {
+    if(string.IsNullOrWhiteSpace(serializedData)) throw new ArgumentNullException(nameof(serializedData));
+
     if(! _options.EnableStateMachinePersistence)
       throw new InvalidOperationException(
         $"This {nameof(Builder)} is not configured for persistence. "
       + $"Set {nameof(Builder)}.{nameof(Options)}.{nameof(Options.EnableStateMachinePersistence)} to true to enable it."
       );
 
-    var persistedStateMachine = JsonSerializer.Deserialize<Persistence<TState>.Read.StateMachineData>(serializedData);
-    if(persistedStateMachine is null) throw new ArgumentException($"'{nameof(serializedData)}' is not a valid serialized state machine");
-
+    var persistedStateMachine = Persistence.DeserializeStateMachineData(serializedData);
     var persistenceSignature = CreatePersistenceSignature();
     if(persistedStateMachine.Signature != persistenceSignature)
-      throw new ArgumentException($"The passed {nameof(serializedData)} doesn't match the configuration of this {nameof(Builder)}. "
-                                + $"Check that the {nameof(Builder)} using for restoring is configured the same way as the one used for building "
-                                + $"the stored state machine.");
+      throw new ArgumentException(
+        $"The passed {nameof(serializedData)} doesn't match the configuration of this {nameof(Builder)}. "
+      + $"Check that the {nameof(Builder)} using for restoring is configured the same way as the one used for building "
+      + $"the stored state machine."
+      );
 
     var states = CreateStates();
 
-    persistedStateMachine.RestoreStateArguments(states.Values);
+    persistedStateMachine.RestoreStateArguments(out var activeStateId, states.Values, customSerializer);
 
-
-    var stateMachine = new StateMachine<TState, TEvent>(states, _onException, persistedStateMachine.ActiveStateId, persistenceSignature);
+    var stateMachine = new StateMachine<TState, TEvent>(states, _onException, activeStateId, persistenceSignature);
     stateMachine.EnterInitialState();
     return stateMachine;
   }

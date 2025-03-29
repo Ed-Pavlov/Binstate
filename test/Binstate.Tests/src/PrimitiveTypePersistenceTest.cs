@@ -7,7 +7,7 @@ using NUnit.Framework;
 
 namespace Binstate.Tests;
 
-public class NoArgumentPersistenceTest : StateMachineTestBase
+public class PrimitiveTypePersistenceTest : StateMachineTestBase
 {
   [Test]
   public void should_call_enter_action_of_active_state_on_restore()

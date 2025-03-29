@@ -45,7 +45,7 @@
     <RepositoryUrl>https://github.com/Ed-Pavlov/Binstate</RepositoryUrl>
     <copyright>Copyright © 2020-2025 Ed Pavlov</copyright>
     <PackageTags>fsm finite-state-machine state-machine state-machine-dsl hierarchical-state-machine hierarchical-states thread-safe async dotnet-core dotnet</PackageTags>
-    <description>Hierarchical state machine for .NET.</description>
+    <description>A thread-safe, hierarchical state machine library for .NET. Features include support for async methods, argument passing, state serialization, and more.</description>
 
     <PackageReleaseNotes>
     </PackageReleaseNotes>
@@ -109,6 +109,15 @@
     </Compile>
     <Compile Update="src\StateMachine\StateMachine.VirtualRootState.cs">
       <DependentUpon>StateMachine.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\Persistence.Item.cs">
+      <DependentUpon>Persistence.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\Persistence.EnumSerializer.cs">
+      <DependentUpon>Persistence.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\Persistance.ICustomSerializer.cs">
+      <DependentUpon>Persistence.cs</DependentUpon>
     </Compile>
   </ItemGroup>
 

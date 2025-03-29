@@ -55,7 +55,7 @@ jobs:
       # Run tests
       -
         name: Test
-        run: dotnet test --no-build
+        run: dotnet test --no-build -p:CollectCoverage=true -p:CoverletOutput=TestResults/ -p:CoverletOutputFormat=opencover
 
       # Create and place nuget packages into env.nugets-dir directory
       -
@@ -88,3 +88,20 @@ jobs:
           name:           Artifacts
           path:           ${{ env.artifacts-dir }}/
           retention-days: 3
+
+      - name: Create Test Coverage Badge
+        uses: simon-k/dotnet-code-coverage-badge@v1.0.0
+        id: create_coverage_badge
+        with:
+          label: Unit Test Coverage
+          color: brightgreen
+          path: test/Binstate.Tests/TestResults/coverage.opencover.xml
+          gist-filename: test-coverage.json
+          gist-id: 294bcfc592339fa417166638864b77ce
+          gist-auth-token: ${{ secrets.GIST_KEY }}
+
+      - name: Print code coverage
+        run: echo "Code coverage percentage ${{steps.create_coverage_badge.outputs.percentage}}%"
+
+      - name: Print code coverage badge data
+        run: echo "Badge data ${{steps.test_step.outputs.badge}}"

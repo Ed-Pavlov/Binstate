@@ -13,12 +13,14 @@ ___
   <img src="/.build/icon.png" width="86" height="86">
 </p>
 
-**Binstate** *(pronounced as "Be in state")* is a simple but yet powerful state machine for .NET. Thread safe. Supports async methods. Supports hierarchically nested states.
-___
+**Binstate** *(pronounced as "Be in state")* is a simple but yet powerful thread-safe, hierarchical state machine for .NET.
+Features include support for async methods, argument passing, state serialization, and more.
 
-[![Nuget](https://img.shields.io/nuget/dt/BeatyBit.Binstate)](https://www.nuget.org/packages/BeatyBit.Binstate/)
 [![Build & Test](https://github.com/Ed-Pavlov/Binstate/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/Ed-Pavlov/Binstate/actions/workflows/build-and-test.yml)
+![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Ed-Pavlov/294bcfc592339fa417166638864b77ce/raw/test-coverage.json)
+[![Nuget](https://img.shields.io/nuget/dt/BeatyBit.Binstate)](https://www.nuget.org/packages/BeatyBit.Binstate/)
 
+___
 
 ## Powered by
 <p align="right">
@@ -35,62 +37,75 @@ The state machine is fully thread safe and allows calling any method from any th
 
 ### Control on what thread enter and exit actions are executed
 
-Binstate doesn't use its own thread to execute transitions.
+**Binstate** doesn't use its own thread to execute actions.
+It gives an application full control over the threading model of the state machine, and only you decide will it be a passive or an active state machine.
 
 `Raise(event)`
 executes an 'exit' action of the current state and an 'enter' action of the new state on the current thread.
 If an 'enter' action is blocking `Raise` will block until enter action finishes.
 `RaiseAsync(event)` uses `Task.Run` to execute a transition.
 
-It gives an application full control over the threading model of the state machine.
-
 ### Support async methods
 
 Supports async methods as an 'enter' action of the state. Binstate guarantees that an async 'enter' action will finish before calling an 'exit'
  action of the current state and an 'enter' action of the new state. An async method should return `Task`, `async void` methods aren’t supported.
 
+    .OnEnter(
+      new Func<Task<string>>( async () =>
+      {
+        var result = await HttGetRequest();
+        return GetOpponentName(result);
+      }
+     )
+
+### Hierarchically nested states
+Supports hierarchically nested states.
+
+    ...
+    builder
+      .DefineState(States.OnFloor)
+      .AsSubstateOf(States.Healthy) // set the parent state
+      .OnEnter(AnnounceFloor)
+    ...
+See the "Elevator" example for more details.
+
 ### Conditional transitions using C# not DSL
 
 Instead of introducing conditional transition into state machine's DSL like
 
-❌
 
+    ❌
     .If(CallDialled, Ringing, () => IsValidNumber)
     .If(CallDialled, Beeping, () => !IsValidNumber);
 
 or
 
-❌
-
+    ❌
     .If(CheckOverload).Goto(MovingUp)
     .Otherwise().Execute(AnnounceOverload)
 
-Binstate allows using C#
+**Binstate** allows using C#
 
 ✔️
 
-    .AddTransition(CallDialed, () => IsValidNumber ? Ringing : Beeping)
+    .AddTransition(CallDialed, () => IsValidNumber ? RingingEvent : BeepingEvent)
 
     .AddTransition(GoUp, () =>
       {
         if(CheckOverload) return MovingUp;
         AnnounceOverload();
-        return null; // no transition will be executed
+        return null; // no transition will be performed
       });
 
 ### Safe checking if state machine still in the state
 
 The current state of the state machine is not exposed publicly. No knowledge which state to check - less errors.
 
-not
-
-❌
+❌ not
 
     while(stateController.State == ❌CopyPastedWrongState❌)
 
-but
-
-✔️
+✔️ but
 
     private static Task PlayMusic(IStateController<Event> stateController)
     {
@@ -115,7 +130,7 @@ but
         }
       }
 
- ### Enter/Exit/OnTransition actions with arguments
+ ### Enter/Exit/Transition actions with arguments
 
          builder
            .DefineState(WaitingForGame)
@@ -128,18 +143,12 @@ but
            .OnEnter<string>(TrackGame)
            ...
 
-### Hierarchically nested states
-Supports hierarchically nested states,
+### Persistence
+Serialize the state machine's current state using `var serializedData = stateMachine.Serialize()`.<br>
+To restore it later, use `var stateMachine = builder.Restore(serializedData)`.<br>
+This recreates the state machine in its saved state, ready to resume operation.
 
-    ...
-    builder
-      .DefineState(States.OnFloor)
-      .AsSubstateOf(States.Healthy)
-      .OnEnter(AnnounceFloor)
-    ...
-See "Elevator" example for more details.
-
-### Propagating arguments
+### Passing and propagating arguments
 #### Propagating arguments attached to a state upon activation
 
          builder
@@ -154,7 +163,7 @@ See "Elevator" example for more details.
 
          stateMachine.Raise(SomeEvent); // argument will be passed from SomeState to AnotherState
 
-#### Mixing arguments propagating and passing
+#### Mixing propagating and passing arguments
           builder
            .DefineState(SomeState)
            .OnEnter<string>(...) // argument passed to 'Raise' mtehod is passed to the 'enter' action and is 'attached' to the state

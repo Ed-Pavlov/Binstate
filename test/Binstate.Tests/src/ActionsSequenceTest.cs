@@ -55,7 +55,7 @@ public class EnterExitActionsTest : StateMachineTestBase
   }
 
   [TestCaseSource(nameof(RaiseWays))]
-  public void should_call_exit_and_enter_on_reentering(RaiseWay raiseWay)
+  public void should_not_call_exit_and_enter_on_reentering_define_with_allow_reentrancy(RaiseWay raiseWay)
   {
     const string enter = nameof(enter);
     const string exit  = nameof(exit);
@@ -72,6 +72,36 @@ public class EnterExitActionsTest : StateMachineTestBase
      .OnEnter(_ => actual.Add(enter))
      .OnExit(() => actual.Add(exit))
      .AllowReentrancy(GoToX);
+
+    var target = builder.Build(Initial);
+    target.Raise(raiseWay, GoToX);
+
+    // --act
+    var result = target.Raise(raiseWay, GoToX);
+
+    // --assert
+    actual.Should().BeEquivalentTo(enter);
+    result.Should().BeTrue();
+  }
+
+  [TestCaseSource(nameof(RaiseWays))]
+  public void should_call_exit_and_enter_on_reentering(RaiseWay raiseWay)
+  {
+    const string enter = nameof(enter);
+    const string exit  = nameof(exit);
+
+    var actual = new List<string>();
+
+    // --arrange
+    var builder = new Builder<string, int>(OnException);
+
+    builder.DefineState(Initial).AddTransition(GoToX, StateX);
+
+    builder
+     .DefineState(StateX)
+     .OnEnter(_ => actual.Add(enter))
+     .OnExit(() => actual.Add(exit))
+     .AddTransition(GoToX, StateX);
 
     var target = builder.Build(Initial);
     target.Raise(raiseWay, GoToX);

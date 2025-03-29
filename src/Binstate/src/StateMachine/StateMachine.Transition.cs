@@ -64,6 +64,9 @@ internal partial class StateMachine<TState, TEvent>
     var commonAncestor     = transitionData.CommonAncestor;
     var argumentsBag       = transitionData.ArgumentsBag;
 
+    if(transition.IsReentrant)
+      return true; // no need to call any actions on reentrant transitions
+
     var enterActions = new List<Action>();
 
     try

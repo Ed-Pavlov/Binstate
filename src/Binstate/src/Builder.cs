@@ -246,7 +246,7 @@ public partial class Builder<TState, TEvent> : Builder
     foreach(var stateConfig in _stateConfigurators.Values.Select(_ => _.StateData))
     foreach(var transition in stateConfig.TransitionList.Values.Where(_ => _.IsStatic)) // do not check dynamic transitions because they depend on the app state
     {
-      if(! transition.GetTargetStateId(out var targetStateId))
+      if( ! transition.GetTargetStateId(out var targetStateId))
         throw Paranoia.GetException("it's impossible to have a transition without target state");
 
       if(! states.ContainsKey(targetStateId))

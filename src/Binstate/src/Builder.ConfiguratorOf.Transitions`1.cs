@@ -16,7 +16,7 @@ public partial class Builder<TState, TEvent>
         if(stateId is null) throw new ArgumentNullException(nameof(stateId));
         if(action == null) throw new ArgumentNullException(nameof(action));
 
-        AddTransitionToList(@event, CreateStaticGetState(stateId), true, action);
+        AddTransitionToList(@event, CreateStaticGetState(stateId), true, false, action);
         return this;
       }
     }

@@ -58,7 +58,9 @@ public partial class Builder<TState, TEvent>
 
       /// <summary>
       /// Defines a re-entrant transition from the current state to itself when the <paramref name="event"/> is raised.
-      /// In such transitions, both the exit and enter actions of the state are executed.
+      /// In such transition, no actions are executed.
+      /// Use <see cref="AddTransition(TEvent,TState,System.Action?)"/> and specify "its own" State ID as a target state to create
+      /// reentrancy transition which calls 'enter', 'exit', and 'transition' actions if any.
       /// </summary>
       /// <param name="event">The event that triggers the re-entrant transition.</param>
       /// <exception cref="ArgumentNullException">Thrown when <paramref name="event"/> is null.</exception>

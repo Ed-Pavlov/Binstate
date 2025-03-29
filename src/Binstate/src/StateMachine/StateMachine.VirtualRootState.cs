@@ -17,6 +17,8 @@ internal partial class StateMachine<TState, TEvent>
     public bool                    IsActive              { get; set; }
     public Type?                   GetArgumentTypeSafe() => null;
 
+    public ITransition FakeTransition { get; } = new Transition<TState, TEvent>(default!, Builder.CreateStaticGetState(targetStateId), true, false, null);
+
 #pragma warning disable CS1574
     /// <summary>
     /// Returns transition to the <see cref="targetStateId"/> no matter what <paramref name="event"/> is passed
@@ -24,7 +26,7 @@ internal partial class StateMachine<TState, TEvent>
 #pragma warning restore CS1574
     public bool FindTransitionTransitive(TEvent @event, [NotNullWhen(true)] out Transition<TState, TEvent>? transition)
     {
-      transition = new Transition<TState, TEvent>(default!, Builder.CreateStaticGetState(targetStateId), true, null);
+      transition = new Transition<TState, TEvent>(default!, Builder.CreateStaticGetState(targetStateId), true, false, null);
       return true;
     }
 

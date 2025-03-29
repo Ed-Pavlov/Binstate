@@ -4,11 +4,12 @@ namespace BeatyBit.Binstate;
 
 internal class Transition<TState, TEvent> : ITransition
 {
-  public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, object? transitionAction)
+  public Transition(TEvent @event, GetState<TState> getTargetStateId, bool isStatic, bool isReentrant, object? transitionAction)
   {
     Event            = @event;
     GetTargetStateId = getTargetStateId;
     IsStatic         = isStatic;
+    IsReentrant      = isReentrant;
     TransitionAction = transitionAction;
   }
 
@@ -22,6 +23,7 @@ internal class Transition<TState, TEvent> : ITransition
   public readonly GetState<TState> GetTargetStateId;
 
   public object? TransitionAction { get; }
+  public bool    IsReentrant      { get; }
 
   [ExcludeFromCodeCoverage]
   public override string ToString()

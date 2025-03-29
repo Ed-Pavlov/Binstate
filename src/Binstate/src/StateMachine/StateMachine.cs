@@ -76,7 +76,7 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
     _activeState = fakeRootState;
 
     // hack TransitionData to perform activation of restored states
-    var transitionData = new TransitionData(fakeRootState, null!, restoredActiveState, null, new Argument.Bag());
+    var transitionData = new TransitionData(fakeRootState, fakeRootState.FakeTransition, restoredActiveState, null, new Argument.Bag());
     PerformTransition(transitionData);
   }
 

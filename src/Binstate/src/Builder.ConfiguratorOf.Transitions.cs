@@ -12,14 +12,14 @@ public partial class Builder<TState, TEvent>
 
       protected TransitionsEx(StateData stateData) => StateData = stateData;
 
-      public void AllowReentrancy(TEvent @event) => AddTransition(@event, StateData.StateId);
+      public void AllowReentrancy(TEvent @event) => AddTransitionToList(@event, CreateStaticGetState(StateData.StateId), true, true, null);
 
       public ITransitions AddTransition(TEvent @event, TState stateId, Action? action = null)
       {
         if(@event is null) throw new ArgumentNullException(nameof(@event));
         if(stateId is null) throw new ArgumentNullException(nameof(stateId));
 
-        AddTransitionToList(@event, CreateStaticGetState(stateId), true, action);
+        AddTransitionToList(@event, CreateStaticGetState(stateId), true, false, action);
         return this;
       }
 
@@ -28,7 +28,7 @@ public partial class Builder<TState, TEvent>
         if(@event is null) throw new ArgumentNullException(nameof(@event));
         if(getState is null) throw new ArgumentNullException(nameof(getState));
 
-        AddTransitionToList(@event, getState, false, null);
+        AddTransitionToList(@event, getState, false, false, null);
         return this;
       }
 
@@ -46,12 +46,12 @@ public partial class Builder<TState, TEvent>
         if(@event is null) throw new ArgumentNullException(nameof(@event));
         if(getState is null) throw new ArgumentNullException(nameof(getState));
 
-        AddTransitionToList(@event, CreateDynamicGetState(getState), false, null);
+        AddTransitionToList(@event, CreateDynamicGetState(getState), false, false, null);
         return this;
       }
 
-      protected void AddTransitionToList(TEvent @event, GetState<TState> getState, bool isStatic, object? action)
-        => StateData.TransitionList.Add(@event, new Transition<TState, TEvent>(@event, getState, isStatic, action));
+      protected void AddTransitionToList(TEvent @event, GetState<TState> getState, bool isStatic, bool isReentrant, object? action)
+        => StateData.TransitionList.Add(@event, new Transition<TState, TEvent>(@event, getState, isStatic, isReentrant, action));
     }
   }
 }

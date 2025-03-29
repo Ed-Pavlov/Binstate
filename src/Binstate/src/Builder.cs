@@ -50,10 +50,10 @@ public partial class Builder<TState, TEvent> : Builder
   /// Use this action to be notified about these exceptions.
   /// </param>
   /// <param name="options"> Configuration options for the state machine builder. </param>
-  public Builder(Action<Exception> onException, Options options = default)
+  public Builder(Action<Exception> onException, Options? options = null)
   {
     _onException = onException ?? throw new ArgumentNullException(nameof(onException));
-    _options     = options;
+    _options     = options ?? new Options();
   }
 
   /// <summary>
@@ -144,8 +144,9 @@ public partial class Builder<TState, TEvent> : Builder
 
     persistedStateMachine.RestoreStateArguments(states.Values);
 
+
     var stateMachine = new StateMachine<TState, TEvent>(states, _onException, persistedStateMachine.ActiveStateId, persistenceSignature);
-    stateMachine.EnterInitialState<Unit>(default);
+    stateMachine.EnterInitialState();
     return stateMachine;
   }
 

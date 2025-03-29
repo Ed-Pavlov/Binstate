@@ -7,7 +7,7 @@ public partial class Builder
   /// <summary>
   /// Configuration options for the state machine builder.
   /// </summary>
-  public struct Options
+  public class Options
   {
     /// <inheritdoc cref="Options"/>
     public Options() { }

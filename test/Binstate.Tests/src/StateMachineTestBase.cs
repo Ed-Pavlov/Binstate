@@ -36,7 +36,7 @@ public abstract class StateMachineTestBase
   [SetUp]
   public void Setup() => ClearRecordedCalls();
 
-  protected void ClearRecordedCalls()
+  protected void ClearRecordedCalls(params object[] actions)
   {
     Fake.ClearRecordedCalls(InitialEnterAction);
     Fake.ClearRecordedCalls(XEnterAction);
@@ -45,6 +45,9 @@ public abstract class StateMachineTestBase
     Fake.ClearRecordedCalls(RootEnterAction);
     Fake.ClearRecordedCalls(ChildEnterAction);
     Fake.ClearRecordedCalls(FinalEnterAction);
+
+    foreach(var action in actions)
+      Fake.ClearRecordedCalls(action);
   }
 
   protected static Builder<string, int> CreateBaseBuilder(Builder.Options options = default)

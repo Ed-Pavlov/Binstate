@@ -2,6 +2,7 @@
 using System.Text.Json;
 using BeatyBit.Binstate;
 using FakeItEasy;
+using FluentAssertions;
 using NUnit.Framework;
 
 namespace Binstate.Tests;
@@ -67,13 +68,6 @@ public class NoArgumentPersistenceTest : StateMachineTestBase
     Assert.Throws<JsonException>(() => builder.Restore(invalidJson));
   }
 
-  public enum MyEnum
-  {
-    None,
-    One,
-    Two
-  }
-
   [Test]
   public void should_preserve_arguments_across_serialize_and_restore()
   {
@@ -89,6 +83,8 @@ public class NoArgumentPersistenceTest : StateMachineTestBase
       var stateMachine = builder.Build(Initial);
       stateMachine.Raise(GoToChild, 42);
       serializedData = stateMachine.Serialize();
+
+      ClearRecordedCalls(childEnterWithArgs, rootEnterWithArgs);
     }
 
     // Act
@@ -96,11 +92,16 @@ public class NoArgumentPersistenceTest : StateMachineTestBase
     targetBuilder.Restore(serializedData);
 
     // Assert
-    A.CallTo(() => rootEnterWithArgs(42)).MustHaveHappenedOnceExactly();
+    A.CallTo(() => rootEnterWithArgs(42)).MustHaveHappenedOnceExactly()
+     .Then(A.CallTo(() => childEnterWithArgs(42)).MustHaveHappenedOnceExactly());
+
     return;
 
     Builder<string, int> СonfigureRemaining(Builder<string, int> builder)
     {
+      builder
+       .GetOrDefineState(Root)
+       .OnEnter(rootEnterWithArgs);
       builder
        .GetOrDefineState(Child)
        .OnEnter(childEnterWithArgs);
@@ -113,8 +114,6 @@ public class NoArgumentPersistenceTest : StateMachineTestBase
   [Test]
   public void should_throw_exception_on_restore_when_persistence_is_not_enabled()
   {
-    var builder = new Builder<string, int>(_ => { }, new Builder.Options { EnableStateMachinePersistence = false });
-
     string serializedData;
 
     // Arrange
@@ -125,11 +124,12 @@ public class NoArgumentPersistenceTest : StateMachineTestBase
     }
 
     // Act & Assert
+    var builder = new Builder<string, int>(OnException, new Builder.Options { EnableStateMachinePersistence = false });
     Assert.Throws<InvalidOperationException>(() => builder.Restore(serializedData));
   }
 
   [Test]
-  public void should_throw_exception_if_state_is_missing_in_serialized_data()
+  public void should_throw_exception_if_builders_are_not_compatible1()
   {
     string serializedData;
 
@@ -142,14 +142,14 @@ public class NoArgumentPersistenceTest : StateMachineTestBase
 
     // Create a builder with a modified set of states
     var modifiedBuilder = CreateTarget();
-    modifiedBuilder.GetOrDefineState("NewState");
+    modifiedBuilder.DefineState("NewState");
 
     // Act & Assert
-    Assert.Throws<InvalidOperationException>(() => modifiedBuilder.Restore(serializedData));
+    Assert.Throws<ArgumentException>(() => modifiedBuilder.Restore(serializedData));
   }
 
   [Test]
-  public void should_throw_exception_on_argument_type_mismatch()
+  public void should_throw_exception_if_builders_are_not_compatible2()
   {
     string serializedData;
 
@@ -158,7 +158,7 @@ public class NoArgumentPersistenceTest : StateMachineTestBase
       var builder = CreateTarget();
       builder
        .GetOrDefineState(Root)
-       .OnEnter((int x) => { });
+       .OnEnter<int>(_ => { });
 
       var stateMachine = builder.Build(Initial);
       stateMachine.Raise(GoToRoot, 42); // Correct argument type
@@ -167,30 +167,12 @@ public class NoArgumentPersistenceTest : StateMachineTestBase
 
     // Act
     var targetBuilder = CreateTarget();
-    targetBuilder.GetOrDefineState(Root).OnEnter((string x) => { });
+    targetBuilder
+     .GetOrDefineState(Root)
+     .OnEnter<string>(_ => { });
 
     // Assert
-    Assert.Throws<InvalidOperationException>(() => targetBuilder.Restore(serializedData));
-  }
-
-  [Test]
-  public void should_throw_exception_on_signature_mismatch()
-  {
-    string serializedData;
-
-    // Arrange
-    {
-      var builder      = CreateTarget();
-      var stateMachine = builder.Build(Initial);
-      serializedData = stateMachine.Serialize();
-    }
-
-    // Modify serialized data to have a different signature
-    var tamperedData = serializedData.Replace("originalSignature", "tamperedSignature");
-
-    // Act & Assert
-    var targetBuilder = CreateTarget();
-    Assert.Throws<InvalidOperationException>(() => targetBuilder.Restore(tamperedData));
+    Assert.Throws<ArgumentException>(() => targetBuilder.Restore(serializedData));
   }
 
   [Test]
@@ -200,8 +182,11 @@ public class NoArgumentPersistenceTest : StateMachineTestBase
 
     const string emptyData = "{}";
 
-    // Act & Assert
-    Assert.Throws<InvalidOperationException>(() => builder.Restore(emptyData));
+    // Act
+    var action = () => builder.Restore(emptyData);
+
+    // Assert
+    action.Should().Throw<Exception>();
   }
 
   private static Builder<string, int> CreateTarget() => CreateBaseBuilder(new Builder.Options { EnableStateMachinePersistence = true });

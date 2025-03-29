@@ -68,6 +68,18 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
     return PerformTransitionAsync(@event, argument, argumentIsFallback);
   }
 
+
+  internal void EnterInitialState()
+  {
+    var restoredActiveState = _activeState;
+    var fakeRootState = new VirtualRootState(_activeState.Id);
+    _activeState = fakeRootState;
+
+    // hack TransitionData to perform activation of restored states
+    var transitionData = new TransitionData(fakeRootState, null!, restoredActiveState, null, new Argument.Bag());
+    PerformTransition(transitionData);
+  }
+
   /// <summary>
   /// This is implemented as a separate method rather than constructor logic to be able specifying generic argument <typeparamref name="T"/>.
   /// While the <see cref="_activeState"/> is set in constructor to use not nullable type for it.

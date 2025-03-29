@@ -16,7 +16,7 @@ branches:
     source-branches:                            [ 'release', 'feature', 'hotfix' ]
     is-source-branch-for:                       [ 'release', 'feature' ]
     tracks-release-branches:                    false
-    is-release-branch:                          false
+    is-release-branch:                          true
     is-main-branch:                             true
     pre-release-weight:                         55000
 

@@ -96,7 +96,7 @@ jobs:
           label: Unit Test Coverage
           color: brightgreen
           path: test/Binstate.Tests/TestResults/coverage.opencover.xml
-          gist-filename: test-coverage.json
+          gist-filename: binstate-test-coverage.json
           gist-id: 294bcfc592339fa417166638864b77ce
           gist-auth-token: ${{ secrets.GIST_KEY }}
 

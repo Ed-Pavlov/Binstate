@@ -45,15 +45,16 @@ public static partial class Persistence
     {
       activeStateId = (TState)ActiveStateIdItem.Deserialize(customSerializer);
 
-      var statesMap = StatesData.Select(
-                                   stateData =>
-                                   {
-                                     var stateId  = (TState)stateData.StateId.Deserialize(customSerializer);
-                                     var argument = stateData.Argument.Deserialize(customSerializer);
-                                     return ( stateId, argument );
-                                   }
-                                 )
-                                .ToDictionary<(TState stateId, object argument), TState, object>(tuple => tuple.stateId!, tuple => tuple.argument);
+      IReadOnlyDictionary<TState, object> statesMap =
+        StatesData.Select(
+                     stateData =>
+                     {
+                       var stateId  = (TState)stateData.StateId.Deserialize(customSerializer);
+                       var argument = stateData.Argument.Deserialize(customSerializer);
+                       return ( stateId, argument );
+                     }
+                   )
+                  .ToDictionary<(TState stateId, object argument), TState, object>(tuple => tuple.stateId!, tuple => tuple.argument);
 
       foreach(var state in states)
       {

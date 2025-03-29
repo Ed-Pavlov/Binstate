@@ -17,7 +17,7 @@ ___
 Features include support for async methods, argument passing, state serialization, and more.
 
 [![Build & Test](https://github.com/Ed-Pavlov/Binstate/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/Ed-Pavlov/Binstate/actions/workflows/build-and-test.yml)
-![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Ed-Pavlov/294bcfc592339fa417166638864b77ce/raw/test-coverage.json)
+![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/Ed-Pavlov/294bcfc592339fa417166638864b77ce/raw/binstate-test-coverage.json)
 [![Nuget](https://img.shields.io/nuget/dt/BeatyBit.Binstate)](https://www.nuget.org/packages/BeatyBit.Binstate/)
 
 ___
@@ -153,7 +153,7 @@ This recreates the state machine in its saved state, ready to resume operation.
 
          builder
            .DefineState(SomeState)
-           .OnEnter<string>(...) // argument passed to 'Raise' mtehod is passed to the 'enter' action and is 'attached' to the state
+           .OnEnter<string>(...) // argument passed to 'Raise' method is passed to the 'enter' action and is 'attached' to the state
            .AddTransition(SomeEvent, AnotherState)
 
          builder

@@ -160,7 +160,7 @@ public partial class Builder<TState, TEvent> : Builder
   /// <returns>
   /// Returns a dictionary containing the states of the state machine, where the key is the state ID and the value is the corresponding state object.
   /// </returns>
-  private Dictionary<TState, IState<TState, TEvent>> CreateStates()
+  private IReadOnlyDictionary<TState, IState<TState, TEvent>> CreateStates()
   {
     var states = new Dictionary<TState, IState<TState, TEvent>>();
 
@@ -238,10 +238,9 @@ public partial class Builder<TState, TEvent> : Builder
   }
 
   /// <summary>
-  /// Validates that transitions don't reference not defined states
+  /// Validates that transitions don't reference not defined states.
   /// </summary>
-  /// <exception cref="InvalidOperationException" />
-  private void ValidateTransitions(Dictionary<TState, IState<TState, TEvent>> states)
+  private void ValidateTransitions(IReadOnlyDictionary<TState, IState<TState, TEvent>> states)
   {
     foreach(var stateConfig in _stateConfigurators.Values.Select(_ => _.StateData))
     foreach(var transition in stateConfig.TransitionList.Values.Where(_ => _.IsStatic)) // do not check dynamic transitions because they depend on the app state

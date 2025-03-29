@@ -11,14 +11,18 @@ public partial class Builder<TState, TEvent>
   /// </summary>
   internal class StateData
   {
+    private readonly Dictionary<TEvent, Transition<TState, TEvent>> _transitionList = new();
+
     public StateData(TState stateId) => StateId = stateId;
 
-    public readonly TState                                         StateId;
-    public readonly Dictionary<TEvent, Transition<TState, TEvent>> TransitionList = new();
+    public readonly TState StateId;
+
+    public IReadOnlyDictionary<TEvent, Transition<TState, TEvent>> TransitionList => _transitionList;
 
     public Maybe<TState> ParentStateId
     {
       get;
+
       set
       {
         if(field.HasValue) throw Paranoia.GetException("code written in the way that property is set only once.");
@@ -29,6 +33,7 @@ public partial class Builder<TState, TEvent>
     public object? EnterAction
     {
       get;
+
       set
       {
         if(field is not null) throw Paranoia.GetException("code written in the way that property is set only once.");
@@ -39,12 +44,16 @@ public partial class Builder<TState, TEvent>
     public object? ExitAction
     {
       get;
+
       set
       {
         if(field is not null) throw Paranoia.GetException("code written in the way that property is set only once.");
         field = value;
       }
     }
+
+    public void AddTransition(TEvent @event, GetState<TState> getState, bool isStatic, bool isReentrant, object? action)
+      => _transitionList.Add(@event, new Transition<TState, TEvent>(@event, getState, isStatic, isReentrant, action));
 
     public IStateFactory Factory { private get; set; } = new StateFactory<Unit>();
 

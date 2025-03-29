@@ -51,7 +51,7 @@ public partial class Builder<TState, TEvent>
       }
 
       protected void AddTransitionToList(TEvent @event, GetState<TState> getState, bool isStatic, bool isReentrant, object? action)
-        => StateData.TransitionList.Add(@event, new Transition<TState, TEvent>(@event, getState, isStatic, isReentrant, action));
+        => StateData.AddTransition(@event, getState, isStatic, isReentrant, action);
     }
   }
 }

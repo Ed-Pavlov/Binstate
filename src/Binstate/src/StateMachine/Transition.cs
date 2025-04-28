@@ -16,7 +16,7 @@ internal class Transition<TState, TEvent> : ITransition
   public TEvent Event { get; }
 
   /// <summary>
-  /// Means a transition targets the predefined state in opposite to the calculated dynamically runtime
+  /// Means a transition targets the predefined state in opposite to the calculated dynamical runtime
   /// </summary>
   public readonly bool IsStatic;
 

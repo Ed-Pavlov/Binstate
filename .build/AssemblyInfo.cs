@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 
 [assembly: InternalsVisibleTo("Binstate.Tests, PublicKey=" + Public.Key)]
 
+// ReSharper disable once CheckNamespace
 internal static class Public
 {
   public const string Key =
@@ -14,9 +15,4 @@ internal static class Public
     + "d6ffd544b626b77a9ba302a23aec6da8ba9dac0ff274af79f1bc4d2b7c1fae922b2c971f933ed037"
     + "211c012ddc09b4d1da193d072fe55ae950f3a6a215cbe76ace833145f65a6980cda1ae1ca492e2d5"
     + "304b2197c86a0f750ec7b52176f2b3aa2a26a327a19dd93aa2f72124e728a82f774240a351f8ddb4";
-}
-
-namespace System.Runtime.CompilerServices
-{
-  internal class IsExternalInit { }
 }

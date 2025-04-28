@@ -238,7 +238,7 @@ public partial class Builder<TState, TEvent> : Builder
   }
 
   /// <summary>
-  /// Validates that transitions don't reference not defined states.
+  /// Validates that transitions don't reference not-defined states.
   /// </summary>
   private void ValidateTransitions(IReadOnlyDictionary<TState, IState<TState, TEvent>> states)
   {

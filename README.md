@@ -1,4 +1,4 @@
-<p align='right'>If <b>Binstate</b> has done you any good, consider buying me a cup of coffee</p>
+<p align='right'>If <b>Binstate</b> has done you any good, consider supporting my future initiatives</p>
 <p align="right">
   <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=ed@pavlov.is&lc=US&item_name=Kudos+for+Binstate&no_note=0&cn=&currency_code=EUR">
     <img src="/.build/button.png" width="76" height="32">

@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <BaseIntermediateOutputPath>$(SolutionDir)\.out\obj\</BaseIntermediateOutputPath>
+    <OutputPath>$(SolutionDir)\.out\bin\</OutputPath>
+    <UseCommonOutputDirectory>true</UseCommonOutputDirectory>
+  </PropertyGroup>
+</Project>

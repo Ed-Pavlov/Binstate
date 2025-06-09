@@ -5,7 +5,7 @@ using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 
-internal interface IState : IArgumentProvider
+internal interface IState : IArgumentReceiver, IArgumentProvider
 {
   IState? ParentState { get; }
   int     DepthInTree { get; }
@@ -34,9 +34,9 @@ internal interface IState<TState, TEvent> : IState
 
   new IState<TState, TEvent>? ParentState { get; }
 
-  IReadOnlyDictionary<TEvent, Transition<TState, TEvent>> Transitions { get; }
+  IReadOnlyDictionary<TEvent, ITransition<TState, TEvent>> Transitions { get; }
 
-  bool FindTransitionTransitive(TEvent @event, [NotNullWhen(true)] out Transition<TState, TEvent>? transition);
+  bool FindTransitionTransitive(TEvent @event, [NotNullWhen(true)] out ITransition<TState, TEvent>? transition);
 
   void EnterSafe(IStateController<TEvent> stateController, Action<Exception> onException);
 }

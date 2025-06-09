@@ -21,14 +21,33 @@ public partial class Builder<TState, TEvent>
       IEnterAction AsSubstateOf(TState parentStateId);
     }
 
+    /// <inheritdoc cref="IState"/>
+    public interface IState<TStateArgument> : IEnterAction<TStateArgument>
+    {
+      /// <inheritdoc cref="IState.AsSubstateOf"/>
+      IEnterAction<TStateArgument> AsSubstateOf(TState parentStateId);
+    }
+
     internal class State : EnterAction, IState
     {
-      internal State(StateData stateData) : base(stateData) { }
+      internal State(StateConfig stateConfig) : base(stateConfig) { }
 
       public IEnterAction AsSubstateOf(TState parentStateId)
       {
         if(parentStateId is null) throw new ArgumentNullException(nameof(parentStateId));
-        StateData.ParentStateId = parentStateId.ToMaybe();
+        StateConfig.ParentStateId = parentStateId.ToMaybe();
+        return this;
+      }
+    }
+
+    internal class State<TStateArgument> : EnterAction<TStateArgument>, IState<TStateArgument>
+    {
+      internal State(StateConfig stateConfig) : base(stateConfig) { }
+
+      public IEnterAction<TStateArgument> AsSubstateOf(TState parentStateId)
+      {
+        if(parentStateId is null) throw new ArgumentNullException(nameof(parentStateId));
+        StateConfig.ParentStateId = parentStateId.ToMaybe();
         return this;
       }
     }

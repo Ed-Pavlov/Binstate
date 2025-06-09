@@ -62,7 +62,10 @@
     <Compile Update="src\Builder.Options.cs">
       <DependentUpon>Builder.cs</DependentUpon>
     </Compile>
-    <Compile Update="src\Builder.StateData.cs">
+    <Compile Update="src\Builder.StateConfig.cs">
+      <DependentUpon>Builder.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\Builder.Transition.cs">
       <DependentUpon>Builder.cs</DependentUpon>
     </Compile>
     <Compile Update="src\Builder.ConfiguratorOf.cs">
@@ -74,13 +77,22 @@
     <Compile Update="src\Builder.ConfiguratorOf.IEnterAction.cs">
       <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
     </Compile>
+    <Compile Update="src\Builder.ConfiguratorOf.IEnterAction`1.cs">
+      <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
+    </Compile>
     <Compile Update="src\Builder.ConfiguratorOf.IExitAction.cs">
       <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
     </Compile>
     <Compile Update="src\Builder.ConfiguratorOf.ITransitions.cs">
       <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
     </Compile>
+    <Compile Update="src\Builder.ConfiguratorOf.ITransitions`1.cs">
+      <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
+    </Compile>
     <Compile Update="src\Builder.ConfiguratorOf.EnterAction.cs">
+      <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
+    </Compile>
+    <Compile Update="src\Builder.ConfiguratorOf.EnterAction`1.cs">
       <DependentUpon>Builder.ConfiguratorOf.cs</DependentUpon>
     </Compile>
     <Compile Update="src\Builder.ConfiguratorOf.ExitAction.cs">

@@ -6,37 +6,30 @@ public partial class Builder<TState, TEvent>
 {
   public static partial class ConfiguratorOf
   {
-    internal class ExitAction : TransitionsEx, IExitActionEx
+    internal class ExitAction : Transitions, IExitAction
     {
-      protected ExitAction(StateData stateData) : base(stateData) { }
+      protected ExitAction(StateConfig stateConfig) : base(stateConfig) { }
 
-      public ITransitionsEx OnExit(Action exitAction)
+      public ITransitions OnExit(Action? exitAction = null)
       {
-        StateData.ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
+        StateConfig.ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
         return this;
-      }
-
-      public ITransitions<T> OnExit<T>(Action<T> exitAction)
-      {
-        StateData.ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
-        StateData.Factory    = new StateFactory<T>();
-        return new Transitions<T>(StateData);
       }
     }
 
-    internal class ExitAction<T> : Transitions<T>, IExitAction<T>
+    internal class ExitAction<TStateArgument> : Transitions<TStateArgument>, IExitAction<TStateArgument>
     {
-      public ExitAction(StateData stateData) : base(stateData) { }
+      public ExitAction(StateConfig stateConfig) : base(stateConfig) { }
 
-      public ITransitions<T> OnExit(Action exitAction)
+      public ITransitions<TStateArgument> OnExit(Action? exitAction = null)
       {
-        StateData.ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
+        StateConfig.ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
         return this;
       }
 
-      public ITransitions<T> OnExit(Action<T> exitAction)
+      public ITransitions<TStateArgument> OnExit(Action<TStateArgument> exitAction)
       {
-        StateData.ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
+        StateConfig.ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
         return this;
       }
     }

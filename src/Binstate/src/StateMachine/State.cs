@@ -44,7 +44,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     TState                                                  id,
     object?                                                 enterAction,
     object?                                                 exitAction,
-    IReadOnlyDictionary<TEvent, Transition<TState, TEvent>> transitions,
+    IReadOnlyDictionary<TEvent, ITransition<TState, TEvent>> transitions,
     IState<TState, TEvent>?                                 parentState)
   {
     Id           = id ?? throw new ArgumentNullException(nameof(id));
@@ -72,7 +72,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   public Maybe<object?> GetArgumentAsObject() => _argument.HasValue ? _argument.Value.ToMaybe<object?>() : Maybe<object?>.Nothing;
   public Type?          GetArgumentTypeSafe() => _argumentType;
 
-  public IReadOnlyDictionary<TEvent, Transition<TState, TEvent>> Transitions { get; }
+  public IReadOnlyDictionary<TEvent, ITransition<TState, TEvent>> Transitions { get; }
 
   public bool IsActive
   {
@@ -179,7 +179,7 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
     }
   }
 
-  public bool FindTransitionTransitive(TEvent @event, [NotNullWhen(returnValue: true)] out Transition<TState, TEvent>? transition)
+  public bool FindTransitionTransitive(TEvent @event, [NotNullWhen(returnValue: true)] out ITransition<TState, TEvent>? transition)
   {
     IState<TState, TEvent>? state = this;
 

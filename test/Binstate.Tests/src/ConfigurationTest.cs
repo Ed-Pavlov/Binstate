@@ -180,7 +180,7 @@ public class ConfigurationTest : StateMachineTestBase
     Action target3 = () => config.AddTransition(null,    () => "func");
     Action target4 = () => config.AddTransition(Initial, (Func<string>)null!);
     Action target5 = () => config.AddTransition(null,    (out string? s) => GetState(out s));
-    Action target6 = () => config.AddTransition(Initial, (GetState<string>)null!);
+    Action target6 = () => config.AddConditionalTransition(Initial, (TransitionGuard<string>)null!);
 #pragma warning restore 8625, 8622
 
     // --assert

@@ -26,9 +26,9 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
 
   internal StateMachine(
     IReadOnlyDictionary<TState, IState<TState, TEvent>> states,
-    Action<Exception> onException,
-    TState initialStateId,
-    string? persistenceSignature)
+    Action<Exception>                                   onException,
+    TState                                              initialStateId,
+    string?                                             persistenceSignature)
   {
     _states               = states      ?? throw new ArgumentNullException(nameof(states));
     _onException          = onException ?? throw new ArgumentNullException(nameof(onException));
@@ -68,15 +68,14 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
     return PerformTransitionAsync(@event, argument, argumentIsFallback);
   }
 
-
   internal void EnterInitialState()
   {
     var restoredActiveState = _activeState;
-    var fakeRootState = new VirtualRootState(_activeState.Id);
+    var fakeRootState       = new VirtualRootState(_activeState.Id);
     _activeState = fakeRootState;
 
     // hack TransitionData to perform activation of restored states
-    var transitionData = new TransitionData(fakeRootState, fakeRootState.FakeTransition, restoredActiveState, null, new Argument.Bag());
+    var transitionData = new TransitionData(fakeRootState, fakeRootState.FakeTransition, null!, restoredActiveState, null, new Argument.Bag());
     PerformTransition(transitionData);
   }
 
@@ -142,5 +141,30 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
     }
 
     return l;
+  }
+
+  private static Tuple<IArgumentProvider?, IArgumentProvider?> PrepareArgumentsForTransition<TEventArgument>(
+    ITransition            transition,
+    TEventArgument         argument,
+    IState<TState, TEvent> activeState)
+  {
+
+    var (stateArgumentType, eventArgumentType) = transition.ArgumentTypes;
+
+    IArgumentProvider? eventArgumentProvider =
+      eventArgumentType is null
+        ? null
+        : eventArgumentType.IsAssignableFrom(typeof(TEventArgument))
+          ? new ArgumentProviderByValue<TEventArgument>(argument)
+          : throw new
+              TransitionException(
+                $"Transition requires 'event argument' but passed argument of type '{eventArgumentType}' is not assignable from '{typeof(TEventArgument)}'"
+              );
+
+    var stateArgumentProvider = stateArgumentType is null ? null : Argument.Resolver.GetArgumentProvider(activeState, stateArgumentType);
+
+    return stateArgumentProvider is null && eventArgumentProvider is null
+             ? Argument.NoTransitionArguments
+             : Tuple.Create(eventArgumentProvider, stateArgumentProvider);
   }
 }

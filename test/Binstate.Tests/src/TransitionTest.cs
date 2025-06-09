@@ -10,6 +10,24 @@ namespace Binstate.Tests;
 
 public class TransitionTest : StateMachineTestBase
 {
+  public void test()
+  {
+    var builder = new Builder<string, int>(OnException);
+    builder
+     .DefineState("sldkjf")
+     .OnEnter(() => { })
+     .OnExit(() =>{})
+     .AddTransition(2, "2w")
+     .AddConditionalTransition(32, "sldkjf", () => true)
+     .AddDynamicTransition(4, () => "return")
+     .AddDynamicTransition(4, (out string? state) =>
+      {
+        state = "2w";
+        return true;
+      });
+  }
+
+
   [TestCaseSource(nameof(RaiseWays))]
   public void should_call_action_on_transition_between_exit_and_enter(RaiseWay raiseWay)
   {
@@ -123,7 +141,7 @@ public class TransitionTest : StateMachineTestBase
 
     builder
      .DefineState(Initial)
-     .AddTransition(
+     .AddDynamicTransition(
         GoToX,
         () =>
         {
@@ -177,7 +195,7 @@ public class TransitionTest : StateMachineTestBase
 
     builder
      .DefineState(initialStateId)
-     .AddTransition(GoToX, DynamicTransition);
+     .AddDynamicTransition(GoToX, DynamicTransition);
 
     builder
      .DefineState(stateId1)
@@ -214,7 +232,7 @@ public class TransitionTest : StateMachineTestBase
     var builder = new Builder<int, int>(OnException);
 
     builder.DefineState(initialStateId)
-           .AddTransition(GoToX, DynamicTransition);
+           .AddDynamicTransition(GoToX, DynamicTransition);
 
     builder.DefineState(stateId).OnEnter(() => Assert.Fail("No transition should be performed"));
 
@@ -241,7 +259,7 @@ public class TransitionTest : StateMachineTestBase
     }
 
     builder.DefineState(Initial)
-           .AddTransition(GoToX, DynamicTransition);
+           .AddDynamicTransition(GoToX, DynamicTransition);
 
     builder.DefineState(StateX).OnEnter(() => Assert.Fail("No transition should be performed"));
 
@@ -261,7 +279,7 @@ public class TransitionTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
     builder.DefineState(Initial)
-           .AddTransition(GoToX, () => null);
+           .AddDynamicTransition(GoToX, () => null);
 
     builder.DefineState(StateX).OnEnter(() => Assert.Fail("No transition should be performed"));
 
@@ -284,7 +302,7 @@ public class TransitionTest : StateMachineTestBase
     var builder = new Builder<int, int>(OnException);
 
     builder.DefineState(initialStateId)
-           .AddTransition(GoToX, () => default!);
+           .AddDynamicTransition(GoToX, () => default!);
 
     builder.DefineState(stateId).OnEnter(() => Assert.Fail("No transition should be performed"));
 
@@ -305,7 +323,7 @@ public class TransitionTest : StateMachineTestBase
 
     builder.DefineState(Initial)
            .OnEnter(OnEnterInitialState)
-           .AddTransition(StateX, () => null);
+           .AddDynamicTransition(StateX, () => null);
 
     builder.DefineState(StateX).OnEnter(() => Assert.Fail("No transition should be performed"));
 
@@ -332,7 +350,7 @@ public class TransitionTest : StateMachineTestBase
 
     builder.DefineState(initialStateId)
            .OnEnter(OnEnterInitialState)
-           .AddTransition(GoToX, () => default);
+           .AddDynamicTransition(GoToX, () => default);
 
     builder.DefineState(stateId).OnEnter(() => Assert.Fail("No transition should be performed"));
 
@@ -425,7 +443,7 @@ public class TransitionTest : StateMachineTestBase
 
     builder
      .DefineState(Initial)
-     .AddTransition(GoToX, () => throw new TestException());
+     .AddDynamicTransition(GoToX, () => throw new TestException());
 
     var target = builder.Build(Initial);
 

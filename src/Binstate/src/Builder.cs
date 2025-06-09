@@ -11,24 +11,7 @@ namespace BeatyBit.Binstate;
 /// <summary>
 /// Just the base type for the <see cref="Builder{TState, TEvent}"/> to simplify the syntax of instantiating <see cref="Options"/>
 /// </summary>
-public partial class Builder
-{
-#pragma warning disable CS8622
-  internal static GetState<TState> CreateStaticGetState<TState>(TState value)
-    => (out TState? state) =>
-    {
-      state = value;
-      return true;
-    };
-
-  internal static GetState<TState> CreateDynamicGetState<TState>(Func<TState?> getState)
-    => (out TState? state) =>
-    {
-      state = getState();
-      return ! EqualityComparer<TState?>.Default.Equals(state, default);
-    };
-#pragma warning restore CS8622
-}
+public partial class Builder;
 
 /// <summary>
 /// This class is used to configure and build a state machine.
@@ -42,7 +25,7 @@ public partial class Builder<TState, TEvent> : Builder
   private readonly Action<Exception> _onException;
   private readonly Options           _options;
 
-  private readonly Dictionary<TState, ConfiguratorOf.State> _stateConfigurators = new();
+  private readonly Dictionary<TState, StateConfig> _configs = new();
 
   /// <summary>
   /// Creates a builder of a state machine, use it to define state and configure transitions.
@@ -63,6 +46,20 @@ public partial class Builder<TState, TEvent> : Builder
   /// </summary>
   /// <param name="stateId"> ID of the state; is used to reference it from other elements of the state machine. </param>
   /// <remarks> Use returned syntax-sugar object to configure the new state. </remarks>
+  public ConfiguratorOf.IState<TArgument> DefineState<TArgument>(TState stateId)
+  {
+    if(stateId is null) throw new ArgumentNullException(nameof(stateId));
+
+    if(! _options.AllowDefaultValueAsStateId && EqualityComparer<TState>.Default.Equals(stateId, default!))
+      throw new ArgumentException($"'{nameof(stateId)}' cannot be default value", nameof(stateId));
+
+    var config = new StateConfig(stateId, new StateFactory<TArgument>());
+    _configs.Add(stateId, config);
+
+    return new ConfiguratorOf.State<TArgument>(config);
+  }
+
+  /// <inheritdoc cref="DefineState{T}"/>
   public ConfiguratorOf.IState DefineState(TState stateId)
   {
     if(stateId is null) throw new ArgumentNullException(nameof(stateId));
@@ -70,9 +67,10 @@ public partial class Builder<TState, TEvent> : Builder
     if(! _options.AllowDefaultValueAsStateId && EqualityComparer<TState>.Default.Equals(stateId, default!))
       throw new ArgumentException($"'{nameof(stateId)}' cannot be default value", nameof(stateId));
 
-    var state = new ConfiguratorOf.State(new StateData(stateId));
-    _stateConfigurators.Add(stateId, state);
-    return state;
+    var config = new StateConfig(stateId, new StateFactory<Unit>());
+    _configs.Add(stateId, config);
+
+    return new ConfiguratorOf.State(config);
   }
 
   /// <summary>
@@ -80,12 +78,12 @@ public partial class Builder<TState, TEvent> : Builder
   /// </summary>
   /// <param name="stateId"> ID of the state; is used to reference it from other elements of the state machine. </param>
   /// <remarks> Use returned syntax-sugar object to configure the new state. </remarks>
-  public ConfiguratorOf.IState GetOrDefineState(TState stateId)
-  {
-    if(stateId is null) throw new ArgumentNullException(nameof(stateId));
+  public ConfiguratorOf.IState<TArgument> GetOrDefineState<TArgument>(TState stateId)
+    => _configs.TryGetValue(stateId, out var config) ? new ConfiguratorOf.State<TArgument>(config) : DefineState<TArgument>(stateId);
 
-    return _stateConfigurators.TryGetValue(stateId, out var state) ? state : DefineState(stateId);
-  }
+  /// <inheritdoc cref="GetOrDefineState{T}"/>
+  public ConfiguratorOf.IState GetOrDefineState(TState stateId)
+    => _configs.TryGetValue(stateId, out var config) ? new ConfiguratorOf.State(config) : DefineState(stateId);
 
   /// <summary>
   /// Validates consistency and builds the state machine using provided configuration.
@@ -104,10 +102,10 @@ public partial class Builder<TState, TEvent> : Builder
   {
     if(initialStateId is null) throw new ArgumentNullException(nameof(initialStateId));
 
-    if(! _stateConfigurators.TryGetValue(initialStateId, out var initialStateConfigurator))
+    if(! _configs.TryGetValue(initialStateId, out var initialStateConfig))
       throw new ArgumentException($"No state '{initialStateId}' is defined");
 
-    if(! IsTransitionDefined(initialStateConfigurator.StateData))
+    if(! IsTransitionDefined(initialStateConfig))
       throw new ArgumentException("No transitions defined from the initial state nor from its parents.");
 
     var states = CreateStates();
@@ -136,7 +134,7 @@ public partial class Builder<TState, TEvent> : Builder
       );
 
     var persistedStateMachine = Persistence.DeserializeStateMachineData(serializedData);
-    var persistenceSignature = CreatePersistenceSignature();
+    var persistenceSignature  = CreatePersistenceSignature();
     if(persistedStateMachine.Signature != persistenceSignature)
       throw new ArgumentException(
         $"The passed {nameof(serializedData)} doesn't match the configuration of this {nameof(Builder)}. "
@@ -164,8 +162,8 @@ public partial class Builder<TState, TEvent> : Builder
   {
     var states = new Dictionary<TState, IState<TState, TEvent>>();
 
-    foreach(var stateConfigurator in _stateConfigurators.Values)
-      CreateStateAndAddToMapRecursively(stateConfigurator.StateData, states);
+    foreach(var stateConfig in _configs.Values)
+      CreateStateAndAddToMapRecursively(stateConfig, states);
 
     ValidateTransitions(states);
 
@@ -175,15 +173,13 @@ public partial class Builder<TState, TEvent> : Builder
     return states;
   }
 
-  private IState<TState, TEvent> CreateStateAndAddToMapRecursively(StateData stateData, Dictionary<TState, IState<TState, TEvent>> states)
+  private IState<TState, TEvent> CreateStateAndAddToMapRecursively(StateConfig stateConfig, Dictionary<TState, IState<TState, TEvent>> states)
   {
-    if(! states.TryGetValue(stateData.StateId, out var state)) // state could be already created during creating parent states
+    if(! states.TryGetValue(stateConfig.StateId, out var state)) // state could be already created during creating parent states
     {
-      state = stateData.CreateState(
-        stateData.ParentStateId.HasValue
-          ? CreateStateAndAddToMapRecursively(
-            _stateConfigurators[stateData.ParentStateId.Value].StateData, states
-          ) // recursive call to create the parent state;
+      state = stateConfig.CreateState(
+        stateConfig.ParentStateId.HasValue
+          ? CreateStateAndAddToMapRecursively(_configs[stateConfig.ParentStateId.Value], states) // recursive call to create the parent state;
           : null
       );
 
@@ -193,15 +189,15 @@ public partial class Builder<TState, TEvent> : Builder
     return state;
   }
 
-  private bool IsTransitionDefined(StateData stateData)
+  private bool IsTransitionDefined(StateConfig stateConfig)
   {
-    var parent = stateData;
+    var parent = stateConfig;
     while(parent is not null)
     {
       if(parent.TransitionList.Count > 0)
         return true;
 
-      parent = parent.ParentStateId.HasValue ? _stateConfigurators[parent.ParentStateId.Value].StateData : null;
+      parent = parent.ParentStateId.HasValue ? _configs[parent.ParentStateId.Value] : null;
     }
 
     return false;
@@ -242,15 +238,14 @@ public partial class Builder<TState, TEvent> : Builder
   /// </summary>
   private void ValidateTransitions(IReadOnlyDictionary<TState, IState<TState, TEvent>> states)
   {
-    foreach(var stateConfig in _stateConfigurators.Values.Select(_ => _.StateData))
+    foreach(var stateConfig in _configs.Values)
     foreach(var transition in stateConfig.TransitionList.Values.Where(_ => _.IsStatic)) // do not check dynamic transitions because they depend on the app state
     {
-      if( ! transition.GetTargetStateId(out var targetStateId))
-        throw Paranoia.GetException("it's impossible to have a transition without target state");
+      var targetStateId = transition.GetTargetStateId();
 
       if(! states.ContainsKey(targetStateId))
         throw new InvalidOperationException(
-          $"The transition '{transition.Event}' from the state '{stateConfig.StateId}' references not defined state '{targetStateId}'"
+          $"The transition on event '{transition.Event}' from the state '{stateConfig.StateId}' references not defined state '{targetStateId}'"
         );
     }
   }
@@ -269,12 +264,11 @@ public partial class Builder<TState, TEvent> : Builder
 
     writer.Write(JsonSerializer.Serialize(_options));
 
-    foreach(var stateData in _stateConfigurators.Values.Select(_ => _.StateData))
+    foreach(var stateData in _configs.Values)
     {
       writer.Write(JsonSerializer.Serialize(stateData.StateId));
       stateData.ParentStateId
-               .Apply(
-                  _ =>
+               .Apply(_ =>
                   {
                     if(_.HasValue)
                       writer.Write(JsonSerializer.Serialize(_.Value));
@@ -289,7 +283,7 @@ public partial class Builder<TState, TEvent> : Builder
         writer.Write(JsonSerializer.Serialize(transition.Event));
         if(transition.IsStatic)
         {
-          transition.GetTargetStateId(out var targetStateId);
+          var targetStateId = transition.GetTargetStateId();
           writer.Write(JsonSerializer.Serialize(targetStateId));
           writer.Write(transition.TransitionAction?.GetType());
         }

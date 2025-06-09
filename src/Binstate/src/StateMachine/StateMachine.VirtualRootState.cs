@@ -12,21 +12,23 @@ internal partial class StateMachine<TState, TEvent>
   /// </summary>
   internal class VirtualRootState(TState targetStateId) : IState<TState, TEvent>
   {
-    public IState<TState, TEvent>? ParentState           => null;
-    public int                     DepthInTree           => 0;
-    public bool                    IsActive              { get; set; }
-    public Type?                   GetArgumentTypeSafe() => null;
+    private readonly Transition<Unit, Unit>  _fakeTransition = new Transition<Unit, Unit>(default!, targetStateId, null);
 
-    public ITransition FakeTransition { get; } = new Transition<TState, TEvent>(default!, Builder.CreateStaticGetState(targetStateId), true, false, null);
+    public  IState<TState, TEvent>? ParentState           => null;
+    public  int                     DepthInTree           => 0;
+    public  bool                    IsActive              { get; set; }
+    public  Type?                   GetArgumentTypeSafe() => null;
+
+    public ITransition<TState, TEvent> FakeTransition => _fakeTransition;
 
 #pragma warning disable CS1574
     /// <summary>
     /// Returns transition to the <see cref="targetStateId"/> no matter what <paramref name="event"/> is passed
     /// </summary>
 #pragma warning restore CS1574
-    public bool FindTransitionTransitive(TEvent @event, [NotNullWhen(true)] out Transition<TState, TEvent>? transition)
+    public bool FindTransitionTransitive(TEvent @event, [NotNullWhen(true)] out ITransition<TState, TEvent>? transition)
     {
-      transition = new Transition<TState, TEvent>(default!, Builder.CreateStaticGetState(targetStateId), true, false, null);
+      transition = _fakeTransition;
       return true;
     }
 
@@ -43,7 +45,7 @@ internal partial class StateMachine<TState, TEvent>
     #region Not implemented
 
     public TState                                         Id          => throw Paranoia.GetException("this method should not be called ever.");
-    public IReadOnlyDictionary<TEvent, Transition<TState, TEvent>> Transitions => throw Paranoia.GetException("this method should not be called ever.");
+    public IReadOnlyDictionary<TEvent, ITransition<TState, TEvent>> Transitions => throw Paranoia.GetException("this method should not be called ever.");
     IState? IState.                                       ParentState => ParentState;
 
     public void EnterSafe(IStateController<TEvent> stateController, Action<Exception> onException)

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
@@ -15,26 +16,37 @@ internal partial class StateMachine<TState, TEvent>
   /// dynamic transition returns 'null'
   /// </returns>
   /// <exception cref="TransitionException"> Throws if passed argument doesn't match the 'enter' action of the target state. </exception>
-  private TransitionData? PrepareTransition<TArgument>(TEvent @event, TArgument argument, bool argumentIsFallback)
+  private TransitionData? PrepareTransition<TEventArgument>(TEvent @event, TEventArgument eventArgument, bool argumentIsFallback)
   {
     try
     {
       _lock.WaitOne(); // if all goes well, it will be set after PerformTransition finished
 
-      if(! _activeState.FindTransitionTransitive(@event, out var transition) // looks for a transition through all parent states
-      || ! transition.GetTargetStateId(out var stateId))
+      if(! _activeState.FindTransitionTransitive(@event, out var transition)) // looks for a transition through all parent states
       {
-        // no transition by specified event is found or dynamic transition cancelled it
+        // no transition by specified event is found
         _lock.Set();
         return null;
       }
 
-      var targetState = GetStateById(stateId);
+      var transitionArgumentsProviders =
+        transition.IsStatic
+          ? Argument.NoTransitionArguments
+          : PrepareArgumentsForTransition(transition, eventArgument, _activeState);
 
+      if(! transition.GetTargetStateId(_activeState.Id, transitionArgumentsProviders, out var stateId))
+      {
+        _lock.Set(); // dynamic transition canceled it
+        return null;
+      }
+
+      var targetState    = GetStateById(stateId);
       var commonAncestor = FindLeastCommonAncestor(targetState, _activeState);
-      var argumentsBag   = PrepareArgument(argument, argumentIsFallback, targetState, commonAncestor, _activeState);
 
-      return new TransitionData(_activeState, transition, targetState, commonAncestor, argumentsBag);
+      var argumentsBag = PrepareArgument(eventArgument, argumentIsFallback, targetState, commonAncestor, _activeState);
+
+
+      return new TransitionData(_activeState, transition, transitionArgumentsProviders, targetState, commonAncestor, argumentsBag);
     }
     catch(TransitionException)
     {
@@ -83,6 +95,7 @@ internal partial class StateMachine<TState, TEvent>
         }
 
         // invoke action attached to the transition itself
+//        transition.CallActionSafe(transitionData.CurrentActiveState, transitionData.TargetState, transitionArgumentsProviders);
         prevActiveState.CallTransitionActionSafe(transition, _onException);
 
         // and then activate new active states
@@ -163,25 +176,181 @@ internal partial class StateMachine<TState, TEvent>
 
   private readonly struct TransitionData
   {
-    public readonly IState                 CurrentActiveState;
-    public readonly ITransition            Transition;
-    public readonly IState<TState, TEvent> TargetState;
-    public readonly IState?                CommonAncestor;
+    public readonly IState                                        CurrentActiveState;
+    public readonly ITransition                                   Transition;
+    public readonly Tuple<IArgumentProvider?, IArgumentProvider?> TransitionArgumentsProviders;
+    public readonly IState<TState, TEvent>                        TargetState;
+    public readonly IState?                                       CommonAncestor;
 
     public readonly IReadOnlyDictionary<IState, Action<IState>> ArgumentsBag;
 
     public TransitionData(
-      IState                 currentActiveState,
-      ITransition            transition,
-      IState<TState, TEvent> targetState,
-      IState?                commonAncestor,
-      Argument.Bag           argumentsBag)
+      IState                                        currentActiveState,
+      ITransition<TState, TEvent>                   transition,
+      Tuple<IArgumentProvider?, IArgumentProvider?> transitionArgumentsProviders,
+      IState<TState, TEvent>                        targetState,
+      IState?                                       commonAncestor,
+      Argument.Bag                                  argumentsBag)
     {
-      CurrentActiveState = currentActiveState;
-      Transition         = transition;
-      TargetState        = targetState;
-      ArgumentsBag       = argumentsBag;
-      CommonAncestor     = commonAncestor;
+      CurrentActiveState           = currentActiveState;
+      Transition                   = transition;
+      TransitionArgumentsProviders = transitionArgumentsProviders;
+      TargetState                  = targetState;
+      ArgumentsBag                 = argumentsBag;
+      CommonAncestor               = commonAncestor;
     }
+  }
+
+  internal class Transition<TStateArgument, TEventArgument> : ITransition<TState, TEvent>
+  {
+    private static readonly Tuple<Type?, Type?> EmptyArgumentTypes = new(null, null);
+
+    private static readonly Type? StateArgumentType = typeof(TStateArgument) == typeof(Unit) ? null : typeof(TStateArgument);
+    private static readonly Type? EventArgumentType = typeof(TEventArgument) == typeof(Unit) ? null : typeof(TEventArgument);
+
+    private static readonly Tuple<Type?, Type?> _argumentTypes
+      = StateArgumentType == null && EventArgumentType == null
+          ? EmptyArgumentTypes
+          : Tuple.Create(StateArgumentType, EventArgumentType);
+
+    private Maybe<TState> _targetStateId;
+
+    public Transition(
+      TEvent                  @event,
+      TState                  targetStateId,
+      Action<TEventArgument>? action,
+      bool                    isReentrant = false)
+      : this(@event, targetStateId, null, ActionToTransitionAction(action))
+      => IsReentrant = isReentrant;
+
+    public Transition(
+      TEvent                                                                     @event,
+      TState                                                                     targetStateId,
+      Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Guard?  guard, //TODO: is it bad, that in StateMachine the type Builder... is used?
+      Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Action? action)
+      : this(@event, ConvertGuardToSelector(targetStateId, guard), action)
+    {
+      _targetStateId   = targetStateId.ToMaybe();
+      IsReentrant      = false;
+      TransitionAction = action;
+      IsStatic         = guard is null;
+    }
+
+    public Transition(
+      TEvent                                                                      @event,
+      Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Selector stateSelector,
+      Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Action?  transitionAction)
+    {
+      Event            = @event;
+      _stateSelector   = stateSelector;
+      TransitionAction = transitionAction;
+    }
+
+    public TEvent Event { get; }
+
+    public Tuple<Type?, Type?> ArgumentTypes => _argumentTypes;
+
+    private readonly Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Selector _stateSelector;
+
+    public TState GetTargetStateId()
+    {
+      if(! IsStatic) throw new InvalidOperationException("This method can be called only for static transitions");
+      return _targetStateId.Value;
+    }
+
+    public bool GetTargetStateId(
+      TState                                        sourceState,
+      Tuple<IArgumentProvider?, IArgumentProvider?> argumentProviders,
+      [NotNullWhen(true)] out TState?               targetStateId)
+    {
+      switch(IsStatic)
+      {
+        case true:
+          targetStateId = _targetStateId.Value;
+          return true;
+
+        default:
+        {
+          var arguments = CreateArguments(sourceState, default, argumentProviders);
+          return _stateSelector(arguments, out targetStateId);
+        }
+      }
+    }
+
+    public void CallActionSafe(TState sourceState, TState targetState, Tuple<IArgumentProvider?, IArgumentProvider?> transitionArgumentsProviders)
+    {
+      var arguments = CreateArguments(sourceState, targetState, transitionArgumentsProviders);
+      var context   = new Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Context(Event, sourceState, targetState, arguments);
+
+     //call action
+    }
+
+    private Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Arguments CreateArguments(
+      TState                                        sourceState,
+      TState?                                       targetState,
+      Tuple<IArgumentProvider?, IArgumentProvider?> argumentProviders)
+    {
+      var stateArgument = GetArgument<TStateArgument>(argumentProviders.ItemX);
+      if(! stateArgument.HasValue)
+        throw TransitionException.NoStateArgumentException<TEvent, TState, TEventArgument>(Event, sourceState, targetState);
+
+      var eventArgument = GetArgument<TEventArgument>(argumentProviders.ItemY);
+      if(! eventArgument.HasValue)
+        throw TransitionException.NoEventArgumentException<TEvent, TState, TEventArgument>(Event, sourceState, targetState);
+
+      return new Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Arguments(stateArgument.Value, eventArgument.Value);
+    }
+
+    private static Maybe<T> GetArgument<T>(IArgumentProvider? argumentProvider)
+      => typeof(TStateArgument) == typeof(Unit) // no argument is required
+           ? new Maybe<T>(default!)
+           : argumentProvider is null // argument required, but not provided
+             ? Maybe<T>.Nothing
+             : ( (IGetArgument<T>)argumentProvider ).Argument.ToMaybe();
+
+    public bool IsStatic { get; }
+
+    public object? TransitionAction { get; }
+    public bool    IsReentrant      { get; }
+
+    private static Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Action? ActionToTransitionAction(Action<TEventArgument>? action)
+      => action is null ? null : _ => action(_.Arguments.EventArgument);
+
+    private static Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Selector ConvertGuardToSelector(
+      TState                                                                    targetStateId,
+      Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Guard? guard)
+    {
+      if(guard is null) return Empty;
+
+      return (
+          Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Arguments args,
+          out TState?                                                                  state)
+        =>
+      {
+        if(guard(args))
+        {
+          state = targetStateId;
+          return true;
+        }
+
+        state = default;
+        return false;
+      };
+
+    }
+
+    [ExcludeFromCodeCoverage]
+    public override string ToString()
+    {
+      var stateName = IsStatic ? _targetStateId!.ToString() : "dynamic";
+      return $"[{Event} -> {stateName}]";
+    }
+
+    private static readonly Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Selector Empty
+      = (Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Arguments args, out TState? state) =>
+      {
+        state = default;
+        return false;
+      };
   }
 }

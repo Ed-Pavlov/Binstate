@@ -24,6 +24,7 @@ public interface IStateController<in TEvent>
   /// </exception>
   bool RaiseAsync(TEvent @event);
 
+#pragma warning disable 1574,1584,1581,1580
   /// <summary>
   /// Asynchronously raises an event with an argument to trigger a state transition.
   /// </summary>
@@ -40,7 +41,8 @@ public interface IStateController<in TEvent>
   /// </exception>
   /// <remarks>
   /// The argument is required if the 'enter' action of the target state or 'exit' action of the current state is configured to accept it.
-  /// See <see cref="Builder{TState,TEvent}.ConfiguratorOf.IEnterAction.OnEnter{T}(System.Action{IStateController{TEvent}, T})"/>.
+  /// See <see cref="Builder{TState,TEvent}.ConfiguratorOf.IEnterAction.OnEnter" />.
   /// </remarks>
+#pragma warning restore 1574,1584,1581,1580
   bool RaiseAsync<T>(TEvent @event, T argument, bool argumentIsFallback = false);
 }

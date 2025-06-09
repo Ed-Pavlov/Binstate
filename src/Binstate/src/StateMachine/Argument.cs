@@ -22,15 +22,15 @@ internal static partial class Argument
   private static readonly Type TupleInterfaceTypeDefinition = typeof(ITuple<,>);
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  private static Type GetArgumentType(this IArgumentProvider argumentProvider)
-    => argumentProvider.GetArgumentTypeSafe() ?? throw Paranoia.GetException("this method should be called only for states with arguments");
+  private static Type GetArgumentType(this IArgumentAware argumentAware)
+    => argumentAware.GetArgumentTypeSafe() ?? throw Paranoia.GetException("this method should be called only for states with arguments");
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
   public static bool IsRequireArgument(this IState state) => state.GetArgumentTypeSafe() is not null;
 
   [MethodImpl(MethodImplOptions.AggressiveInlining)]
-  public static bool CanAcceptArgumentFrom(this IState argumentTarget, IState argumentSource)
-    => argumentTarget.GetArgumentType().IsAssignableFrom(argumentSource.GetArgumentTypeSafe());
+  public static bool CanAcceptArgumentFrom(this IArgumentReceiver receiver, IArgumentProvider provider)
+    => receiver.GetArgumentType().IsAssignableFrom(provider.GetArgumentTypeSafe());
 
   private static void SetArgument<T>(ISetArgument<T> target, T argument) => target.Argument = argument;
 
@@ -42,35 +42,35 @@ internal static partial class Argument
   /// <summary>
   /// Validation of the argument and target type should be performed on the caller side
   /// </summary>
-  public static void SetArgumentByReflectionUnsafe(IState target, Type targetArgumentType, object? argument)
+  public static void SetArgumentByReflectionUnsafe(IArgumentReceiver receiver, Type argumentType, object? argument)
   {
-    var setArgumentMethod = SetArgumentMethodFactory.MakeGenericMethod(targetArgumentType);
-    setArgumentMethod.Invoke(null, [target, argument]);
+    var setArgumentMethod = SetArgumentMethodFactory.MakeGenericMethod(argumentType);
+    setArgumentMethod.Invoke(null, [receiver, argument]);
   }
 
-  private static void SetArgumentByReflection(IState target, ITuple<IArgumentProvider, IArgumentProvider?> tuple)
+  private static void SetArgumentByReflection(IArgumentReceiver receiver, ITuple<IArgumentProvider, IArgumentProvider?> tuple)
   {
-    var targetArgumentType  = target.GetArgumentType();
-    var source1ArgumentType = tuple.ItemX.GetArgumentType();
+    var receiverArgumentType = receiver.GetArgumentType();
+    var passedArgumentType   = tuple.ItemX.GetArgumentType();
 
     // target argument can accept PassedArgument, so should be set, and we are good
-    if(targetArgumentType.IsAssignableFrom(source1ArgumentType))
+    if(receiverArgumentType.IsAssignableFrom(passedArgumentType))
     {
-      if(tuple.ItemY is not null) throw Paranoia.GetInvalidTargetException(target);
+      if(tuple.ItemY is not null) throw Paranoia.GetInvalidTargetException(receiver);
 
-      var passArgumentMethod = PropagateArgumentMethodFactory.MakeGenericMethod(targetArgumentType);
-      passArgumentMethod.Invoke(null, [target, tuple.ItemX]);
+      var passArgumentMethod = PropagateArgumentMethodFactory.MakeGenericMethod(receiverArgumentType);
+      passArgumentMethod.Invoke(null, [receiver, tuple.ItemX]);
       return;
     }
 
-    // target argument is ITuple, pass both providers
-    if(targetArgumentType.IsTuple(out var typeX, out var typeY))
+    // the receiver argument type is ITuple, pass both providers
+    if(receiverArgumentType.IsTuple(out var typeX, out var typeY))
     {
-      var source2ArgumentType = tuple.ItemY?.GetArgumentType();
-      if(source2ArgumentType is null) throw Paranoia.GetInvalidTargetException(target);
+      var stateArgumentType = tuple.ItemY?.GetArgumentType();
+      if(stateArgumentType is null) throw Paranoia.GetInvalidTargetException(receiver);
 
       var passTupleArgumentMethod = SetTupleArgumentMethodFactory.MakeGenericMethod(typeX, typeY);
-      passTupleArgumentMethod.Invoke(null, [target, tuple.ItemX, tuple.ItemY!]);
+      passTupleArgumentMethod.Invoke(null, [receiver, tuple.ItemX, tuple.ItemY!]);
     }
   }
 

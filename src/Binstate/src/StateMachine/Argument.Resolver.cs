@@ -29,7 +29,51 @@ internal static partial class Argument
       }
     }
 
-    private bool GetArgumentProviders<TArgument>(
+    /// <summary>
+    /// Searches for an argument provider in the source state and its parent states that can provide an argument of the specified target type.
+    /// </summary>
+    /// <param name="sourceState">The source state to start searching from</param>
+    /// <param name="targetArgumentType">The type of argument needed by the target state</param>
+    /// <returns>
+    /// An IArgumentProvider if found that can provide the target type, either directly or from a tuple component.
+    /// Returns null if no suitable provider is found.
+    /// </returns>
+    /// <remarks>
+    /// The search is performed in the following order:
+    /// 1. Checks if the source state's argument type matches the target type directly
+    /// 2. If a source state has a tuple argument, checks if either component matches target type
+    /// 3. Recursively checks parent states in the same manner
+    /// </remarks>
+    public static IArgumentProvider? GetArgumentProvider(IState sourceState, Type targetArgumentType)
+    {
+      var state = sourceState;
+      while(state != null)
+      {
+        var stateArgumentType = state.GetArgumentTypeSafe();
+
+        if(stateArgumentType is not null)
+        {
+          if(targetArgumentType.IsAssignableFrom(stateArgumentType))
+            return state;
+
+          // if one of the Tuple items of the source state is suitable for the target, use it
+          if(stateArgumentType.IsTuple(out var typeX, out var typeY))
+          {
+            if(targetArgumentType.IsAssignableFrom(typeX))
+              return ArgumentProviderFromTupleXFactory.CreateArgumentProvider(targetArgumentType, typeX, typeY, state); // magic is here
+
+            if(targetArgumentType.IsAssignableFrom(typeY))
+              return ArgumentProviderFromTupleYFactory.CreateArgumentProvider(targetArgumentType, typeX, typeY, state); // magic is here
+          }
+        }
+
+        state = state.ParentState;
+      }
+
+      return null;
+    }
+
+    public bool GetArgumentProviders<TArgument>(
       Type                                                                   targetArgumentType,
       TArgument                                                              argument,
       bool                                                                   argumentIsFallback,
@@ -43,12 +87,13 @@ internal static partial class Argument
       if(! argumentIsFallback)
         if(targetArgumentType.IsAssignableFrom(typeof(TArgument)))
         {
-          providers = new Tuple<IArgumentProvider, IArgumentProvider?>(new ArgumentProvider<TArgument>(argument), null);
+          providers = new Tuple<IArgumentProvider, IArgumentProvider?>(new ArgumentProviderByValue<TArgument>(argument), null);
           _argumentSourcesCache.Add(targetArgumentType, providers);
           return true;
         }
 
-      // search for a state provides argument of an assignable type if target requires a Tuple and there is a source with suitable Tuple, it will be found
+      // search for a state provides an argument of an assignable type if the target requires a Tuple and there is a source
+      // with a suitable Tuple, it will be found
       if(GetArgumentProviderForSingleArgument(sourceState, targetArgumentType, out var provider))
       {
         providers = new Tuple<IArgumentProvider, IArgumentProvider?>(provider, null);
@@ -66,11 +111,11 @@ internal static partial class Argument
 
         if(providerX is null)
           if(typeX.IsAssignableFrom(passedArgumentType))
-            providerX = new ArgumentProvider<TArgument>(argument); // replace it with fallback value if provided
+            providerX = new ArgumentProviderByValue<TArgument>(argument); // replace it with a fallback value if provided
 
         if(providerY is null)
           if(typeY.IsAssignableFrom(passedArgumentType))
-            providerY = new ArgumentProvider<TArgument>(argument); // replace it with fallback value if provided
+            providerY = new ArgumentProviderByValue<TArgument>(argument); // replace it with a fallback value if provided
 
         if(providerX is null || providerY is null)
           return false;
@@ -83,14 +128,28 @@ internal static partial class Argument
       // if still no result and there is a fallback value is provided, use it
       if(targetArgumentType.IsAssignableFrom(passedArgumentType))
       {
-        providers = new Tuple<IArgumentProvider, IArgumentProvider?>(new ArgumentProvider<TArgument>(argument), null);
+        providers = new Tuple<IArgumentProvider, IArgumentProvider?>(new ArgumentProviderByValue<TArgument>(argument), null);
         return true;
       }
 
       return false;
     }
 
-    private bool GetArgumentProviderForSingleArgument(
+    /// <summary>
+    /// Finds an argument provider for a state with a single argument type from the source state hierarchy.
+    /// </summary>
+    /// <param name="sourceState">The starting state to search from in the state hierarchy</param>
+    /// <param name="targetArgumentType">The required argument type to find a provider for</param>
+    /// <param name="provider">The argument provider found, if any</param>
+    /// <returns>True if a suitable provider was found, false otherwise</returns>
+    /// <remarks>
+    /// This method searches in the following order:
+    /// 1. Checks if the source state's argument type is assignable to target type
+    /// 2. If source state's argument is a Tuple, checks if either component is assignable to target
+    /// 3. Recursively searches parent states in hierarchy
+    /// Caches found providers for future lookups.
+    /// </remarks>
+    public bool GetArgumentProviderForSingleArgument(
       IState                                     sourceState,
       Type                                       targetArgumentType,
       [NotNullWhen(true)] out IArgumentProvider? provider)
@@ -115,14 +174,14 @@ internal static partial class Argument
             return true;
           }
 
-          // if one of the Tuple items of the source state is suitable for target, use it
+          // if one of the Tuple items of the source state is suitable for the target, use it
           if(stateArgumentType.IsTuple(out var typeX, out var typeY)
           && (
                targetArgumentType.IsAssignableFrom(typeX)
             || targetArgumentType.IsAssignableFrom(typeY)
              ))
           {
-            provider = StateTupleArgumentProvider.Create(targetArgumentType, typeX, typeY, state); // magic is here
+            provider = ArgumentProviderFromTupleDynamicFactory.CreateArgumentProvider(targetArgumentType, typeX, typeY, state); // magic is here
             _argumentProviderCache.Add(targetArgumentType, provider);
             return true;
           }
@@ -135,5 +194,5 @@ internal static partial class Argument
     }
   }
 
-  public class Bag : Dictionary<IState, Action<IState>> { }
+  public class Bag : Dictionary<IState, Action<IState>>;
 }

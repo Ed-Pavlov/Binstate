@@ -1,4 +1,5 @@
 using System;
+using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 
@@ -6,19 +7,104 @@ public partial class Builder<TState, TEvent>
 {
   public static partial class ConfiguratorOf
   {
-    internal class Transitions<T> : TransitionsEx, ITransitions<T>
+    internal class Transitions<TStateArgument> : ITransitions<TStateArgument>
     {
-      public Transitions(StateData stateData) : base(stateData) { }
+      protected StateConfig StateConfig { get; }
 
-      public ITransitions<T> AddTransition(TEvent @event, TState stateId, Action<T> action)
+      public Transitions(StateConfig stateConfig) => StateConfig = stateConfig;
+
+      public ITransitions<TStateArgument> AddTransition(TEvent @event, TState targetState, Transition<TStateArgument, Unit>.Action? action = null)
       {
-        if(@event is null) throw new ArgumentNullException(nameof(@event));
-        if(stateId is null) throw new ArgumentNullException(nameof(stateId));
-        if(action == null) throw new ArgumentNullException(nameof(action));
-
-        AddTransitionToList(@event, CreateStaticGetState(stateId), true, false, action);
+        StateConfig.AddTransition(@event, targetState, null, action);
         return this;
       }
+
+      public ITransitions<TStateArgument> AddTransition<TEventArgument>(
+        TEvent                                            @event,
+        TState                                            targetState,
+        Transition<TStateArgument, TEventArgument>.Action action)
+      {
+        StateConfig.AddTransition(@event, targetState, null, action);
+        return this;
+      }
+
+      public ITransitions<TStateArgument> AddConditionalTransition<TEventArgument>(
+        TEvent                                            @event,
+        TState                                            targetState,
+        Transition<TStateArgument, TEventArgument>.Guard  guard,
+        Transition<TStateArgument, TEventArgument>.Action action)
+      {
+        StateConfig.AddTransition(@event, targetState, guard, action);
+        return this;
+      }
+
+      public ITransitions<TStateArgument> AddConditionalTransition(
+        TEvent                                   @event,
+        TState                                   targetState,
+        Transition<TStateArgument, Unit>.Guard   guard,
+        Transition<TStateArgument, Unit>.Action? action = null)
+      {
+        StateConfig.AddTransition(@event, targetState, guard, action);
+        return this;
+      }
+
+      public ITransitions<TStateArgument> AddConditionalTransition(
+        TEvent                                   @event,
+        TState                                   targetState,
+        Func<bool>                               guard,
+        Transition<TStateArgument, Unit>.Action? action = null)
+      {
+        StateConfig.AddTransition(@event, targetState, _ => guard(), action);
+        return this;
+      }
+
+      public ITransitions<TStateArgument> AddConditionalTransition<TEventArgument>(
+        TEvent                                            @event,
+        TState                                            targetState,
+        Func<bool>                                        guard,
+        Transition<TStateArgument, TEventArgument>.Action action)
+      {
+        StateConfig.AddTransition(@event, targetState, _ => guard(), action);
+        return this;
+      }
+
+      public ITransitions<TStateArgument> AddDynamicTransition(
+        TEvent                                    @event,
+        Transition<TStateArgument, Unit>.Selector selector,
+        Transition<TStateArgument, Unit>.Action?  action = null)
+      {
+        StateConfig.AddTransition(@event, selector, action);
+        return this;
+      }
+
+      public ITransitions<TStateArgument> AddDynamicTransition<TEventArgument>(
+        TEvent                                              @event,
+        Transition<TStateArgument, TEventArgument>.Selector selector,
+        Transition<TStateArgument, TEventArgument>.Action   action)
+      {
+        StateConfig.AddTransition(@event, selector, action);
+        return this;
+      }
+
+      public ITransitions<TStateArgument> AddDynamicTransition(TEvent @event, Func<TState?> selector, Transition<TStateArgument, Unit>.Action? action = null)
+      {
+        StateConfig.AddTransition(@event, FuncToSelector<TStateArgument, Unit>(selector), action);
+        return this;
+      }
+
+      public ITransitions<TStateArgument> AddDynamicTransition<TEventArgument>(
+        TEvent                                            @event,
+        Func<TState?>                                     selector,
+        Transition<TStateArgument, TEventArgument>.Action action)
+      {
+        StateConfig.AddTransition(@event, FuncToSelector<TStateArgument, TEventArgument>(selector), action);
+        return this;
+      }
+
+      public void AllowReentrancy(TEvent @event, Action? action = null)
+        => StateConfig.AddReentrantTransition<Unit>(@event, action is null ? null : _ => action());
+
+      public void AllowReentrancy<TEventArgument>(TEvent @event, Action<TEventArgument> action) => StateConfig.AddReentrantTransition(@event, action);
     }
   }
 }

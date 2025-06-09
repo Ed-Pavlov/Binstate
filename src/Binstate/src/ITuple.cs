@@ -2,6 +2,8 @@
 
 namespace BeatyBit.Binstate;
 
+// TODO: rename to Arguments and make it <TStateArgument, TEventArgument>
+
 /// <summary>
 /// This data structure is used if a state needs to accept two arguments at once,
 /// usually one is passed to <see cref="IStateMachine{TEvent}.Raise{T}" /> method and the second one is obtained from the previously active
@@ -59,4 +61,20 @@ public class Tuple<TX, TY> : ITuple<TX, TY>
 
   /// <inheritdoc />
   public override string ToString() => $"{{{nameof(ItemX)}: {ItemX}, {nameof(ItemY)}:{ItemY}}}";
+
+  /// <summary>
+  /// Deconstructs the tuple into its individual components.
+  /// </summary>
+  public void Deconstruct(out TX passedArgumentType, out TY stateArgumentType)
+  {
+    passedArgumentType = ItemX;
+    stateArgumentType  = ItemY;
+  }
+}
+
+/// <inheritdoc cref="System.Tuple"/>
+public static class Tuple
+{
+  /// <inheritdoc cref="System.Tuple.Create{T1, T2}"/>
+  public static Tuple<TX, TY> Create<TX, TY>(TX x, TY y) => new(x, y);
 }

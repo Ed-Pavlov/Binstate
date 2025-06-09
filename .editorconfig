@@ -5,6 +5,10 @@ indent_style = space
 indent_size = 2
 tab_width = 2
 
+resharper_wrap_before_ternary_opsigns = true
+resharper_wrap_ternary_expr_style = chop_if_long
+resharper_nested_ternary_style = expanded
+
 # Microsoft .NET properties
 csharp_new_line_before_catch = true
 csharp_new_line_before_finally = true
@@ -95,7 +99,6 @@ resharper_keep_existing_property_patterns_arrangement = false
 resharper_keep_existing_switch_expression_arrangement = false
 resharper_local_function_body = expression_body
 resharper_max_enum_members_on_line = 20
-resharper_nested_ternary_style = compact
 resharper_object_creation_when_type_evident = explicitly_typed
 resharper_outdent_binary_ops = true
 resharper_outdent_binary_pattern_ops = true

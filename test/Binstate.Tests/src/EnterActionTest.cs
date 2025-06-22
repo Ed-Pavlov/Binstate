@@ -59,7 +59,7 @@ public class EnterActionTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
     builder.DefineState(Initial).AddTransition(GoToX, StateX);
-    builder.DefineState(StateX).OnEnter(onEnter);
+    builder.DefineState<string>(StateX).OnEnter(onEnter);
 
     var target = builder.Build(Initial);
 
@@ -81,8 +81,8 @@ public class EnterActionTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
     builder.DefineState(Initial).AddTransition(GoToX, StateX);
-    builder.DefineState(StateX).OnEnter(onEnter1).AddTransition(GoToY, StateY);
-    builder.DefineState(StateY).OnEnter(onEnter2);
+    builder.DefineState<string>(StateX).OnEnter(onEnter1).AddTransition(GoToY, StateY);
+    builder.DefineState<string>(StateY).OnEnter(onEnter2);
 
     var target = builder.Build(Initial);
     target.Raise(raiseWay, GoToX, expected);
@@ -103,7 +103,7 @@ public class EnterActionTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Parent).OnEnter(onEnterParent);
+    builder.DefineState<string>(Parent).OnEnter(onEnterParent);
     builder.DefineState(Child).AsSubstateOf(Parent); // Child is w/o Enter and argument
     builder.DefineState(Initial).AddTransition(GoToChild, Child);
 
@@ -126,9 +126,9 @@ public class EnterActionTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Parent).OnEnter(onEnterParent);
+    builder.DefineState<string>(Parent).OnEnter(onEnterParent);
     builder.DefineState(Child).AsSubstateOf(Parent); // Child is w/o Enter and argument
-    builder.DefineState(StateX).OnEnter(onEnter1).AddTransition(GoToChild, Child);
+    builder.DefineState<string>(StateX).OnEnter(onEnter1).AddTransition(GoToChild, Child);
     builder.DefineState(Initial).AddTransition(GoToX, StateX);
 
     var target = builder.Build(Initial);
@@ -152,8 +152,8 @@ public class EnterActionTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
     builder.DefineState(Initial).AddTransition(GoToX, StateX);
-    builder.DefineState(StateX).OnEnter(onEnter1).AddTransition(GoToY, StateY);
-    builder.DefineState(StateY).OnEnter(onEnter2);
+    builder.DefineState<string>(StateX).OnEnter(onEnter1).AddTransition(GoToY, StateY);
+    builder.DefineState<string>(StateY).OnEnter(onEnter2);
 
     var target = builder.Build(Initial);
     target.Raise(raiseWay, GoToX, expected + "bad");
@@ -176,8 +176,8 @@ public class EnterActionTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
     builder.DefineState(Initial).AddTransition(GoToX, StateX);
-    builder.DefineState(StateX).OnEnter(onEnter1).AddTransition(GoToY, StateY);
-    builder.DefineState(StateY).OnEnter(onEnter2);
+    builder.DefineState<string>(StateX).OnEnter(onEnter1).AddTransition(GoToY, StateY);
+    builder.DefineState<string>(StateY).OnEnter(onEnter2);
 
     var target = builder.Build(Initial);
     target.Raise(raiseWay, GoToX, expected);
@@ -194,13 +194,13 @@ public class EnterActionTest : StateMachineTestBase
   {
     const string expectedString        = "argument";
     var          expectedStringBuilder = new StringBuilder("expected");
-    var          onEnter               = A.Fake<Action<StringBuilder, string>>();
+    var          onEnter               = A.Fake<Action<ITuple<StringBuilder, string>>>();
 
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).OnEnter<string>(_ => { }).AddTransition(GoToX, StateX);
-    builder.DefineState(StateX).OnEnter(onEnter);
+    builder.DefineState<string>(Initial).OnEnter(A.Dummy<Action>()).AddTransition(GoToX, StateX);
+    builder.DefineState<ITuple<StringBuilder, string>>(StateX).OnEnter(onEnter);
 
     var target = builder.Build(Initial, expectedString);
 
@@ -208,7 +208,11 @@ public class EnterActionTest : StateMachineTestBase
     target.Raise(raiseWay, GoToX, expectedStringBuilder);
 
     // --assert
-    A.CallTo(() => onEnter(expectedStringBuilder, expectedString)).MustHaveHappenedOnceAndOnly();
+
+    A.CallTo(() => onEnter(
+               A<ITuple<StringBuilder, string>>.That.Matches(tuple => tuple.ItemX.Equals(expectedStringBuilder) && tuple.ItemY.Equals(expectedString))
+             ))
+     .MustHaveHappenedOnceAndOnly();
   }
 
   [TestCaseSource(nameof(RaiseWays))]
@@ -222,8 +226,8 @@ public class EnterActionTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).OnEnter<string>(_ => { }).AddTransition(GoToX, StateX);
-    builder.DefineState(StateX).OnEnter(onEnter);
+    builder.DefineState<string>(Initial).OnEnter(A.Dummy<Action>()).AddTransition(GoToX, StateX);
+    builder.DefineState<ITuple<StringBuilder, string>>(StateX).OnEnter(onEnter);
 
     var target = builder.Build(Initial, expectedString);
 
@@ -239,14 +243,14 @@ public class EnterActionTest : StateMachineTestBase
   {
     const string expectedString        = "argument";
     var          expectedStringBuilder = new StringBuilder("expected");
-    var          onEnter               = A.Fake<Action<StringBuilder, string>>();
+    var          onEnter               = A.Fake<Action<ITuple<StringBuilder, string>>>();
 
     // --arrange
     var builder = new Builder<string, int>(OnException, new Builder.Options { ArgumentTransferMode = ArgumentTransferMode.Free });
 
-    builder.DefineState(Initial).OnEnter<string>(_ => { }).AddTransition(GoToY, StateY);
-    builder.DefineState(StateY).AsSubstateOf(Initial).OnEnter<StringBuilder>(_ => { }).AddTransition(GoToX, StateX);
-    builder.DefineState(StateX).OnEnter(onEnter);
+    builder.DefineState<string>(Initial).AddTransition(GoToY, StateY);
+    builder.DefineState<StringBuilder>(StateY).AsSubstateOf(Initial).AddTransition(GoToX, StateX);
+    builder.DefineState<ITuple<StringBuilder, string>>(StateX).OnEnter(onEnter);
 
     var target = builder.Build(Initial, expectedString);
     target.Raise(raiseWay, GoToY, expectedStringBuilder);
@@ -255,6 +259,10 @@ public class EnterActionTest : StateMachineTestBase
     target.Raise(raiseWay, GoToX);
 
     // --assert
-    A.CallTo(() => onEnter(expectedStringBuilder, expectedString)).MustHaveHappenedOnceAndOnly();
+    A.CallTo(() => onEnter(
+               A<ITuple<StringBuilder, string>>.That.Matches(tuple => tuple.ItemX.Equals(expectedStringBuilder) && tuple.ItemY.Equals(expectedString))
+             )
+      )
+     .MustHaveHappenedOnceAndOnly();
   }
 }

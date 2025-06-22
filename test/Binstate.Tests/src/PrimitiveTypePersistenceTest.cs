@@ -100,10 +100,10 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
     Builder<string, int> СonfigureRemaining(Builder<string, int> builder)
     {
       builder
-       .GetOrDefineState(Root)
+       .GetOrDefineState<int>(Root)
        .OnEnter(rootEnterWithArgs);
       builder
-       .GetOrDefineState(Child)
+       .GetOrDefineState<int>(Child)
        .OnEnter(childEnterWithArgs);
 
       return builder;
@@ -156,9 +156,7 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
     // Arrange
     {
       var builder = CreateTarget();
-      builder
-       .GetOrDefineState(Root)
-       .OnEnter<int>(_ => { });
+      builder.GetOrDefineState<int>(Root);
 
       var stateMachine = builder.Build(Initial);
       stateMachine.Raise(GoToRoot, 42); // Correct argument type
@@ -167,9 +165,7 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
 
     // Act
     var targetBuilder = CreateTarget();
-    targetBuilder
-     .GetOrDefineState(Root)
-     .OnEnter<string>(_ => { });
+    targetBuilder.GetOrDefineState<string>(Root);
 
     // Assert
     Assert.Throws<ArgumentException>(() => targetBuilder.Restore(serializedData));

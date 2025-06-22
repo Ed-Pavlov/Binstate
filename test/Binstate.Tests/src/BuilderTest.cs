@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using BeatyBit.Binstate;
+using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
 
@@ -37,12 +38,12 @@ public class BuilderTest : StateMachineTestBase
 
     builder.DefineState(Initial).AddTransition(GoToX, Child);
 
-    builder.DefineState(Parent)
-           .OnEnter<int>((sm, value) => { });
+    builder.DefineState<int>(Parent)
+           .OnEnter(A.Dummy<Action>());
 
-    builder.DefineState(Child)
+    builder.DefineState<string>(Child)
            .AsSubstateOf(Parent)
-           .OnEnter<string>(value => { });
+           .OnEnter(A.Dummy<Action>());
 
     // --act
     Action target = () => builder.Build(Initial);
@@ -62,12 +63,12 @@ public class BuilderTest : StateMachineTestBase
 
     builder.DefineState(Initial).AddTransition(GoToX, Child);
 
-    builder.DefineState(Parent)
-           .OnEnter<int>((sm, value) => { });
+    builder.DefineState<int>(Parent)
+           .OnEnter(A.Dummy<Action>());
 
-    builder.DefineState(Child)
+    builder.DefineState<string>(Child)
            .AsSubstateOf(Parent)
-           .OnEnter<string>(value => { });
+           .OnEnter(A.Dummy<Action>());
 
     // --act
     var target = builder.Build(Initial);

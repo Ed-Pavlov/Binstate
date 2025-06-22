@@ -1,6 +1,7 @@
 ﻿global using static Binstate.Tests.TestCategory;
 using System;
 using BeatyBit.Binstate;
+using FakeItEasy;
 using FluentAssertions;
 using JetBrains.dotMemoryUnit;
 using NUnit.Framework;
@@ -28,20 +29,20 @@ public class BoxingTest : StateMachineTestBase
 
     builder.DefineState(Initial).AddTransition(GoToX, StateX);
 
-    builder.DefineState(StateX)
-           .OnEnter<ValueType1>(_ => { })
+    builder.DefineState<ValueType1>(StateX)
+           .OnEnter(A.Dummy<Action<ValueType1>>())
            .AddTransition(GoToY, StateY);
 
-    builder.DefineState(Parent)
-           .OnEnter<ValueType2>(value => actual2 = value);
+    builder.DefineState<ValueType2>(Parent)
+           .OnEnter(value => actual2 = value);
 
-    builder.DefineState(Child)
+    builder.DefineState<ValueType1>(Child)
            .AsSubstateOf(Parent)
-           .OnEnter<ValueType1>(value => actual1 = value);
+           .OnEnter(value => actual1 = value);
 
-    builder.DefineState(StateY)
+    builder.DefineState<ITuple<ValueType2, ValueType1>>(StateY)
            .AsSubstateOf(Child)
-           .OnEnter<ITuple<ValueType2, ValueType1>>(value => actualTuple = value);
+           .OnEnter(value => actualTuple = value);
 
     var target = builder.Build(Initial);
 

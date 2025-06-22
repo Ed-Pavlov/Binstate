@@ -65,9 +65,6 @@
     <Compile Update="src\Builder.StateConfig.cs">
       <DependentUpon>Builder.cs</DependentUpon>
     </Compile>
-    <Compile Update="src\Builder.Transition.cs">
-      <DependentUpon>Builder.cs</DependentUpon>
-    </Compile>
     <Compile Update="src\Builder.ConfiguratorOf.cs">
       <DependentUpon>Builder.cs</DependentUpon>
     </Compile>

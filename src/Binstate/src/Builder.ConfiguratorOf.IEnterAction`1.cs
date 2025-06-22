@@ -52,7 +52,6 @@ public partial class Builder<TState, TEvent>
       /// Specifies a synchronous (blocking) action with an argument and access to the state controller, to be executed upon entering the state.
       /// This overload provides the ability to perform auto transitions or waiting till the state be exited through <see cref="IStateController{TEvent}"/>.
       /// </summary>
-      /// <typeparam name="TArgument">The type of the argument.</typeparam>
       /// <param name="enterAction">The synchronous action with an argument and access to the state controller.</param>
       /// <returns>An <see cref="IExitAction{TArgument}"/> instance for configuring the exit action.</returns>
       /// <exception cref="ArgumentNullException">Thrown when <paramref name="enterAction"/> is null.</exception>
@@ -64,7 +63,6 @@ public partial class Builder<TState, TEvent>
       /// Specifies a synchronous (blocking) action with an argument and access to the state controller, to be executed upon entering the state.
       /// This overload provides the ability to perform auto transitions or waiting till the state be exited through <see cref="IStateController{TEvent}"/>.
       /// </summary>
-      /// <typeparam name="TArgument">The type of the argument.</typeparam>
       /// <param name="enterAction">The synchronous action with an argument and access to the state controller.</param>
       /// <returns>An <see cref="IExitAction{TArgument}"/> instance for configuring the exit action.</returns>
       /// <exception cref="ArgumentNullException">Thrown when <paramref name="enterAction"/> is null.</exception>
@@ -75,7 +73,6 @@ public partial class Builder<TState, TEvent>
       /// <summary>
       /// Specifies an asynchronous (non-blocking) action with an argument, to be executed upon entering the state.
       /// </summary>
-      /// <typeparam name="TArgument">The type of the argument.</typeparam>
       /// <param name="enterAction">The asynchronous action with an argument, returning a <see cref="Task"/>.</param>
       /// <returns>An <see cref="IExitAction{TArgument}"/> instance for configuring the exit action.</returns>
       /// <exception cref="ArgumentNullException">Thrown when <paramref name="enterAction"/> is null.</exception>
@@ -86,7 +83,6 @@ public partial class Builder<TState, TEvent>
       /// Specifies an asynchronous (non-blocking) action with an argument and access to the state controller, to be executed upon entering the state.
       /// This overload provides the ability to perform auto transitions or waiting till the state be exited through <see cref="IStateController{TEvent}"/>.
       /// </summary>
-      /// <typeparam name="TArgument">The type of the argument.</typeparam>
       /// <param name="enterAction">The asynchronous action with an argument and access to the state controller, returning a <see cref="Task"/>.</param>
       /// <returns>An <see cref="IExitAction{TArgument}"/> instance for configuring the exit action.</returns>
       /// <exception cref="ArgumentNullException">Thrown when <paramref name="enterAction"/> is null.</exception>

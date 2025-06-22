@@ -2,10 +2,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using BeatyBit.Binstate;
+using BeatyBit.Bits;
+using Binstate.Tests.Util;
 using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
-
 
 namespace Binstate.Tests;
 
@@ -27,8 +28,8 @@ public class ArgumentPassingTest : StateMachineTestBase
      .AddTransition(GoToX, StateX);
 
     builder
-     .DefineState(StateX)
-     .OnEnter<string>((sm, param) => actual = param);
+     .DefineState<string>(StateX)
+     .OnEnter((sm, param) => actual = param);
 
     var target = builder.Build(Initial);
 
@@ -49,7 +50,7 @@ public class ArgumentPassingTest : StateMachineTestBase
     var builder = new Builder<string, int>(OnException);
 
     builder.DefineState(Initial).AddTransition(GoToX, StateX);
-    builder.DefineState(StateX).OnEnter(onEnter);
+    builder.DefineState<IDisposable>(StateX).OnEnter(onEnter);
 
     var target = builder.Build(Initial);
 
@@ -71,9 +72,9 @@ public class ArgumentPassingTest : StateMachineTestBase
     var builder = new Builder<string, string>(OnException);
 
     builder.DefineState(Initial).AddTransition(Child, Child);
-    builder.DefineState(Root).OnEnter(onEnterRoot);
+    builder.DefineState<IDisposable>(Root).OnEnter(onEnterRoot);
     builder.DefineState(Parent).AsSubstateOf(Root).OnEnter(sm => { });
-    builder.DefineState(Child).AsSubstateOf(Parent).OnEnter(onEnterChild);
+    builder.DefineState<Stream>(Child).AsSubstateOf(Parent).OnEnter(onEnterChild);
 
     var target = builder.Build(Initial);
 
@@ -96,8 +97,8 @@ public class ArgumentPassingTest : StateMachineTestBase
      .AddTransition(GoToX, StateX);
 
     builder
-     .DefineState(StateX)
-     .OnEnter<string>((sm, value) => { });
+     .DefineState<string>(StateX)
+     .OnEnter((sm, value) => { });
 
     var stateMachine = builder.Build(Initial);
 
@@ -111,7 +112,7 @@ public class ArgumentPassingTest : StateMachineTestBase
   }
 
   [TestCaseSource(nameof(RaiseWays))]
-  public void should_throw_exception_if_no_argument_specified_for_enter_action_with_argument(RaiseWay raiseWay)
+  public void should_throw_exception_if_no_argument_passed_for_transition_to_state_with_argument(RaiseWay raiseWay)
   {
     // --arrange
     var builder = new Builder<string, int>(OnException);
@@ -121,8 +122,8 @@ public class ArgumentPassingTest : StateMachineTestBase
      .AddTransition(GoToX, StateX);
 
     builder
-     .DefineState(StateX)
-     .OnEnter<int>(value => { });
+     .DefineState<int>(StateX)
+     .OnEnter(A.Dummy<Action>());
 
     var stateMachine = builder.Build(Initial);
 
@@ -143,12 +144,12 @@ public class ArgumentPassingTest : StateMachineTestBase
 
     builder.DefineState(Initial).AddTransition(GoToX, Child);
 
-    builder.DefineState(Parent)
-           .OnEnter<int>((stateMachine, value) => { });
+    builder.DefineState<int>(Parent)
+           .OnEnter((stateMachine, value) => { });
 
-    builder.DefineState(Child)
+    builder.DefineState<string>(Child)
            .AsSubstateOf(Parent)
-           .OnEnter<string>(value => { });
+           .OnEnter(A.Dummy<Action>());
 
     // --act
     var sm = builder.Build(Initial);
@@ -170,14 +171,18 @@ public class ArgumentPassingTest : StateMachineTestBase
     var onExit       = A.Fake<Action<IDisposable>>();
     var onTransition = A.Fake<Action<IDisposable>>();
 
+    var fake = A.Fake<Transition<IDisposable, Unit>.Action<string, int>>();
+//    A.CallTo(() => fake(A<Transition<IDisposable, Unit>.Context<string, int>>.That.Matches(context => context.Arguments.ItemX == expected)));
+
+
     // --arrange
     var builder = new Builder<string, int>(OnException);
     builder.DefineState(Initial).AddTransition(GoToX, StateX);
     builder.DefineState(StateY);
-    builder.DefineState(StateX)
+    builder.DefineState<IDisposable>(StateX)
            .OnEnter(onEnter)
            .OnExit(onExit)
-           .AddTransition(GoToY, StateY, onTransition);
+           .AddTransitionSimple(GoToY, StateY, onTransition);
 
     var target = builder.Build(Initial);
 
@@ -186,9 +191,12 @@ public class ArgumentPassingTest : StateMachineTestBase
     target.Raise(GoToY);
 
     // --assert
-    A.CallTo(() => onEnter(expected)).MustHaveHappenedOnceExactly()
+    A.CallTo(() => onEnter(expected))
+     .MustHaveHappenedOnceExactly()
      .Then(A.CallTo(() => onExit(expected)).MustHaveHappenedOnceExactly())
      .Then(A.CallTo(() => onTransition(expected)).MustHaveHappenedOnceExactly());
+
+    A.CallTo(() => fake.WithArguments(context => context.Arguments.ItemX == expected)).MustHaveHappenedOnceExactly();
   }
 
   [Test]
@@ -204,8 +212,8 @@ public class ArgumentPassingTest : StateMachineTestBase
      .AddTransition(GoToX, StateX);
 
     builder
-     .DefineState(StateX)
-     .OnEnter<string?>(enter);
+     .DefineState<string?>(StateX)
+     .OnEnter(enter);
 
     var target = builder.Build(Initial);
 
@@ -230,7 +238,7 @@ public class ArgumentPassingTest : StateMachineTestBase
     builder.DefineState(Initial)
            .AddTransition(GoToX, StateX);
 
-    builder.DefineState(StateX)
+    builder.DefineState<string>(StateX)
            .OnEnter(onEnterStateX);
 
     var stateMachine = builder.Build(Initial);
@@ -254,7 +262,7 @@ public class ArgumentPassingTest : StateMachineTestBase
     builder.DefineState(Initial)
            .AddTransition(GoToX, StateX);
 
-    builder.DefineState(StateX)
+    builder.DefineState<int>(StateX)
            .OnEnter(onEnterStateX); // StateX expects int
 
     var stateMachine = builder.Build(Initial);
@@ -283,11 +291,11 @@ public class ArgumentPassingTest : StateMachineTestBase
     builder.DefineState(Initial)
            .AddTransition(GoToX, StateX);
 
-    builder.DefineState(StateX)
+    builder.DefineState<string>(StateX)
            .OnEnter(onEnterStateX) // StateX expects string and sets the argument
            .AddTransition(GoToY, StateY);
 
-    builder.DefineState(StateY)
+    builder.DefineState<string>(StateY)
            .OnEnter(onEnterStateY); // StateY expects string
 
     var stateMachine = builder.Build(Initial);
@@ -319,11 +327,11 @@ public class ArgumentPassingTest : StateMachineTestBase
     builder.DefineState(Initial)
            .AddTransition(GoToX, StateX);
 
-    builder.DefineState(StateX)
+    builder.DefineState<string>(StateX)
            .OnEnter(onEnterStateX) // StateX expects string and sets the argument
            .AddTransition(GoToY, StateY);
 
-    builder.DefineState(StateY)
+    builder.DefineState<string>(StateY)
            .OnEnter(onEnterStateY); // StateY expects string
 
     var stateMachine = builder.Build(Initial);
@@ -356,7 +364,7 @@ public class ArgumentPassingTest : StateMachineTestBase
     builder.DefineState(Initial)
            .AddTransition(GoToX, StateX);
 
-    builder.DefineState(StateX)
+    builder.DefineState<string>(StateX)
            .OnEnter(onEnterStateX) // StateX expects string
            .AddTransition(GoToY, StateY);
 
@@ -394,18 +402,18 @@ public class ArgumentPassingTest : StateMachineTestBase
     builder.DefineState(Initial)
            .AddTransition(GoToX, StateX);
 
-    builder.DefineState(StateX)
+    builder.DefineState<string>(StateX)
            .OnEnter(onEnterStateX) // StateX expects string
            .AddTransition(GoToY, StateY)
            .AddTransition(GoToZ, StateZ); // Need a path away from Y
 
-    builder.DefineState(StateY)
+    builder.DefineState<string>(StateY)
            .OnEnter(onEnterStateY)        // StateY expects string
            .AddTransition(GoToZ, StateZ); // Path away from Y
 
     builder.DefineState(StateZ)
            .OnEnter(onEnterStateZ)        // No argument
-           .AddTransition(GoToX, StateX); // Path back to X, allows setting new value
+           .AddTransition(GoToX, StateX); // Path back to X, allows setting the new value
 
     var stateMachine = builder.Build(Initial);
 
@@ -445,11 +453,11 @@ public class ArgumentPassingTest : StateMachineTestBase
     builder.DefineState(Initial)
            .AddTransition(GoToX, StateX);
 
-    builder.DefineState(StateX)
+    builder.DefineState<string>(StateX)
            .OnEnter(onEnterStateX) // Attaches a null argument
            .AddTransition(GoToY, StateY);
 
-    builder.DefineState(StateY)
+    builder.DefineState<string>(StateY)
            .OnEnter(onEnterStateY);
 
     var stateMachine = builder.Build(Initial);
@@ -473,7 +481,7 @@ public class ArgumentPassingTest : StateMachineTestBase
     builder.DefineState(Initial)
            .AddTransition(GoToX, StateX);
 
-    builder.DefineState(StateX)
+    builder.DefineState<string>(StateX)
            .OnEnter(onEnterStateX)        // StateX expects string
            .AddTransition(GoToX, StateX); // Self-transition
 
@@ -481,7 +489,7 @@ public class ArgumentPassingTest : StateMachineTestBase
 
     // --act
     stateMachine.Raise(GoToX, value1); // Enter StateX with "value1"
-    stateMachine.Raise(GoToX);         // Self-transition, should propagate "value1"
+    stateMachine.Raise(GoToX);         // Self-transition should propagate "value1"
 
     // --assert
     // OnEnter should be called twice with the same propagated value
@@ -501,7 +509,7 @@ public class ArgumentPassingTest : StateMachineTestBase
     builder.DefineState(Initial)
            .AddTransition(GoToX, StateX);
 
-    builder.DefineState(StateX)
+    builder.DefineState<string>(StateX)
            .OnEnter(onEnterStateX)        // StateX expects string
            .AddTransition(GoToX, StateX); // Self-transition
 
@@ -519,4 +527,5 @@ public class ArgumentPassingTest : StateMachineTestBase
   }
 
   #endregion
+
 }

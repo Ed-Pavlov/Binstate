@@ -36,7 +36,7 @@ public class InitialStateTest : StateMachineTestBase
     // --arrange
     var target = new Builder<string, int>(OnException);
 
-    target.DefineState(Initial).OnEnter(onEnter).AddTransition(GoToX, StateX);
+    target.DefineState<string>(Initial).OnEnter(onEnter).AddTransition(GoToX, StateX);
     target.DefineState(StateX);
 
     // --act
@@ -61,7 +61,7 @@ public class InitialStateTest : StateMachineTestBase
 
     target.DefineState(Root).With(_ => setupRoot(_, rootAction));
     target.DefineState(Parent).AsSubstateOf(Root).With(_ => setupParent(_, parentAction));
-    target.DefineState(Initial).AsSubstateOf(Parent).OnEnter(onEnter).AddTransition(GoToX, StateX);
+    target.DefineState<string>(Initial).AsSubstateOf(Parent).OnEnter(onEnter).AddTransition(GoToX, StateX);
     target.DefineState(StateX);
 
     // --act
@@ -132,7 +132,7 @@ public class InitialStateTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(_ => {Assert.Fail(_.ToString()); });
 
-    builder.DefineState(Initial).OnEnter<string>(_ => { }).AllowReentrancy(GoToX);
+    builder.DefineState<string>(Initial).AllowReentrancy(GoToX);
 
     // --act
     Action target = () => builder.Build(Initial);
@@ -149,7 +149,7 @@ public class InitialStateTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(_ => { });
 
-    builder.DefineState(Parent).OnEnter<string>(_ => { }).AllowReentrancy(GoToX);
+    builder.DefineState<string>(Parent).AllowReentrancy(GoToX);
     builder.DefineState(Initial).AsSubstateOf(Parent);
 
     // --act

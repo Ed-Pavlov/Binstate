@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using BeatyBit.Binstate;
+using Binstate.Tests.Util;
 using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
@@ -127,7 +128,7 @@ public class EnterExitActionsTest : StateMachineTestBase
     builder.DefineState(StateX)
            .OnEnter(onEnter)
            .OnExit(onExit)
-           .AddTransition(GoToY, StateY, onTransition);
+           .AddTransitionSimple(GoToY, StateY, onTransition);
 
     var target = builder.Build(Initial);
 

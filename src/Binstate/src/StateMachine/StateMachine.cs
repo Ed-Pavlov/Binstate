@@ -165,6 +165,6 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
 
     return stateArgumentProvider is null && eventArgumentProvider is null
              ? Argument.NoTransitionArguments
-             : Tuple.Create(eventArgumentProvider, stateArgumentProvider);
+             : ArgumentsTuple.Create(eventArgumentProvider, stateArgumentProvider);
   }
 }

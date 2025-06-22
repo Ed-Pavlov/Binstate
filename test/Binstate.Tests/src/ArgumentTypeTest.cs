@@ -21,10 +21,10 @@ public class ArgumentTypeTest : StateMachineTestBase
     // --arrange
     var target = new Builder<string, int>(OnException);
 
-    target.DefineState(Initial)
+    target.DefineState<string>(Initial)
           .OnEnter(onEnter)
           .OnExit(onExit)
-          .AddTransition(GoToX, StateX, onTransition);
+          .AddTransitionSimple(GoToX, StateX, onTransition);
 
     target.DefineState(StateX);
 
@@ -51,10 +51,10 @@ public class ArgumentTypeTest : StateMachineTestBase
     // --arrange
     var target = new Builder<string, int>(OnException);
 
-    target.DefineState(Initial)
+    target.DefineState<string>(Initial)
           .OnEnter(onEnter)
           .OnExit(onExit)
-          .AddTransition(GoToX, StateX, onTransition);
+          .AddTransitionSimple(GoToX, StateX, onTransition);
 
     target.DefineState(StateX);
 
@@ -81,10 +81,10 @@ public class ArgumentTypeTest : StateMachineTestBase
     // --arrange
     var target = new Builder<string, int>(OnException);
 
-    target.DefineState(Initial)
+    target.DefineState<string>(Initial)
           .OnEnter(onEnter)
           .OnExit(onExit)
-          .AddTransition(GoToX, StateX, onTransition);
+          .AddTransitionSimple(GoToX, StateX, onTransition);
 
     target.DefineState(StateX);
 

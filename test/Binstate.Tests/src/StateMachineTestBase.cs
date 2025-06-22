@@ -94,13 +94,13 @@ public abstract class StateMachineTestBase
 
   public static IEnumerable<RaiseWay> RaiseWays() => [RaiseWay.Raise, RaiseWay.RaiseAsync];
 
-  public static void OnEnter<T>(Builder<string, int>.ConfiguratorOf.IEnterAction state, Action<T> action) => state.OnEnter(action);
-  public static void OnExit<T>(Builder<string, int>.ConfiguratorOf.IEnterAction  state, Action<T> action) => state.OnExit(action);
+  public static void OnEnter<T>(Builder<string, int>.ConfiguratorOf.IEnterAction<T> state, Action<T> action) => state.OnEnter(action);
+  public static void OnExit<T>(Builder<string, int>.ConfiguratorOf.IEnterAction<T>  state, Action<T> action) => state.OnExit(action);
 
   public static IEnumerable EnterExit()
   {
-    yield return new Action<Builder<string, int>.ConfiguratorOf.IEnterAction, Action<string>>(OnEnter);
-    yield return new Action<Builder<string, int>.ConfiguratorOf.IEnterAction, Action<string>>(OnExit);
+    yield return new Action<Builder<string, int>.ConfiguratorOf.IEnterAction<string>, Action<string>>(OnEnter);
+    yield return new Action<Builder<string, int>.ConfiguratorOf.IEnterAction<string>, Action<string>>(OnExit);
   }
 }
 

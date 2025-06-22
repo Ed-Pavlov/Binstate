@@ -33,8 +33,8 @@ public partial class Example
        .AddTransition(Terminate,   Terminated);
 
       builder
-       .DefineState(TrackingGame)
-       .OnEnter<string>(TrackGame)
+       .DefineState<string>(TrackingGame)
+       .OnEnter(TrackGame)
        .AddTransition(GameFinished, WaitingForGame)
        .AddTransition(Terminate,    Terminated);
     }

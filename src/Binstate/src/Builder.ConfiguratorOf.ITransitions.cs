@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
@@ -14,43 +13,65 @@ public partial class Builder<TState, TEvent>
     public interface ITransitions
     {
       /// <inheritdoc cref="AddTransition{TEventArgument}"/>
-      ITransitions AddTransition(TEvent @event, TState targetState, Transition<Unit, Unit>.Action? action = null);
+      ITransitions AddTransition(TEvent @event, TState targetState, Transition<Unit, Unit>.Action<TState, TEvent>? action = null);
 
       /// <inheritdoc cref="ITransitions{TStateArgument}.AddTransition{TEventArgument}"/>
-      ITransitions AddTransition<TEventArgument>(TEvent @event, TState targetState, Transition<Unit, TEventArgument>.Action action);
+      ITransitions AddTransition<TEventArgument>(TEvent @event, TState targetState, Transition<Unit, TEventArgument>.Action<TState, TEvent> action);
 
       /// <inheritdoc cref="ITransitions{TStateArgument}.AddConditionalTransition{TEventArgument}"/>
       ITransitions AddConditionalTransition<TEventArgument>(
-        TEvent                                  @event,
-        TState                                  targetState,
-        Transition<Unit, TEventArgument>.Guard  guard,
-        Transition<Unit, TEventArgument>.Action action);
+        TEvent                                                   @event,
+        TState                                                   targetState,
+        Transition<Unit, TEventArgument>.Guard                   guard,
+        Transition<Unit, TEventArgument>.Action<TState, TEvent>? action = null);
 
-#pragma warning disable 1574,1584,1581,1580
+//#pragma warning disable ,1584,1581,1580
+#pragma warning disable CS0419, 1574
       /// <inheritdoc cref="AddConditionalTransition{TEventArgument}"/>
-#pragma warning restore 1574,1584,1581,1580
       ITransitions AddConditionalTransition(
-        TEvent                        @event,
-        TState                        targetState,
-        Transition<Unit, Unit>.Guard  guard,
-        Transition<Unit, Unit>.Action action);
+        TEvent                                         @event,
+        TState                                         targetState,
+        Transition<Unit, Unit>.Guard                   guard,
+        Transition<Unit, Unit>.Action<TState, TEvent>? action = null);
+#pragma warning restore CS0419, 1574
 
-#pragma warning disable 1574,1584,1581,1580
+#pragma warning disable CS0419, 1574
       /// <inheritdoc cref="AddConditionalTransition{TEventArgument}"/>
-#pragma warning restore 1574,1584,1581,1580
-      ITransitions AddConditionalTransition(TEvent @event, TState targetState, Func<bool> guard, Transition<Unit, Unit>.Action? action = null);
+#pragma warning restore CS0419, 1574
+      ITransitions AddConditionalTransition(TEvent @event, TState targetState, Func<bool> guard, Transition<Unit, Unit>.Action<TState, TEvent>? action = null);
 
       /// <inheritdoc cref="ITransitions{TStateArgument}.AddConditionalTransition{TEventArgument}"/>
       ITransitions AddConditionalTransition<TEventArgument>(
-        TEvent                                  @event,
-        TState                                  targetState,
-        Func<bool>                              guard,
-        Transition<Unit, TEventArgument>.Action action);
+        TEvent                                                   @event,
+        TState                                                   targetState,
+        Func<bool>                                               guard,
+        Transition<Unit, TEventArgument>.Action<TState, TEvent>? action = null);
 
-#pragma warning disable 1574,1584,1581,1580
-      /// <inheritdoc cref="AddDynamicTransition{TEventArgument}(TEvent, Func{TState?}, Transition{TStateArgument,TEventArgument}.Action)"/>
-#pragma warning restore 1574,1584,1581,1580
-      ITransitions AddDynamicTransition(TEvent @event, Func<TState?> selectState, Transition<Unit, Unit>.Action? action = null);
+#pragma warning disable CS0419, 1574
+      /// <inheritdoc cref="AddDynamicTransition{TEventArgument}"/>
+      ITransitions AddDynamicTransition(
+        TEvent                                               @event,
+        Transition<Unit, Unit>.StateSelector<TState, TEvent> selectState,
+        Transition<Unit, Unit>.Action<TState, TEvent>?       action = null);
+#pragma warning restore CS0419, 1574
+
+#pragma warning disable 0419, 1574, 1580
+      /// <remarks>
+      /// Use this overload if you use a ValueType (e.g., enum) as a <typeparamref name="TState" /> and the default value of the value type as a valid State id.
+      /// Otherwise, consider using
+      /// <see cref="AddDynamicTransition{TEventArgument}(TEvent, Transition{TStateArgument,TEventArgument}.Selector{TState,TEvent}, Transition{TStateArgument,TEventArgument}.Action{TState,TEvent})" />
+      /// method as more simple.
+      /// </remarks>
+      ITransitions AddDynamicTransition<TEventArgument>(
+        TEvent                                                         @event,
+        Transition<Unit, TEventArgument>.StateSelector<TState, TEvent> selectState,
+        Transition<Unit, TEventArgument>.Action<TState, TEvent>        action);
+#pragma warning restore CS0419, 1574, 1580
+
+#pragma warning disable CS0419, 1574, 1580
+      /// <inheritdoc cref="AddDynamicTransition{TEventArgument}(TEvent, Func{TState?}, Transition{TStateArgument,TEventArgument}.Action{TState,TEvent})"/>
+#pragma warning restore CS0419, 1574, 1580
+      ITransitions AddDynamicTransition(TEvent @event, Func<TState?> selectState, Transition<Unit, Unit>.Action<TState, TEvent>? action = null);
 
       /// <summary>
       /// Defines a dynamic transition from the currently configured state to the state returned by <paramref name="selectState"/>
@@ -63,7 +84,10 @@ public partial class Builder<TState, TEvent>
       /// and before the 'enter' action of the target state.</param>
       /// <returns>The <see cref="ITransitions"/> instance for chaining configuration.</returns>
       /// <exception cref="ArgumentNullException">Thrown when <paramref name="event"/> or <paramref name="selectState"/> is null.</exception>
-      ITransitions AddDynamicTransition<TEventArgument>(TEvent @event, Func<TState?> selectState, Transition<Unit, TEventArgument>.Action action);
+      ITransitions AddDynamicTransition<TEventArgument>(
+        TEvent                                                  @event,
+        Func<TState?>                                           selectState,
+        Transition<Unit, TEventArgument>.Action<TState, TEvent> action);
 
       /// <inheritdoc cref="AllowReentrancy"/>
       void AllowReentrancy(TEvent @event, Action? action = null);
@@ -80,5 +104,5 @@ public partial class Builder<TState, TEvent>
       void AllowReentrancy<TEventArgument>(TEvent @event, Action<TEventArgument> action);
     }
   }
-#pragma warning restore 1574,1584,1581,1580
+#pragma warning restore CS0419, 1574
 }

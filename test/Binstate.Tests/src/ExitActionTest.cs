@@ -37,7 +37,7 @@ public class ExitActionTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).OnExit(onExit).AddTransition(GoToX, StateX);
+    builder.DefineState<string>(Initial).OnExit(onExit).AddTransition(GoToX, StateX);
     builder.DefineState(StateX);
 
     var target = builder.Build(Initial, expected);
@@ -59,8 +59,8 @@ public class ExitActionTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial).OnExit(onExitInitial).AddTransition(GoToX, StateX);
-    builder.DefineState(StateX).OnExit(onExitX).AddTransition(GoToY, StateY);
+    builder.DefineState<string>(Initial).OnExit(onExitInitial).AddTransition(GoToX, StateX);
+    builder.DefineState<string>(StateX).OnExit(onExitX).AddTransition(GoToY, StateY);
     builder.DefineState(StateY);
 
     var target = builder.Build(Initial, expected);
@@ -82,7 +82,7 @@ public class ExitActionTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Parent).OnExit(onExitParent);
+    builder.DefineState<string>(Parent).OnExit(onExitParent);
     builder.DefineState(Initial).AsSubstateOf(Parent).AddTransition(GoToChild, Child);
     builder.DefineState(Child); // Child is w/o Exit and argument
 

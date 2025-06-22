@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using BeatyBit.Binstate;
+using BeatyBit.Bits;
+using Binstate.Tests.Util;
 using FakeItEasy;
 using FluentAssertions;
 using NUnit.Framework;
@@ -10,24 +12,6 @@ namespace Binstate.Tests;
 
 public class TransitionTest : StateMachineTestBase
 {
-  public void test()
-  {
-    var builder = new Builder<string, int>(OnException);
-    builder
-     .DefineState("sldkjf")
-     .OnEnter(() => { })
-     .OnExit(() =>{})
-     .AddTransition(2, "2w")
-     .AddConditionalTransition(32, "sldkjf", () => true)
-     .AddDynamicTransition(4, () => "return")
-     .AddDynamicTransition(4, (out string? state) =>
-      {
-        state = "2w";
-        return true;
-      });
-  }
-
-
   [TestCaseSource(nameof(RaiseWays))]
   public void should_call_action_on_transition_between_exit_and_enter(RaiseWay raiseWay)
   {
@@ -40,7 +24,7 @@ public class TransitionTest : StateMachineTestBase
 
     builder.DefineState(Initial)
            .OnExit(onExitInitial)
-           .AddTransition(GoToX, StateX, onTransit);
+           .AddTransitionSimple(GoToX, StateX, onTransit);
 
     builder.DefineState(StateX)
            .OnEnter(onEnterState1);
@@ -51,7 +35,8 @@ public class TransitionTest : StateMachineTestBase
     target.Raise(raiseWay, GoToX);
 
     // --assert
-    A.CallTo(() => onExitInitial()).MustHaveHappenedOnceExactly()
+    A.CallTo(() => onExitInitial())
+     .MustHaveHappenedOnceExactly()
      .Then(A.CallTo(() => onTransit()).MustHaveHappenedOnceExactly())
      .Then(A.CallTo(() => onEnterState1()).MustHaveHappenedOnceExactly());
   }
@@ -68,10 +53,9 @@ public class TransitionTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState(Initial)
-           .OnEnter<IDisposable>(_ => { })
+    builder.DefineState<IDisposable>(Initial)
            .OnExit(onExitInitial)
-           .AddTransition(GoToX, StateX, onTransit);
+           .AddTransitionSimple(GoToX, StateX, onTransit);
 
     builder.DefineState(StateX)
            .OnEnter(onEnterState1);
@@ -180,7 +164,7 @@ public class TransitionTest : StateMachineTestBase
 
     var first = true;
 
-    bool DynamicTransition(out int state)
+    bool DynamicTransition(Transition<Unit, Unit>.Context<int, int> context, out int state)
     {
       state = first ? stateId1 : stateId2;
       first = false;
@@ -191,7 +175,7 @@ public class TransitionTest : StateMachineTestBase
     var actual = new List<int>();
 
     // --arrange
-    var builder = new Builder<int, int>(OnException, new Builder.Options{AllowDefaultValueAsStateId = true});
+    var builder = new Builder<int, int>(OnException, new Builder.Options { AllowDefaultValueAsStateId = true });
 
     builder
      .DefineState(initialStateId)
@@ -222,12 +206,6 @@ public class TransitionTest : StateMachineTestBase
     const int initialStateId = 1;
     const int stateId        = 2;
 
-    static bool DynamicTransition(out int state)
-    {
-      state = stateId;
-      return false;
-    }
-
     // --arrange
     var builder = new Builder<int, int>(OnException);
 
@@ -243,6 +221,13 @@ public class TransitionTest : StateMachineTestBase
 
     // --assert
     actual.Should().BeFalse();
+    return;
+
+    static bool DynamicTransition(Transition<Unit, Unit>.Context<int, int > _, out int state)
+    {
+      state = stateId;
+      return false;
+    }
   }
 
   [TestCaseSource(nameof(RaiseWays))]
@@ -250,13 +235,6 @@ public class TransitionTest : StateMachineTestBase
   {
     // --arrange
     var builder = new Builder<string, int>(OnException);
-
-    static bool DynamicTransition(out string stateId)
-    {
-      stateId = StateX;
-
-      return false;
-    }
 
     builder.DefineState(Initial)
            .AddDynamicTransition(GoToX, DynamicTransition);
@@ -270,6 +248,13 @@ public class TransitionTest : StateMachineTestBase
 
     // --assert
     actual.Should().BeFalse();
+    return;
+
+    static bool DynamicTransition(Transition<Unit, Unit>.Context<string, int > _, out string state)
+    {
+      state = StateX;
+      return false;
+    }
   }
 
   [TestCaseSource(nameof(RaiseWays))]
@@ -377,7 +362,7 @@ public class TransitionTest : StateMachineTestBase
     builder.DefineState(Initial).AddTransition(Child, Child);
 
     builder.DefineState(Parent)
-           .AddTransition(StateX, StateX, () => actual.Add(Parent));
+           .AddTransition(StateX, StateX, _ => actual.Add(Parent));
 
     builder.DefineState(Child).AsSubstateOf(Parent);
 
@@ -403,7 +388,7 @@ public class TransitionTest : StateMachineTestBase
     var builder = new Builder<string, string>(onException);
 
     builder.DefineState(Initial)
-           .AddTransition(StateX, StateX, () => throw new TestException());
+           .AddTransition(StateX, StateX, _ => throw new TestException());
 
     builder.DefineState(StateX);
 

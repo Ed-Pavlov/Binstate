@@ -13,13 +13,13 @@ internal static partial class Argument
   internal class ArgumentProviderFromTupleDynamic<T, TA, TR>(IState state)
     : ArgumentProviderByValue<T>(GetArgument(( (IGetArgument<ITuple<TA, TR>>)state ).Argument)) // base class constructor
   {
-    private static T GetArgument(ITuple<TA, TR> tuple)
+    private static T GetArgument(ITuple<TA, TR> argumentsTuple)
     {
-      return tuple switch
+      return argumentsTuple switch
       {
         { ItemX: T arg }       => arg,
         { ItemY: T propagate } => propagate,
-        _                      => throw new ArgumentOutOfRangeException(nameof(tuple))
+        _                      => throw new ArgumentOutOfRangeException(nameof(argumentsTuple))
       };
     }
   }
@@ -27,12 +27,12 @@ internal static partial class Argument
   internal class ArgumentProviderFromTupleX<T, TA, TR>(IState state)
     : ArgumentProviderByValue<T>(GetArgument(( (IGetArgument<ITuple<TA, TR>>)state ).Argument)) // base class constructor
   {
-    private static T GetArgument(ITuple<TA, TR> tuple)
+    private static T GetArgument(ITuple<TA, TR> argumentsTuple)
     {
-      return tuple switch
+      return argumentsTuple switch
       {
         { ItemX: T arg } => arg,
-        _                => throw new ArgumentOutOfRangeException(nameof(tuple))
+        _                => throw new ArgumentOutOfRangeException(nameof(argumentsTuple))
       };
     }
   }
@@ -40,12 +40,12 @@ internal static partial class Argument
   internal class ArgumentProviderFromTupleY<T, TA, TR>(IState state)
     : ArgumentProviderByValue<T>(GetArgument(( (IGetArgument<ITuple<TA, TR>>)state ).Argument)) // base class constructor
   {
-    private static T GetArgument(ITuple<TA, TR> tuple)
+    private static T GetArgument(ITuple<TA, TR> argumentsTuple)
     {
-      return tuple switch
+      return argumentsTuple switch
       {
         { ItemY: T propagate } => propagate,
-        _                      => throw new ArgumentOutOfRangeException(nameof(tuple))
+        _                      => throw new ArgumentOutOfRangeException(nameof(argumentsTuple))
       };
     }
   }

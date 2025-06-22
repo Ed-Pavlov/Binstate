@@ -18,8 +18,7 @@ public class EnumTypePersistenceTest : StateMachineTestBase
     {
       var builder = new Builder<TestEnum, int>(OnException, new Builder.Options { EnableStateMachinePersistence = true });
       builder
-       .DefineState(TestEnum.A)
-       .OnEnter<int>(_ => { })
+       .DefineState<int>(TestEnum.A)
        .AllowReentrancy(1);
 
       var stateMachine = builder.Build(TestEnum.A, 32);
@@ -30,7 +29,7 @@ public class EnumTypePersistenceTest : StateMachineTestBase
     {
       var target = new Builder<TestEnum, int>(OnException, new Builder.Options { EnableStateMachinePersistence = true });
       target
-       .DefineState(TestEnum.A)
+       .DefineState<int>(TestEnum.A)
        .OnEnter(enterAction)
        .AllowReentrancy(1);
 
@@ -51,8 +50,7 @@ public class EnumTypePersistenceTest : StateMachineTestBase
     {
       var builder = new Builder<string, int>(OnException, new Builder.Options { EnableStateMachinePersistence = true });
       builder
-       .DefineState(Initial)
-       .OnEnter<TestEnum>(_ => { })
+       .DefineState<TestEnum>(Initial)
        .AllowReentrancy(GoToInitial);
 
       var stateMachine = builder.Build(Initial, TestEnum.A);
@@ -63,7 +61,7 @@ public class EnumTypePersistenceTest : StateMachineTestBase
     {
       var target = new Builder<string, int>(OnException, new Builder.Options { EnableStateMachinePersistence = true });
       target
-       .DefineState(Initial)
+       .DefineState<TestEnum>(Initial)
        .OnEnter(enterAction)
        .AllowReentrancy(GoToInitial);
 
@@ -80,8 +78,8 @@ public class EnumTypePersistenceTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<TestEnum, int>(OnException, new Builder.Options { EnableStateMachinePersistence = true });
     builder
-     .DefineState(TestEnum.A)
-     .OnEnter<int>(_ => { })
+     .DefineState<int>(TestEnum.A)
+     .OnEnter((int _) => { })
      .AllowReentrancy(1);
 
     var stateMachine = builder.Build(TestEnum.A, 32);
@@ -99,8 +97,7 @@ public class EnumTypePersistenceTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException, new Builder.Options { EnableStateMachinePersistence = true });
     builder
-     .DefineState(Initial)
-     .OnEnter<TestEnum>(_ => { })
+     .DefineState<TestEnum>(Initial)
      .AllowReentrancy(GoToInitial);
 
     var stateMachine = builder.Build(Initial, TestEnum.A);

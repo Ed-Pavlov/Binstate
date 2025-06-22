@@ -48,29 +48,29 @@ internal static partial class Argument
     setArgumentMethod.Invoke(null, [receiver, argument]);
   }
 
-  private static void SetArgumentByReflection(IArgumentReceiver receiver, ITuple<IArgumentProvider, IArgumentProvider?> tuple)
+  private static void SetArgumentByReflection(IArgumentReceiver receiver, ITuple<IArgumentProvider, IArgumentProvider?> argumentsTuple)
   {
     var receiverArgumentType = receiver.GetArgumentType();
-    var passedArgumentType   = tuple.ItemX.GetArgumentType();
+    var passedArgumentType   = argumentsTuple.ItemX.GetArgumentType();
 
     // target argument can accept PassedArgument, so should be set, and we are good
     if(receiverArgumentType.IsAssignableFrom(passedArgumentType))
     {
-      if(tuple.ItemY is not null) throw Paranoia.GetInvalidTargetException(receiver);
+      if(argumentsTuple.ItemY is not null) throw Paranoia.GetInvalidTargetException(receiver);
 
       var passArgumentMethod = PropagateArgumentMethodFactory.MakeGenericMethod(receiverArgumentType);
-      passArgumentMethod.Invoke(null, [receiver, tuple.ItemX]);
+      passArgumentMethod.Invoke(null, [receiver, argumentsTuple.ItemX]);
       return;
     }
 
     // the receiver argument type is ITuple, pass both providers
     if(receiverArgumentType.IsTuple(out var typeX, out var typeY))
     {
-      var stateArgumentType = tuple.ItemY?.GetArgumentType();
+      var stateArgumentType = argumentsTuple.ItemY?.GetArgumentType();
       if(stateArgumentType is null) throw Paranoia.GetInvalidTargetException(receiver);
 
       var passTupleArgumentMethod = SetTupleArgumentMethodFactory.MakeGenericMethod(typeX, typeY);
-      passTupleArgumentMethod.Invoke(null, [receiver, tuple.ItemX, tuple.ItemY!]);
+      passTupleArgumentMethod.Invoke(null, [receiver, argumentsTuple.ItemX, argumentsTuple.ItemY!]);
     }
   }
 

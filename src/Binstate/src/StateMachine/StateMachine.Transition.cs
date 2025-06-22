@@ -8,14 +8,15 @@ namespace BeatyBit.Binstate;
 internal partial class StateMachine<TState, TEvent>
 {
   /// <summary>
-  /// Performing transition is split into two parts, the first one is "readonly", preparing and checking all the data, can throw an exception.
+  /// Performing transition is split into two parts.
+  /// This is the first one, it's "readonly", preparing and checking all the data, can throw an exception.
   /// </summary>
   /// <returns>
   /// Returns null if:
   /// no transition found by specified <paramref name="event" /> from the current state
   /// dynamic transition returns 'null'
   /// </returns>
-  /// <exception cref="TransitionException"> Throws if passed argument doesn't match the 'enter' action of the target state. </exception>
+  /// <exception cref="TransitionException"> Throws if <paramref name="eventArgument"/> doesn't match the argument required by the target state. </exception>
   private TransitionData? PrepareTransition<TEventArgument>(TEvent @event, TEventArgument eventArgument, bool argumentIsFallback)
   {
     try
@@ -211,9 +212,9 @@ internal partial class StateMachine<TState, TEvent>
     private static readonly Tuple<Type?, Type?> _argumentTypes
       = StateArgumentType == null && EventArgumentType == null
           ? EmptyArgumentTypes
-          : Tuple.Create(StateArgumentType, EventArgumentType);
+          : ArgumentsTuple.Create(StateArgumentType, EventArgumentType);
 
-    private Maybe<TState> _targetStateId;
+    private readonly Maybe<TState> _targetStateId;
 
     public Transition(
       TEvent                  @event,
@@ -224,10 +225,10 @@ internal partial class StateMachine<TState, TEvent>
       => IsReentrant = isReentrant;
 
     public Transition(
-      TEvent                                                                     @event,
-      TState                                                                     targetStateId,
-      Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Guard?  guard, //TODO: is it bad, that in StateMachine the type Builder... is used?
-      Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Action? action)
+      TEvent                                                                      @event,
+      TState                                                                      targetStateId,
+      Binstate.Transition<TStateArgument, TEventArgument>.Guard?                  guard, //TODO: is it bad, that in StateMachine the type Builder... is used?
+      Binstate.Transition<TStateArgument, TEventArgument>.Action<TState, TEvent>? action)
       : this(@event, ConvertGuardToSelector(targetStateId, guard), action)
     {
       _targetStateId   = targetStateId.ToMaybe();
@@ -237,9 +238,9 @@ internal partial class StateMachine<TState, TEvent>
     }
 
     public Transition(
-      TEvent                                                                      @event,
-      Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Selector stateSelector,
-      Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Action?  transitionAction)
+      TEvent                                                                            @event,
+      Binstate.Transition<TStateArgument, TEventArgument>.StateSelector<TState, TEvent> stateSelector,
+      Binstate.Transition<TStateArgument, TEventArgument>.Action<TState, TEvent>?       transitionAction)
     {
       Event            = @event;
       _stateSelector   = stateSelector;
@@ -250,7 +251,7 @@ internal partial class StateMachine<TState, TEvent>
 
     public Tuple<Type?, Type?> ArgumentTypes => _argumentTypes;
 
-    private readonly Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Selector _stateSelector;
+    private readonly Binstate.Transition<TStateArgument, TEventArgument>.StateSelector<TState, TEvent> _stateSelector;
 
     public TState GetTargetStateId()
     {
@@ -272,7 +273,8 @@ internal partial class StateMachine<TState, TEvent>
         default:
         {
           var arguments = CreateArguments(sourceState, default, argumentProviders);
-          return _stateSelector(arguments, out targetStateId);
+          var context   = new Binstate.Transition<TStateArgument, TEventArgument>.Context<TState, TEvent>(Event, sourceState, default, arguments);
+          return _stateSelector(context, out targetStateId);
         }
       }
     }
@@ -280,12 +282,12 @@ internal partial class StateMachine<TState, TEvent>
     public void CallActionSafe(TState sourceState, TState targetState, Tuple<IArgumentProvider?, IArgumentProvider?> transitionArgumentsProviders)
     {
       var arguments = CreateArguments(sourceState, targetState, transitionArgumentsProviders);
-      var context   = new Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Context(Event, sourceState, targetState, arguments);
+      var context   = new Binstate.Transition<TStateArgument, TEventArgument>.Context<TState, TEvent>(Event, sourceState, targetState, arguments);
 
-     //call action
+      //TODO: call action
     }
 
-    private Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Arguments CreateArguments(
+    private ITuple<TStateArgument, TEventArgument> CreateArguments(
       TState                                        sourceState,
       TState?                                       targetState,
       Tuple<IArgumentProvider?, IArgumentProvider?> argumentProviders)
@@ -298,7 +300,7 @@ internal partial class StateMachine<TState, TEvent>
       if(! eventArgument.HasValue)
         throw TransitionException.NoEventArgumentException<TEvent, TState, TEventArgument>(Event, sourceState, targetState);
 
-      return new Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Arguments(stateArgument.Value, eventArgument.Value);
+      return ArgumentsTuple.Create(stateArgument.Value, eventArgument.Value);
     }
 
     private static Maybe<T> GetArgument<T>(IArgumentProvider? argumentProvider)
@@ -313,21 +315,21 @@ internal partial class StateMachine<TState, TEvent>
     public object? TransitionAction { get; }
     public bool    IsReentrant      { get; }
 
-    private static Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Action? ActionToTransitionAction(Action<TEventArgument>? action)
-      => action is null ? null : _ => action(_.Arguments.EventArgument);
+    private static Binstate.Transition<TStateArgument, TEventArgument>.Action<TState, TEvent>? ActionToTransitionAction(Action<TEventArgument>? action)
+      => action is null ? null : _ => action(_.Arguments.ItemY);
 
-    private static Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Selector ConvertGuardToSelector(
-      TState                                                                    targetStateId,
-      Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Guard? guard)
+    private static Binstate.Transition<TStateArgument, TEventArgument>.StateSelector<TState, TEvent> ConvertGuardToSelector(
+      TState                                                     targetStateId,
+      Binstate.Transition<TStateArgument, TEventArgument>.Guard? guard)
     {
       if(guard is null) return Empty;
 
       return (
-          Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Arguments args,
-          out TState?                                                                  state)
+          Binstate.Transition<TStateArgument, TEventArgument>.Context<TState, TEvent> context,
+          [NotNullWhen(true)]out TState?                                              state)
         =>
       {
-        if(guard(args))
+        if(guard(context.Arguments))
         {
           state = targetStateId;
           return true;
@@ -342,12 +344,12 @@ internal partial class StateMachine<TState, TEvent>
     [ExcludeFromCodeCoverage]
     public override string ToString()
     {
-      var stateName = IsStatic ? _targetStateId!.ToString() : "dynamic";
+      var stateName = IsStatic ? _targetStateId.HasValue.ToString() : "dynamic";
       return $"[{Event} -> {stateName}]";
     }
 
-    private static readonly Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Selector Empty
-      = (Builder<TState, TEvent>.Transition<TStateArgument, TEventArgument>.Arguments args, out TState? state) =>
+    private static readonly Binstate.Transition<TStateArgument, TEventArgument>.StateSelector<TState, TEvent> Empty
+      = (Binstate.Transition<TStateArgument, TEventArgument>.Context<TState, TEvent> _, [NotNullWhen(true)]out TState? state) =>
       {
         state = default;
         return false;

@@ -65,16 +65,16 @@ public partial class Builder<TState, TEvent>
     }
 
     public void AddTransition<TStateArgument, TEventArgument>(
-      TEvent                                             @event,
-      TState                                             targetStateId,
-      Transition<TStateArgument, TEventArgument>.Guard?  guard,
-      Transition<TStateArgument, TEventArgument>.Action? action)
+      TEvent                                                             @event,
+      TState                                                             targetStateId,
+      Transition<TStateArgument, TEventArgument>.Guard?                  guard,
+      Transition<TStateArgument, TEventArgument>.Action<TState, TEvent>? action)
       => _transitionList.Add(@event, new StateMachine<TState, TEvent>.Transition<TStateArgument, TEventArgument>(@event, targetStateId, guard, action));
 
     public void AddTransition<TStateArgument, TEventArgument>(
-      TEvent                                              @event,
-      Transition<TStateArgument, TEventArgument>.Selector selectState,
-      Transition<TStateArgument, TEventArgument>.Action?  action)
+      TEvent                                                                   @event,
+      Transition<TStateArgument, TEventArgument>.StateSelector<TState, TEvent> selectState,
+      Transition<TStateArgument, TEventArgument>.Action<TState, TEvent>?       action)
       => _transitionList.Add(@event, new StateMachine<TState, TEvent>.Transition<TStateArgument, TEventArgument>(@event, selectState, action));
 
     public IState<TState, TEvent> CreateState(IState<TState, TEvent>? parentState) => _factory.CreateState(this, parentState);

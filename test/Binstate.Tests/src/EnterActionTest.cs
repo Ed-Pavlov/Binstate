@@ -226,7 +226,7 @@ public class EnterActionTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    builder.DefineState<string>(Initial).OnEnter(A.Dummy<Action>()).AddTransition(GoToX, StateX);
+    builder.DefineState<string>(Initial).OnEnter(A.Fake<Action>()).AddTransition(GoToX, StateX);
     builder.DefineState<ITuple<StringBuilder, string>>(StateX).OnEnter(onEnter);
 
     var target = builder.Build(Initial, expectedString);

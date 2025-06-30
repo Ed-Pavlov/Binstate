@@ -53,7 +53,7 @@ public partial class Builder<TState, TEvent> : Builder
     if(! _options.AllowDefaultValueAsStateId && EqualityComparer<TState>.Default.Equals(stateId, default!))
       throw new ArgumentException($"'{nameof(stateId)}' cannot be default value", nameof(stateId));
 
-    var config = new StateConfig(stateId, new StateFactory<TArgument>());
+    var config = new StateConfig<TArgument>(stateId);
     _configs.Add(stateId, config);
 
     return new ConfiguratorOf.State<TArgument>(config);
@@ -67,7 +67,7 @@ public partial class Builder<TState, TEvent> : Builder
     if(! _options.AllowDefaultValueAsStateId && EqualityComparer<TState>.Default.Equals(stateId, default!))
       throw new ArgumentException($"'{nameof(stateId)}' cannot be default value", nameof(stateId));
 
-    var config = new StateConfig(stateId, new StateFactory<Unit>());
+    var config = new StateConfig<Unit>(stateId);
     _configs.Add(stateId, config);
 
     return new ConfiguratorOf.State(config);
@@ -79,11 +79,14 @@ public partial class Builder<TState, TEvent> : Builder
   /// <param name="stateId"> ID of the state; is used to reference it from other elements of the state machine. </param>
   /// <remarks> Use returned syntax-sugar object to configure the new state. </remarks>
   public ConfiguratorOf.IState<TArgument> GetOrDefineState<TArgument>(TState stateId)
-    => _configs.TryGetValue(stateId, out var config) ? new ConfiguratorOf.State<TArgument>(config) : DefineState<TArgument>(stateId);
+    => _configs.TryGetValue(stateId, out var config) ? new ConfiguratorOf.State<TArgument>((StateConfig<TArgument>)config) : DefineState<TArgument>(stateId);
 
   /// <inheritdoc cref="GetOrDefineState{T}"/>
   public ConfiguratorOf.IState GetOrDefineState(TState stateId)
-    => _configs.TryGetValue(stateId, out var config) ? new ConfiguratorOf.State(config) : DefineState(stateId);
+  {
+    if(stateId is null) throw new ArgumentNullException(nameof(stateId));
+    return _configs.TryGetValue(stateId, out var config) ? new ConfiguratorOf.State((StateConfig<Unit>)config) : DefineState(stateId);
+  }
 
   /// <summary>
   /// Validates consistency and builds the state machine using provided configuration.
@@ -275,9 +278,6 @@ public partial class Builder<TState, TEvent> : Builder
                   }
                 );
 
-      writer.Write(stateData.EnterAction?.GetType());
-      writer.Write(stateData.ExitAction?.GetType());
-
       foreach(var transition in stateData.TransitionList.Values)
       {
         writer.Write(JsonSerializer.Serialize(transition.Event));
@@ -285,7 +285,7 @@ public partial class Builder<TState, TEvent> : Builder
         {
           var targetStateId = transition.GetTargetStateId();
           writer.Write(JsonSerializer.Serialize(targetStateId));
-          writer.Write(transition.TransitionAction?.GetType());
+//          writer.Write(transition.TransitionAction?.GetType());
         }
       }
     }

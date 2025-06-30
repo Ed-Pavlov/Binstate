@@ -17,7 +17,7 @@ public partial class Builder<TState, TEvent>
       /// <param name="exitAction">The action to execute.</param>
       /// <returns>An <see cref="ITransitions"/> instance for configuring possible transitions.</returns>
       /// <exception cref="ArgumentNullException">Thrown when <paramref name="exitAction"/> is null.</exception>
-      ITransitions OnExit(Action? exitAction = null);
+      ITransitions OnExit(Action exitAction);
     }
 
 
@@ -25,7 +25,7 @@ public partial class Builder<TState, TEvent>
     public interface IExitAction<TArgument> : ITransitions<TArgument>
     {
       /// <inheritdoc cref="IExitAction.OnExit"/>
-      ITransitions<TArgument> OnExit(Action? exitAction = null);
+      ITransitions<TArgument> OnExit(Action exitAction);
 
       /// <inheritdoc cref="IExitAction.OnExit"/>
       ITransitions<TArgument> OnExit(Action<TArgument> exitAction);

@@ -2,6 +2,7 @@ using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 
@@ -13,7 +14,7 @@ public partial class Builder<TState, TEvent>
     {
       private const string AsyncVoidMethodNotSupported = "'async void' methods are not supported, use Task return type for async method";
 
-      internal EnterAction(StateConfig stateConfig) : base(stateConfig) { }
+      internal EnterAction(StateConfig<Unit> stateConfig) : base(stateConfig) { }
 
       public IExitAction OnEnter(Action? enterAction = null)
       {
@@ -28,7 +29,7 @@ public partial class Builder<TState, TEvent>
         if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
         if(IsAsyncMethod(enterAction.Method)) throw new ArgumentException(AsyncVoidMethodNotSupported);
 
-        StateConfig.EnterAction = ConvertToGeneralForm(enterAction);
+        StateConfig.EnterAction = State<TState, TEvent, Unit>.EnterAction.Create(enterAction);
         return this;
       }
 
@@ -36,14 +37,15 @@ public partial class Builder<TState, TEvent>
       {
         if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-        return OnEnter(_ => enterAction());
+        StateConfig.EnterAction = State<TState, TEvent, Unit>.EnterAction.Create(enterAction);
+        return this;
       }
 
       public IExitAction OnEnter(Func<IStateController<TEvent>, Task> enterAction)
       {
         if(enterAction is null) throw new ArgumentNullException(nameof(enterAction));
 
-        StateConfig.EnterAction = enterAction;
+        StateConfig.EnterAction = State<TState, TEvent, Unit>.EnterAction.Create(enterAction);
         return this;
       }
 
@@ -112,20 +114,6 @@ public partial class Builder<TState, TEvent>
 //      }
 
       private static bool IsAsyncMethod(MemberInfo method) => method.GetCustomAttribute(typeof(AsyncStateMachineAttribute)) is not null;
-
-      private static Func<IStateController<TEvent>, Task?> ConvertToGeneralForm(Action<IStateController<TEvent>> enterAction)
-        => controller =>
-        {
-          enterAction(controller);
-          return null;
-        };
-
-      private static Func<IStateController<TEvent>, TArgument, Task?> ConvertToGeneralForm<TArgument>(Action<IStateController<TEvent>, TArgument> enterAction)
-        => (controller, argument) =>
-        {
-          enterAction(controller, argument);
-          return null;
-        };
     }
   }
 }

@@ -9,9 +9,9 @@ public partial class Builder<TState, TEvent>
   {
     internal class Transitions<TStateArgument> : ITransitions<TStateArgument>
     {
-      protected StateConfig StateConfig { get; }
+      protected StateConfig<TStateArgument> StateConfig { get; }
 
-      public Transitions(StateConfig stateConfig) => StateConfig = stateConfig;
+      public Transitions(StateConfig<TStateArgument> stateConfig) => StateConfig = stateConfig;
 
       public ITransitions<TStateArgument> AddTransition(
         TEvent                                                   @event,

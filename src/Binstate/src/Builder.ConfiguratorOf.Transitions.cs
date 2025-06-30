@@ -17,9 +17,9 @@ public partial class Builder<TState, TEvent>
 
     internal class Transitions : ITransitions
     {
-      protected readonly StateConfig StateConfig;
+      protected readonly StateConfig<Unit> StateConfig;
 
-      protected Transitions(StateConfig stateConfig) => StateConfig = stateConfig;
+      protected Transitions(StateConfig<Unit> stateConfig) => StateConfig = stateConfig;
 
       public ITransitions AddTransition(TEvent @event, TState targetState, Transition<Unit, Unit>.Action<TState, TEvent>? action = null)
       {
@@ -29,6 +29,8 @@ public partial class Builder<TState, TEvent>
 
       public ITransitions AddTransition<TEventArgument>(TEvent @event, TState targetState, Transition<Unit, TEventArgument>.Action<TState, TEvent> action)
       {
+        if(action is null) throw new ArgumentNullException(nameof(action));
+
         StateConfig.AddTransition(@event, targetState, null, action);
         return this;
       }
@@ -39,6 +41,8 @@ public partial class Builder<TState, TEvent>
         Transition<Unit, TEventArgument>.Guard                   guard,
         Transition<Unit, TEventArgument>.Action<TState, TEvent>? action)
       {
+        if(guard is null) throw new ArgumentNullException(nameof(guard));
+
         StateConfig.AddTransition(@event, targetState, guard, action);
         return this;
       }
@@ -49,6 +53,8 @@ public partial class Builder<TState, TEvent>
         Transition<Unit, Unit>.Guard                   guard,
         Transition<Unit, Unit>.Action<TState, TEvent>? action)
       {
+        if(guard is null) throw new ArgumentNullException(nameof(guard));
+
         StateConfig.AddTransition(@event, targetState, guard, action);
         return this;
       }
@@ -59,6 +65,8 @@ public partial class Builder<TState, TEvent>
         Func<bool>                                     guard,
         Transition<Unit, Unit>.Action<TState, TEvent>? action = null)
       {
+        if(guard is null) throw new ArgumentNullException(nameof(guard));
+
         StateConfig.AddTransition(@event, targetState, _ => guard(), action);
         return this;
       }
@@ -78,6 +86,8 @@ public partial class Builder<TState, TEvent>
         Transition<Unit, Unit>.StateSelector<TState, TEvent> selector,
         Transition<Unit, Unit>.Action<TState, TEvent>?       action = null)
       {
+        if(selector is null) throw new ArgumentNullException(nameof(selector));
+
         StateConfig.AddTransition(@event, selector, action);
         return this;
       }
@@ -87,12 +97,17 @@ public partial class Builder<TState, TEvent>
         Transition<Unit, TEventArgument>.StateSelector<TState, TEvent> selector,
         Transition<Unit, TEventArgument>.Action<TState, TEvent>        action)
       {
+        if(selector is null) throw new ArgumentNullException(nameof(selector));
+        if(action is null) throw new ArgumentNullException(nameof(action));
+
         StateConfig.AddTransition(@event, selector, action);
         return this;
       }
 
       public ITransitions AddDynamicTransition(TEvent @event, Func<TState?> selector, Transition<Unit, Unit>.Action<TState, TEvent>? action = null)
       {
+        if(selector is null) throw new ArgumentNullException(nameof(selector));
+
         StateConfig.AddTransition(@event, FuncToSelector<Unit, Unit>(selector), action);
         return this;
       }
@@ -102,6 +117,9 @@ public partial class Builder<TState, TEvent>
         Func<TState?>                                           selector,
         Transition<Unit, TEventArgument>.Action<TState, TEvent> action)
       {
+        if(selector is null) throw new ArgumentNullException(nameof(selector));
+        if(action is null) throw new ArgumentNullException(nameof(action));
+
         StateConfig.AddTransition(@event, FuncToSelector<Unit, TEventArgument>(selector), action);
         return this;
       }
@@ -109,7 +127,12 @@ public partial class Builder<TState, TEvent>
       public void AllowReentrancy(TEvent @event, Action? action = null)
         => StateConfig.AddReentrantTransition<Unit>(@event, action is null ? null : _ => action());
 
-      public void AllowReentrancy<TEventArgument>(TEvent @event, Action<TEventArgument> action) => StateConfig.AddReentrantTransition(@event, action);
+      public void AllowReentrancy<TEventArgument>(TEvent @event, Action<TEventArgument> action)
+      {
+        if(action is null) throw new ArgumentNullException(nameof(action));
+
+        StateConfig.AddReentrantTransition(@event, action);
+      }
     }
   }
 }

@@ -6,7 +6,6 @@ namespace BeatyBit.Binstate;
 internal interface ITransition
 {
   bool                IsStatic         { get; }
-  object?             TransitionAction { get; }
   bool                IsReentrant      { get; }
   Tuple<Type?, Type?> ArgumentTypes    { get; }
 }

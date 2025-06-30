@@ -1,4 +1,5 @@
 using System;
+using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 
@@ -8,28 +9,31 @@ public partial class Builder<TState, TEvent>
   {
     internal class ExitAction : Transitions, IExitAction
     {
-      protected ExitAction(StateConfig stateConfig) : base(stateConfig) { }
+      protected ExitAction(StateConfig<Unit> stateConfig) : base(stateConfig) { }
 
-      public ITransitions OnExit(Action? exitAction = null)
+      public ITransitions OnExit(Action exitAction)
       {
-        StateConfig.ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
+        if(exitAction is null) throw new ArgumentNullException(nameof(exitAction));
+        StateConfig.ExitAction = State<TState, TEvent, Unit>.ExitAction.Create(exitAction);
         return this;
       }
     }
 
     internal class ExitAction<TStateArgument> : Transitions<TStateArgument>, IExitAction<TStateArgument>
     {
-      public ExitAction(StateConfig stateConfig) : base(stateConfig) { }
+      public ExitAction(StateConfig<TStateArgument> stateConfig) : base(stateConfig) { }
 
-      public ITransitions<TStateArgument> OnExit(Action? exitAction = null)
+      public ITransitions<TStateArgument> OnExit(Action exitAction)
       {
-        StateConfig.ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
+        if(exitAction is null) throw new ArgumentNullException(nameof(exitAction));
+        StateConfig.ExitAction = State<TState, TEvent, TStateArgument>.ExitAction.Create(exitAction);
         return this;
       }
 
       public ITransitions<TStateArgument> OnExit(Action<TStateArgument> exitAction)
       {
-        StateConfig.ExitAction = exitAction ?? throw new ArgumentNullException(nameof(exitAction));
+        if(exitAction is null) throw new ArgumentNullException(nameof(exitAction));
+        StateConfig.ExitAction = State<TState, TEvent, TStateArgument>.ExitAction.Create(exitAction);
         return this;
       }
     }

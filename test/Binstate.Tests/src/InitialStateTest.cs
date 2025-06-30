@@ -48,8 +48,8 @@ public class InitialStateTest : StateMachineTestBase
 
   [Test]
   public void should_pass_argument_to_initial_and_its_parents_states(
-    [ValueSource(nameof(EnterExit))] Action<Builder<string, int>.ConfiguratorOf.IEnterAction, Action<string>> setupRoot,
-    [ValueSource(nameof(EnterExit))] Action<Builder<string, int>.ConfiguratorOf.IEnterAction, Action<string>> setupParent)
+    [ValueSource(nameof(EnterExit))] Action<Builder<string, int>.ConfiguratorOf.IEnterAction<string>, Action<string>> setupRoot,
+    [ValueSource(nameof(EnterExit))] Action<Builder<string, int>.ConfiguratorOf.IEnterAction<string>, Action<string>> setupParent)
   {
     const string expected     = "expected";
     var          onEnter      = A.Fake<Action<string>>();
@@ -59,8 +59,8 @@ public class InitialStateTest : StateMachineTestBase
     // --arrange
     var target = new Builder<string, int>(OnException);
 
-    target.DefineState(Root).With(_ => setupRoot(_, rootAction));
-    target.DefineState(Parent).AsSubstateOf(Root).With(_ => setupParent(_, parentAction));
+    target.DefineState<string>(Root).With(_ => setupRoot(_, rootAction));
+    target.DefineState<string>(Parent).AsSubstateOf(Root).With(_ => setupParent(_, parentAction));
     target.DefineState<string>(Initial).AsSubstateOf(Parent).OnEnter(onEnter).AddTransition(GoToX, StateX);
     target.DefineState(StateX);
 

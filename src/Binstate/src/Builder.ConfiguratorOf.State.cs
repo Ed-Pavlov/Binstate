@@ -30,7 +30,7 @@ public partial class Builder<TState, TEvent>
 
     internal class State : EnterAction, IState
     {
-      internal State(StateConfig stateConfig) : base(stateConfig) { }
+      internal State(StateConfig<Unit> stateConfig) : base(stateConfig) { }
 
       public IEnterAction AsSubstateOf(TState parentStateId)
       {
@@ -42,7 +42,7 @@ public partial class Builder<TState, TEvent>
 
     internal class State<TStateArgument> : EnterAction<TStateArgument>, IState<TStateArgument>
     {
-      internal State(StateConfig stateConfig) : base(stateConfig) { }
+      internal State(StateConfig<TStateArgument> stateConfig) : base(stateConfig) { }
 
       public IEnterAction<TStateArgument> AsSubstateOf(TState parentStateId)
       {

@@ -7,16 +7,16 @@ using BeatyBit.Bits;
 
 namespace BeatyBit.Binstate;
 
-internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>, IGetArgument<TArgument>, ISetArgument<TArgument>
+internal sealed partial class State<TState, TEvent, TArgument> : IState<TState, TEvent>, IGetArgument<TArgument>, ISetArgument<TArgument>
   where TState : notnull
   where TEvent : notnull
 {
   private readonly Type? _argumentType;
 
-  private readonly object? _enterAction;
+  private readonly EnterAction? _enterAction;
 
   /// <summary>
-  /// This event is used to wait while state's 'enter' action is finished before call 'exit' action and change the active state of the state machine.
+  /// This event is used to wait while the state's 'enter' action is finished before call 'exit' action and change the active state of the state machine.
   /// See usages for details.
   /// </summary>
   private readonly ManualResetEvent _enterActionFinished = new ManualResetEvent(true);
@@ -27,25 +27,25 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   /// </summary>
   private readonly ManualResetEvent _enterActionStarted = new ManualResetEvent(true);
 
-  private readonly object? _exitAction;
+  private readonly ExitAction? _exitAction;
 
   private Maybe<TArgument> _argument;
 
   private volatile bool _isActive;
 
   /// <summary>
-  /// This task is used to wait while state's 'enter' action is finished before call 'exit' action and change the active state of the state machine in
+  /// This task is used to wait while the state's 'enter' action is finished before call 'exit' action and change the active state of the state machine in
   /// case of async OnEnter action.
   /// See usages for details.
   /// </summary>
   private Task? _task;
 
   public State(
-    TState                                                  id,
-    object?                                                 enterAction,
-    object?                                                 exitAction,
+    TState                                                   id,
+    EnterAction?                                             enterAction,
+    ExitAction?                                                  exitAction,
     IReadOnlyDictionary<TEvent, ITransition<TState, TEvent>> transitions,
-    IState<TState, TEvent>?                                 parentState)
+    IState<TState, TEvent>?                                  parentState)
   {
     Id           = id ?? throw new ArgumentNullException(nameof(id));
     _enterAction = enterAction;
@@ -91,16 +91,10 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
   {
     try
     {
-      _enterActionFinished.Reset(); // Exit will wait this event before call OnExit so after resetting it
+      _enterActionFinished.Reset(); // Exit will wait for this event before call OnExit so after resetting it
       _enterActionStarted.Set();    // it is safe to set the state as entered
 
-      _task = _enterAction switch
-      {
-        null                                                   => null,
-        Func<IStateController<TEvent>, TArgument, Task?> enter => enter(stateController, Argument),
-        Func<IStateController<TEvent>, Task?> enter            => enter(stateController),
-        _                                                      => throw new ArgumentOutOfRangeException(),
-      };
+      _task = _enterAction?.Call(stateController, _argument);
     }
     catch(Exception exception)
     {
@@ -126,56 +120,18 @@ internal sealed class State<TState, TEvent, TArgument> : IState<TState, TEvent>,
       // if action is set as active but enter action still is not called, wait for it
       _enterActionStarted.WaitOne();
 
-      // wait till State.Enter function finishes
+      // wait till the state's 'enter' function finishes
       // if enter action is blocking or no action: _enterFunctionFinished is set means it finishes
       _enterActionFinished.WaitOne();
 
       // if async: _enterFunctionFinished is set means there is a value assigned to _task, which allows waiting till the action finishes
       _task?.Wait();
 
-      switch(_exitAction)
-      {
-        case null: break;
-
-        case Action action:
-          action();
-          break;
-
-        case Action<TArgument> actionT:
-          actionT(Argument);
-          break;
-
-        default: throw new ArgumentOutOfRangeException();
-      }
+      _exitAction?.Call(_argument);
     }
     catch(Exception exception)
     {
       onException(exception);
-    }
-  }
-
-  public void CallTransitionActionSafe(ITransition transition, Action<Exception> onException)
-  {
-    try
-    {
-      switch(transition.TransitionAction)
-      {
-        case null: break; // no action
-
-        case Action action:
-          action();
-          break;
-
-        case Action<TArgument> actionT: // action requires argument
-          actionT(Argument);
-          break;
-
-        default: throw new ArgumentOutOfRangeException();
-      }
-    }
-    catch(Exception exc)
-    { // transition action can throw "user" exception
-      onException(exc);
     }
   }
 

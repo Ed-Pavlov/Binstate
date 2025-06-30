@@ -96,8 +96,7 @@ internal partial class StateMachine<TState, TEvent>
         }
 
         // invoke action attached to the transition itself
-//        transition.CallActionSafe(transitionData.CurrentActiveState, transitionData.TargetState, transitionArgumentsProviders);
-        prevActiveState.CallTransitionActionSafe(transition, _onException);
+        transition.CallActionSafe(transitionData.CurrentActiveState.Id, transitionData.TargetState.Id, transitionData.TransitionArgumentsProviders);
 
         // and then activate new active states
         _activeState = targetState;
@@ -177,8 +176,8 @@ internal partial class StateMachine<TState, TEvent>
 
   private readonly struct TransitionData
   {
-    public readonly IState                                        CurrentActiveState;
-    public readonly ITransition                                   Transition;
+    public readonly IState<TState, TEvent>                        CurrentActiveState;
+    public readonly ITransition<TState, TEvent>                   Transition;
     public readonly Tuple<IArgumentProvider?, IArgumentProvider?> TransitionArgumentsProviders;
     public readonly IState<TState, TEvent>                        TargetState;
     public readonly IState?                                       CommonAncestor;
@@ -186,7 +185,7 @@ internal partial class StateMachine<TState, TEvent>
     public readonly IReadOnlyDictionary<IState, Action<IState>> ArgumentsBag;
 
     public TransitionData(
-      IState                                        currentActiveState,
+      IState<TState, TEvent>                        currentActiveState,
       ITransition<TState, TEvent>                   transition,
       Tuple<IArgumentProvider?, IArgumentProvider?> transitionArgumentsProviders,
       IState<TState, TEvent>                        targetState,
@@ -231,6 +230,9 @@ internal partial class StateMachine<TState, TEvent>
       Binstate.Transition<TStateArgument, TEventArgument>.Action<TState, TEvent>? action)
       : this(@event, ConvertGuardToSelector(targetStateId, guard), action)
     {
+      if(@event is null) throw new ArgumentNullException(nameof(@event));
+      if(targetStateId is null) throw new ArgumentNullException(nameof(targetStateId));
+
       _targetStateId   = targetStateId.ToMaybe();
       IsReentrant      = false;
       TransitionAction = action;
@@ -281,10 +283,13 @@ internal partial class StateMachine<TState, TEvent>
 
     public void CallActionSafe(TState sourceState, TState targetState, Tuple<IArgumentProvider?, IArgumentProvider?> transitionArgumentsProviders)
     {
-      var arguments = CreateArguments(sourceState, targetState, transitionArgumentsProviders);
-      var context   = new Binstate.Transition<TStateArgument, TEventArgument>.Context<TState, TEvent>(Event, sourceState, targetState, arguments);
-
-      //TODO: call action
+      if(TransitionAction is not null)
+      {
+        var arguments = CreateArguments(sourceState, targetState, transitionArgumentsProviders);
+        //TODO: which arguments should be passed to the context? sourceState argument? so, not provider, but argument should be passed
+        var context   = new Binstate.Transition<TStateArgument, TEventArgument>.Context<TState, TEvent>(Event, sourceState, targetState, arguments);
+        TransitionAction.Invoke(context);
+      }
     }
 
     private ITuple<TStateArgument, TEventArgument> CreateArguments(
@@ -312,8 +317,8 @@ internal partial class StateMachine<TState, TEvent>
 
     public bool IsStatic { get; }
 
-    public object? TransitionAction { get; }
-    public bool    IsReentrant      { get; }
+    private Binstate.Transition<TStateArgument, TEventArgument>.Action<TState, TEvent>? TransitionAction { get; }
+    public  bool                                                                        IsReentrant      { get; }
 
     private static Binstate.Transition<TStateArgument, TEventArgument>.Action<TState, TEvent>? ActionToTransitionAction(Action<TEventArgument>? action)
       => action is null ? null : _ => action(_.Arguments.ItemY);
@@ -324,9 +329,7 @@ internal partial class StateMachine<TState, TEvent>
     {
       if(guard is null) return Empty;
 
-      return (
-          Binstate.Transition<TStateArgument, TEventArgument>.Context<TState, TEvent> context,
-          [NotNullWhen(true)]out TState?                                              state)
+      return (context, [NotNullWhen(true)] out state)
         =>
       {
         if(guard(context.Arguments))
@@ -349,7 +352,7 @@ internal partial class StateMachine<TState, TEvent>
     }
 
     private static readonly Binstate.Transition<TStateArgument, TEventArgument>.StateSelector<TState, TEvent> Empty
-      = (Binstate.Transition<TStateArgument, TEventArgument>.Context<TState, TEvent> _, [NotNullWhen(true)]out TState? state) =>
+      = (_, [NotNullWhen(true)] out state) =>
       {
         state = default;
         return false;

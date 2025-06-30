@@ -11,7 +11,7 @@ internal interface IState : IArgumentReceiver, IArgumentProvider
   int     DepthInTree { get; }
 
   /// <summary>
-  /// This property is set from protected by lock part of the code so it's no need synchronization
+  /// This property is set from protected by lock part of the code, so it's no need synchronization
   /// see <see cref="StateMachine{TState,TEvent}.CreateActivateStateNotGuardedAction" /> implementation for details.
   /// </summary>
   bool IsActive { get; set; }
@@ -22,8 +22,6 @@ internal interface IState : IArgumentReceiver, IArgumentProvider
   /// In this case it should wait till <see cref="Builder{TState,TEvent}.ConfiguratorOf.IEnterAction" /> be called and exited, before call exit action
   /// </summary>
   void ExitSafe(Action<Exception> onException);
-
-  void CallTransitionActionSafe(ITransition transition, Action<Exception> onException);
 
   Maybe<object?> GetArgumentAsObject();
 }

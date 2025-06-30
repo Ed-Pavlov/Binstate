@@ -75,13 +75,10 @@ public class ConfigurationTest : StateMachineTestBase
 
     var actions = new Action[]
     {
-      () => config.OnEnter((Action)null!),
+      () => config.OnEnter(),
       () => config.OnEnter((Func<Task>)null!),
-
       () => config.OnEnter((Action<object>)null!),
       () => config.OnEnter((Func<object, Task>)null!),
-
-
       () => config.OnEnter((Action<IStateController<string>>)null!),
       () => config.OnEnter((Func<IStateController<string>, Task>)null!),
     };
@@ -146,39 +143,42 @@ public class ConfigurationTest : StateMachineTestBase
       // Basic transitions
       () => config.AddTransition(null,    Initial),
       () => config.AddTransition(Initial, null),
-      () => config.AddTransition<int>(Initial, Initial, (Transition<Unit, int>.Action<string, string>)null!),
+      () => config.AddTransition<int>(Initial, Initial, null!),
 
       // Conditional transitions
       () => config.AddConditionalTransition(null,    Initial, () => true),
       () => config.AddConditionalTransition(Initial, null,    () => true),
       () => config.AddConditionalTransition(Initial, Initial, (Func<bool>)null!),
       () => config.AddConditionalTransition(Initial, Initial, (Transition<Unit, Unit>.Guard)null!),
-      () => config.AddConditionalTransition<int>(Initial, Initial, (Transition<Unit, int>.Guard)null!),
-      () => config.AddConditionalTransition<int>(null,    Initial, (g) => true),
-      () => config.AddConditionalTransition<int>(Initial, null,    (g) => true),
+      () => config.AddConditionalTransition(Initial, Initial, (Transition<Unit, int>.Guard)null!),
+      () => config.AddConditionalTransition<int>(null,    Initial, _ => true),
+      () => config.AddConditionalTransition<int>(Initial, null,    _ => true),
 
       // Dynamic transitions
       () => config.AddDynamicTransition(null,    () => "func"),
       () => config.AddDynamicTransition(Initial, (Func<string?>)null!),
       () => config.AddDynamicTransition(null,    StateSelector),
       () => config.AddDynamicTransition(Initial, (Transition<Unit, Unit>.StateSelector<string, string>)null!),
-      () => config.AddDynamicTransition<int>(null,    () => "func",                                               (a) => { }),
-      () => config.AddDynamicTransition<int>(Initial, (Func<string?>)null!,                                       (a) => { }),
-      () => config.AddDynamicTransition<int>(Initial, () => "func",                                               null!),
-      () => config.AddDynamicTransition<int>(null,    StateSelectorInt,                                           (a) => { }),
-      () => config.AddDynamicTransition<int>(Initial, (Transition<Unit, int>.StateSelector<string, string>)null!, (a) => { }),
-      () => config.AddDynamicTransition<int>(Initial, StateSelectorInt,                                           null!),
+      () => config.AddDynamicTransition<int>(null,    () => "func",         _ => { }),
+      () => config.AddDynamicTransition<int>(Initial, (Func<string?>)null!, _ => { }),
+      () => config.AddDynamicTransition<int>(Initial, () => "func",         null!),
+      () => config.AddDynamicTransition<int>(null,    StateSelectorInt,     _ => { }),
+      () => config.AddDynamicTransition(Initial, (Transition<Unit, int>.StateSelector<string, string>)null!, _ => { }),
+      () => config.AddDynamicTransition<int>(Initial, StateSelectorInt, null!),
 
       // Reentrancy
       () => config.AllowReentrancy(null),
-      () => config.AllowReentrancy<int>(null,    (a) => { }),
-      () => config.AllowReentrancy<int>(Initial, null!)
+      () => config.AllowReentrancy<int>(null,    _ => { }),
+      () => config.AllowReentrancy<int>(Initial, null!),
     };
 #pragma warning restore 8625, 8622
 
     // --assert
-    foreach(var action in actions)
-      action.Should().ThrowExactly<ArgumentNullException>();
+    for(var index = 0; index < actions.Length; index++)
+    {
+      var action = actions[index];
+      action.Should().ThrowExactly<ArgumentNullException>($"index {index}");
+    }
 
     return;
 

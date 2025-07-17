@@ -5,11 +5,12 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text.Json;
 using BeatyBit.Bits;
+using Microsoft.Extensions.Logging;
 
 namespace BeatyBit.Binstate;
 
 /// <summary>
-/// Just the base type for the <see cref="Builder{TState, TEvent}"/> to simplify the syntax of instantiating <see cref="Options"/>
+/// Just the base type for the <see cref="Builder{TState, TEvent}"/> to simplify the syntax of instantiating <see cref="Settings"/>
 /// </summary>
 public partial class Builder;
 
@@ -23,7 +24,7 @@ public partial class Builder<TState, TEvent> : Builder
   where TEvent : notnull
 {
   private readonly Action<Exception> _onException;
-  private readonly Options           _options;
+  private readonly Settings          _settings;
 
   private readonly Dictionary<TState, StateConfig> _configs = new();
 
@@ -34,11 +35,11 @@ public partial class Builder<TState, TEvent> : Builder
   /// All exception thrown from 'enter', 'exit', and 'transition' actions passed to the state machine are caught in order not break the state of the state machine.
   /// Use this action to be notified about these exceptions.
   /// </param>
-  /// <param name="options"> Configuration options for the state machine builder. </param>
-  public Builder(Action<Exception> onException, Options? options = null)
+  /// <param name="settings"> Configuration options for the state machine builder. </param>
+  public Builder(Action<Exception> onException, Settings? settings = null)
   {
     _onException = onException ?? throw new ArgumentNullException(nameof(onException));
-    _options     = options     ?? new Options();
+    _settings    = settings    ?? new Settings();
   }
 
   /// <summary>
@@ -50,7 +51,7 @@ public partial class Builder<TState, TEvent> : Builder
   {
     if(stateId is null) throw new ArgumentNullException(nameof(stateId));
 
-    if(! _options.AllowDefaultValueAsStateId && EqualityComparer<TState>.Default.Equals(stateId, default!))
+    if(! _settings.AllowDefaultValueAsStateId && EqualityComparer<TState>.Default.Equals(stateId, default!))
       throw new ArgumentException($"'{nameof(stateId)}' cannot be default value", nameof(stateId));
 
     var config = new StateConfig<TArgument>(stateId);
@@ -64,7 +65,7 @@ public partial class Builder<TState, TEvent> : Builder
   {
     if(stateId is null) throw new ArgumentNullException(nameof(stateId));
 
-    if(! _options.AllowDefaultValueAsStateId && EqualityComparer<TState>.Default.Equals(stateId, default!))
+    if(! _settings.AllowDefaultValueAsStateId && EqualityComparer<TState>.Default.Equals(stateId, default!))
       throw new ArgumentException($"'{nameof(stateId)}' cannot be default value", nameof(stateId));
 
     var config = new StateConfig<Unit>(stateId);
@@ -113,7 +114,8 @@ public partial class Builder<TState, TEvent> : Builder
 
     var states = CreateStates();
 
-    var stateMachine = new StateMachine<TState, TEvent>(states, _onException, initialStateId, CreatePersistenceSignature());
+    var logger       = _settings.LoggerFactory?.CreateLogger<StateMachine<TState, TEvent>>();
+    var stateMachine = new StateMachine<TState, TEvent>(states, _onException, initialStateId, CreatePersistenceSignature(), logger);
     stateMachine.EnterInitialState(initialStateArgument);
     return stateMachine;
   }
@@ -130,10 +132,10 @@ public partial class Builder<TState, TEvent> : Builder
   {
     if(string.IsNullOrWhiteSpace(serializedData)) throw new ArgumentNullException(nameof(serializedData));
 
-    if(! _options.EnableStateMachinePersistence)
+    if(! _settings.EnableStateMachinePersistence)
       throw new InvalidOperationException(
         $"This {nameof(Builder)} is not configured for persistence. "
-      + $"Set {nameof(Builder)}.{nameof(Options)}.{nameof(Options.EnableStateMachinePersistence)} to true to enable it."
+      + $"Set {nameof(Builder)}.{nameof(Settings)}.{nameof(Settings.EnableStateMachinePersistence)} to true to enable it."
       );
 
     var persistedStateMachine = Persistence.DeserializeStateMachineData(serializedData);
@@ -170,7 +172,7 @@ public partial class Builder<TState, TEvent> : Builder
 
     ValidateTransitions(states);
 
-    if(_options.ArgumentTransferMode == ArgumentTransferMode.Strict)
+    if(_settings.ArgumentTransferMode == ArgumentTransferMode.Strict)
       ValidateSubstateEnterArgument(states.Values);
 
     return states;
@@ -258,14 +260,14 @@ public partial class Builder<TState, TEvent> : Builder
   /// </summary>
   private string? CreatePersistenceSignature()
   {
-    if(! _options.EnableStateMachinePersistence) return null;
+    if(! _settings.EnableStateMachinePersistence) return null;
 
     using var sha256 = SHA256.Create();
 
     using var stream = new MemoryStream();
     using var writer = new StreamWriter(stream);
 
-    writer.Write(JsonSerializer.Serialize(_options));
+    writer.Write(JsonSerializer.Serialize(_settings));
 
     foreach(var stateData in _configs.Values)
     {
@@ -285,6 +287,7 @@ public partial class Builder<TState, TEvent> : Builder
         {
           var targetStateId = transition.GetTargetStateId();
           writer.Write(JsonSerializer.Serialize(targetStateId));
+
 //          writer.Write(transition.TransitionAction?.GetType());
         }
       }

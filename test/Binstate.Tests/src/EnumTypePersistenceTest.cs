@@ -16,7 +16,7 @@ public class EnumTypePersistenceTest : StateMachineTestBase
 
     // --arrange
     {
-      var builder = new Builder<TestEnum, int>(OnException, new Builder.Options { EnableStateMachinePersistence = true });
+      var builder = new Builder<TestEnum, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = true });
       builder
        .DefineState<int>(TestEnum.A)
        .AllowReentrancy(1);
@@ -27,7 +27,7 @@ public class EnumTypePersistenceTest : StateMachineTestBase
 
     // --act
     {
-      var target = new Builder<TestEnum, int>(OnException, new Builder.Options { EnableStateMachinePersistence = true });
+      var target = new Builder<TestEnum, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = true });
       target
        .DefineState<int>(TestEnum.A)
        .OnEnter(enterAction)
@@ -48,7 +48,7 @@ public class EnumTypePersistenceTest : StateMachineTestBase
 
     // --arrange
     {
-      var builder = new Builder<string, int>(OnException, new Builder.Options { EnableStateMachinePersistence = true });
+      var builder = new Builder<string, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = true });
       builder
        .DefineState<TestEnum>(Initial)
        .AllowReentrancy(GoToInitial);
@@ -59,7 +59,7 @@ public class EnumTypePersistenceTest : StateMachineTestBase
 
     // --act
     {
-      var target = new Builder<string, int>(OnException, new Builder.Options { EnableStateMachinePersistence = true });
+      var target = new Builder<string, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = true });
       target
        .DefineState<TestEnum>(Initial)
        .OnEnter(enterAction)
@@ -76,7 +76,7 @@ public class EnumTypePersistenceTest : StateMachineTestBase
   public void should_throw_exception_if_not_primitive_type_is_used_as_state_id()
   {
     // --arrange
-    var builder = new Builder<TestEnum, int>(OnException, new Builder.Options { EnableStateMachinePersistence = true });
+    var builder = new Builder<TestEnum, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = true });
     builder
      .DefineState<int>(TestEnum.A)
      .OnEnter((int _) => { })
@@ -95,7 +95,7 @@ public class EnumTypePersistenceTest : StateMachineTestBase
   public void should_throw_exception_if_not_primitive_type_is_used_as_state_argument()
   {
     // --arrange
-    var builder = new Builder<string, int>(OnException, new Builder.Options { EnableStateMachinePersistence = true });
+    var builder = new Builder<string, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = true });
     builder
      .DefineState<TestEnum>(Initial)
      .AllowReentrancy(GoToInitial);

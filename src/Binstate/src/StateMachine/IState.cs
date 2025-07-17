@@ -8,7 +8,9 @@ namespace BeatyBit.Binstate;
 internal interface IState : IArgumentReceiver, IArgumentProvider
 {
   IState? ParentState { get; }
-  int     DepthInTree { get; }
+  object  Id          { get; }
+
+  int DepthInTree { get; }
 
   /// <summary>
   /// This property is set from protected by lock part of the code, so it's no need synchronization
@@ -28,7 +30,7 @@ internal interface IState : IArgumentReceiver, IArgumentProvider
 
 internal interface IState<TState, TEvent> : IState
 {
-  TState Id { get; }
+  new TState Id { get; }
 
   new IState<TState, TEvent>? ParentState { get; }
 

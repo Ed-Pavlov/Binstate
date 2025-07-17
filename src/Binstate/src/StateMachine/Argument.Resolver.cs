@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.Logging;
 
 namespace BeatyBit.Binstate;
 
@@ -34,6 +35,7 @@ internal static partial class Argument
     /// </summary>
     /// <param name="sourceState">The source state to start searching from</param>
     /// <param name="targetArgumentType">The type of argument needed by the target state</param>
+    /// <param name="LOG"></param>
     /// <returns>
     /// An IArgumentProvider if found that can provide the target type, either directly or from a tuple component.
     /// Returns null if no suitable provider is found.
@@ -44,15 +46,19 @@ internal static partial class Argument
     /// 2. If a source state has a tuple argument, checks if either component matches target type
     /// 3. Recursively checks parent states in the same manner
     /// </remarks>
-    public static IArgumentProvider? GetArgumentProvider(IState sourceState, Type targetArgumentType)
+    public static IArgumentProvider? GetArgumentProvider(IState sourceState, Type targetArgumentType, ILogger LOG)
     {
       var state = sourceState;
       while(state != null)
       {
         var stateArgumentType = state.GetArgumentTypeSafe();
 
+        using var _ = LOG.BeginScope("Get Argument From Active State");
+
         if(stateArgumentType is not null)
         {
+          LOG.LogInformation("State: {0}; ArgType: {1}", state.Id, stateArgumentType);
+
           if(targetArgumentType.IsAssignableFrom(stateArgumentType))
             return state;
 

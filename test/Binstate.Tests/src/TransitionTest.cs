@@ -175,7 +175,7 @@ public class TransitionTest : StateMachineTestBase
     var actual = new List<int>();
 
     // --arrange
-    var builder = new Builder<int, int>(OnException, new Builder.Options { AllowDefaultValueAsStateId = true });
+    var builder = new Builder<int, int>(OnException, new Builder.Settings { AllowDefaultValueAsStateId = true });
 
     builder
      .DefineState(initialStateId)
@@ -340,6 +340,7 @@ public class TransitionTest : StateMachineTestBase
     builder.DefineState(stateId).OnEnter(() => Assert.Fail("No transition should be performed"));
 
     builder.Build(initialStateId);
+    return;
 
     static void OnEnterInitialState(IStateController<int> stateMachine)
     {

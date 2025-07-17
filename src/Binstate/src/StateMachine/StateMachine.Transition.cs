@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using BeatyBit.Bits;
+using Microsoft.Extensions.Logging;
 
 namespace BeatyBit.Binstate;
 
@@ -30,11 +31,7 @@ internal partial class StateMachine<TState, TEvent>
         return null;
       }
 
-      var transitionArgumentsProviders =
-        transition.IsStatic
-          ? Argument.NoTransitionArguments
-          : PrepareArgumentsForTransition(transition, eventArgument, _activeState);
-
+      var transitionArgumentsProviders = PrepareArgumentsForTransition(transition, eventArgument, _activeState, _logger);
       if(! transition.GetTargetStateId(_activeState.Id, transitionArgumentsProviders, out var stateId))
       {
         _lock.Set(); // dynamic transition canceled it
@@ -65,8 +62,8 @@ internal partial class StateMachine<TState, TEvent>
   }
 
   /// <summary>
-  /// Performs changes in the state machine state. Doesn't throw any exceptions, exceptions from the user code, 'enter' and 'exit' actions are translated
-  /// into the delegate passed to <see cref="Builder{TState,TEvent}(Action{System.Exception}, Builder{TState,TEvent}.Options)" />
+  /// Performs changes in the state machine state. Doesn't throw any exceptions; exceptions from the user code, 'enter' and 'exit' actions are translated
+  /// into the delegate passed to <see cref="Builder{TState,TEvent}(Action{System.Exception}, Builder.Settings)" />
   /// </summary>
   private bool PerformTransition(TransitionData transitionData)
   {
@@ -86,7 +83,7 @@ internal partial class StateMachine<TState, TEvent>
     {
       try
       {
-        // exit all active states which are not parent for the new state
+        // exit all active states that are not parent for the new state
         while(currentActiveState != commonAncestor)
         {
           if(currentActiveState is null) throw Paranoia.GetException("currentActiveState can't become null earlier then be equal to commonAncestor");
@@ -230,7 +227,6 @@ internal partial class StateMachine<TState, TEvent>
       Binstate.Transition<TStateArgument, TEventArgument>.Action<TState, TEvent>? action)
       : this(@event, ConvertGuardToSelector(targetStateId, guard), action)
     {
-      if(@event is null) throw new ArgumentNullException(nameof(@event));
       if(targetStateId is null) throw new ArgumentNullException(nameof(targetStateId));
 
       _targetStateId   = targetStateId.ToMaybe();
@@ -297,13 +293,21 @@ internal partial class StateMachine<TState, TEvent>
       TState?                                       targetState,
       Tuple<IArgumentProvider?, IArgumentProvider?> argumentProviders)
     {
-      var stateArgument = GetArgument<TStateArgument>(argumentProviders.ItemX);
-      if(! stateArgument.HasValue)
-        throw TransitionException.NoStateArgumentException<TEvent, TState, TEventArgument>(Event, sourceState, targetState);
+      var stateArgument = new Maybe<TStateArgument>(default!);
+      if(!Is.Unit<TStateArgument>())
+      {
+        stateArgument = GetArgument<TStateArgument>(argumentProviders.ItemX);
+        if(! stateArgument.HasValue)
+          throw TransitionException.NoStateArgumentException<TEvent, TState, TStateArgument>(Event, sourceState, targetState);
+      }
 
-      var eventArgument = GetArgument<TEventArgument>(argumentProviders.ItemY);
-      if(! eventArgument.HasValue)
-        throw TransitionException.NoEventArgumentException<TEvent, TState, TEventArgument>(Event, sourceState, targetState);
+      var eventArgument = new Maybe<TEventArgument>(default!);
+      if(!Is.Unit<TEventArgument>())
+      {
+        eventArgument = GetArgument<TEventArgument>(argumentProviders.ItemY);
+        if(! eventArgument.HasValue)
+          throw TransitionException.NoEventArgumentException<TEvent, TState, TEventArgument>(Event, sourceState, targetState);
+      }
 
       return ArgumentsTuple.Create(stateArgument.Value, eventArgument.Value);
     }

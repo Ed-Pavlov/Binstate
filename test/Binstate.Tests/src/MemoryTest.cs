@@ -25,7 +25,7 @@ public class BoxingTest : StateMachineTestBase
     ITuple<ValueType2, ValueType1>? actualTuple = null;
 
     // --arrange
-    var builder = new Builder<string, int>(OnException, new Builder.Options{ArgumentTransferMode = ArgumentTransferMode.Free});
+    var builder = new Builder<string, int>(OnException, new Builder.Settings{ArgumentTransferMode = ArgumentTransferMode.Free});
 
     builder.DefineState(Initial).AddTransition(GoToX, StateX);
 
@@ -95,7 +95,7 @@ public class BoxingTest : StateMachineTestBase
     target.Should().BeOfType<Target<ValueType1>>().Which.Arg.Value.Should().Be(expected.Value);
   }
 
-  private readonly struct ValueType1
+  public readonly struct ValueType1
   {
     public readonly int Value;
     public ValueType1(int value) => Value = value;

@@ -14,10 +14,11 @@ internal partial class StateMachine<TState, TEvent>
   {
     private readonly Transition<Unit, Unit> _fakeTransition = new Transition<Unit, Unit>(default!, targetStateId, null);
 
-    public IState<TState, TEvent>? ParentState           => null;
-    public int                     DepthInTree           => 0;
-    public bool                    IsActive              { get; set; }
-    public Type?                   GetArgumentTypeSafe() => null;
+    public IState<TState, TEvent>? ParentState => null;
+
+    public int   DepthInTree           => 0;
+    public bool  IsActive              { get; set; }
+    public Type? GetArgumentTypeSafe() => null;
 
     public ITransition<TState, TEvent> FakeTransition => _fakeTransition;
 
@@ -46,6 +47,7 @@ internal partial class StateMachine<TState, TEvent>
 
     public TState                                                   Id          => default!;
     public IReadOnlyDictionary<TEvent, ITransition<TState, TEvent>> Transitions => throw Paranoia.GetException("this method should not be called ever.");
+    object IState.                                                  Id          => Id;
     IState? IState.                                                 ParentState => ParentState;
 
     public void EnterSafe(IStateController<TEvent> stateController, Action<Exception> onException)

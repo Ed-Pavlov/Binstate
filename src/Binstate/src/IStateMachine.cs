@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace BeatyBit.Binstate;
 
@@ -21,7 +22,7 @@ public interface IStateMachine<in TEvent>
   /// <exception cref="TransitionException">
   /// Thrown if the 'enter' action of the target state requires an argument.
   /// User-defined exceptions from 'enter', 'exit', and 'dynamic transition' actions are caught and reported using the
-  /// delegate passed to <see cref="Builder{TState,TEvent}(System.Action{Exception}, Builder{TState,TEvent}.Options)"/>.
+  /// delegate passed to <see cref="Builder{TState,TEvent}(Action{System.Exception}, Builder.Settings)" />.
   /// </exception>
   bool Raise(TEvent @event);
 
@@ -40,7 +41,8 @@ public interface IStateMachine<in TEvent>
   /// <returns><c>true</c> if the state was changed; otherwise, <c>false</c>.</returns>
   /// <exception cref="TransitionException">
   /// Thrown if the 'enter' action of the target state does not require an argument or requires an argument of an incompatible type.
-  /// User-defined exceptions from 'enter', 'exit', and 'dynamic transition' actions are caught and reported using the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{Exception}, Builder{TState,TEvent}.Options)"/>.
+  /// User-defined exceptions from 'enter', 'exit', and 'dynamic transition' actions are caught and reported using the delegate
+  /// passed to <see cref="Builder{TState,TEvent}(Action{System.Exception}, Builder.Settings)" />.
   /// </exception>
   bool Raise<T>(TEvent @event, T argument, bool argumentIsFallback = false);
 
@@ -56,7 +58,8 @@ public interface IStateMachine<in TEvent>
   /// <returns>A <see cref="Task{TResult}"/> that completes with <c>true</c> if a transition was found; otherwise, <c>false</c>.</returns>
   /// <exception cref="TransitionException">
   /// Thrown if the 'enter' action of the target state requires an argument.
-  /// User-defined exceptions from 'enter', 'exit', and 'dynamic transition' actions are caught and reported using the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{Exception}, Builder{TState,TEvent}.Options)"/>.
+  /// User-defined exceptions from 'enter', 'exit', and 'dynamic transition' actions are caught and reported using the delegate
+  /// passed to <see cref="Builder{TState,TEvent}(Action{System.Exception}, Builder.Settings)" />.
   /// </exception>
   Task<bool> RaiseAsync(TEvent @event);
 
@@ -75,7 +78,8 @@ public interface IStateMachine<in TEvent>
   /// <returns>A <see cref="Task{TResult}"/> that completes with <c>true</c> if a transition was found; otherwise, <c>false</c>.</returns>
   /// <exception cref="TransitionException">
   /// Thrown if the 'enter' action of the target state does not require an argument or requires an argument of an incompatible type.
-  /// User-defined exceptions from 'enter', 'exit', and 'dynamic transition' actions are caught and reported using the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{Exception}, Builder{TState,TEvent}.Options)"/>.
+  /// User-defined exceptions from 'enter', 'exit', and 'dynamic transition' actions are caught and reported using the delegate
+  /// passed to <see cref="Builder{TState,TEvent}(Action{System.Exception}, Builder.Settings)" />.
   /// </exception>
   Task<bool> RaiseAsync<T>(TEvent @event, T argument, bool argumentIsFallback = false);
 

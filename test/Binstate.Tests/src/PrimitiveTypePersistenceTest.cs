@@ -16,7 +16,7 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
 
     // --arrange
     {
-      var builder = СonfigureRemaining(CreateTarget());
+      var builder = CreateTarget();
 
       var sourceMachine = builder.Build(Initial);
       sourceMachine.Raise(GoToChild);
@@ -25,8 +25,8 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
       ClearRecordedCalls();
     }
 
-    // create the new instance of builder for purity
-    var target = СonfigureRemaining(CreateTarget());
+    // create the new instance of builder
+    var target = CreateTarget();
 
     // --act
     target.Restore(data);
@@ -39,11 +39,14 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
     A.CallTo(InitialEnterAction).MustNotHaveHappened();
     return;
 
-    Builder<string, int> СonfigureRemaining(Builder<string, int> builder)
+    Builder<string, int> CreateTarget()
     {
+      var builder = new Builder<string, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = true });
+
       builder
        .GetOrDefineState(Initial)
-       .OnEnter(InitialEnterAction);
+       .OnEnter(InitialEnterAction)
+       .AddTransition(GoToChild, Child);
 
       builder
        .GetOrDefineState(Root)
@@ -51,6 +54,7 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
 
       builder
        .GetOrDefineState(Child)
+       .AsSubstateOf(Root)
        .OnEnter(ChildEnterAction);
 
       return builder;
@@ -60,9 +64,14 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
   [Test]
   public void should_throw_exception_on_restore_with_invalid_json()
   {
-    // --arrange
-    var          builder     = CreateTarget();
     const string invalidJson = "{ invalid }";
+
+    // --arrange
+    var builder = new Builder<string, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = true });
+    builder
+     .DefineState(Initial)
+     .AddTransition(GoToChild, Child);
+
 
     // --act --assert
     Assert.Throws<JsonException>(() => builder.Restore(invalidJson));
@@ -78,7 +87,7 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
 
     // Arrange
     {
-      var builder = СonfigureRemaining(CreateTarget());
+      var builder = CreateTarget();
 
       var stateMachine = builder.Build(Initial);
       stateMachine.Raise(GoToChild, 42);
@@ -88,27 +97,34 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
     }
 
     // Act
-    var targetBuilder = СonfigureRemaining(CreateTarget());
+    var targetBuilder = CreateTarget();
     targetBuilder.Restore(serializedData);
 
     // Assert
-    A.CallTo(() => rootEnterWithArgs(42)).MustHaveHappenedOnceExactly()
+    A.CallTo(() => rootEnterWithArgs(42))
+     .MustHaveHappenedOnceExactly()
      .Then(A.CallTo(() => childEnterWithArgs(42)).MustHaveHappenedOnceExactly());
 
     return;
 
-    Builder<string, int> СonfigureRemaining(Builder<string, int> builder)
+    Builder<string, int> CreateTarget()
     {
+      var builder = new Builder<string, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = true });
+      builder
+       .DefineState(Initial)
+       .AddTransition(GoToChild, Child);
+
       builder
        .GetOrDefineState<int>(Root)
        .OnEnter(rootEnterWithArgs);
+
       builder
        .GetOrDefineState<int>(Child)
+       .AsSubstateOf(Root)
        .OnEnter(childEnterWithArgs);
 
       return builder;
     }
-
   }
 
   [Test]
@@ -118,13 +134,20 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
 
     // Arrange
     {
-      var validBuilder = CreateTarget();
+
+      var validBuilder = new Builder<string, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = true });
+      validBuilder
+       .DefineState(Initial)
+       .AddTransition(GoToChild, Child);
+
+      validBuilder.DefineState(Child);
+
       var stateMachine = validBuilder.Build(Initial);
       serializedData = stateMachine.Serialize();
     }
 
     // Act & Assert
-    var builder = new Builder<string, int>(OnException, new Builder.Options { EnableStateMachinePersistence = false });
+    var builder = new Builder<string, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = false });
     Assert.Throws<InvalidOperationException>(() => builder.Restore(serializedData));
   }
 
@@ -146,6 +169,19 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
 
     // Act & Assert
     Assert.Throws<ArgumentException>(() => modifiedBuilder.Restore(serializedData));
+    return;
+
+    Builder<string, int> CreateTarget()
+    {
+      var builder = new Builder<string, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = true });
+      builder
+       .DefineState(Initial)
+       .AddTransition(GoToChild, Child);
+
+      builder.DefineState(Child);
+
+      return builder;
+    }
   }
 
   [Test]
@@ -169,12 +205,26 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
 
     // Assert
     Assert.Throws<ArgumentException>(() => targetBuilder.Restore(serializedData));
+    return;
+
+    Builder<string, int> CreateTarget()
+    {
+      var builder = new Builder<string, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = true });
+      builder
+       .DefineState(Initial)
+       .AddTransition(GoToRoot, Root);
+
+      return builder;
+    }
   }
 
   [Test]
   public void should_handle_empty_serialized_data_gracefully()
   {
-    var builder = CreateTarget();
+    var builder = new Builder<string, int>(OnException, new Builder.Settings { EnableStateMachinePersistence = true });
+    builder
+     .DefineState(Initial)
+     .AddTransition(GoToChild, Child);
 
     const string emptyData = "{}";
 
@@ -184,6 +234,4 @@ public class PrimitiveTypePersistenceTest : StateMachineTestBase
     // Assert
     action.Should().Throw<Exception>();
   }
-
-  private static Builder<string, int> CreateTarget() => CreateBaseBuilder(new Builder.Options { EnableStateMachinePersistence = true });
 }

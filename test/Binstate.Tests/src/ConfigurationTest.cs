@@ -216,13 +216,18 @@ public class ConfigurationTest : StateMachineTestBase
     // --arrange
     var builder = new Builder<string, int>(OnException);
 
-    var expected = builder.DefineState(Initial);
+    builder.DefineState(Initial);
+    builder.DefineState(StateX);
 
     // --act
-    var actual = builder.GetOrDefineState(Initial);
+    builder
+     .GetOrDefineState(Initial)
+     .AddTransition(GoToX, StateX);
+
+    var sm = builder.Build(Initial);
 
     // --assert
-    actual.Should().BeSameAs(expected);
+    sm.Raise(GoToX).Should().BeTrue();
   }
 
   [Test]

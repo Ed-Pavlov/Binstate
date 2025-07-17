@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Extensions.Logging;
 
 namespace BeatyBit.Binstate;
 
@@ -7,10 +8,10 @@ public partial class Builder
   /// <summary>
   /// Configuration options for the state machine builder.
   /// </summary>
-  public class Options
+  public class Settings
   {
-    /// <inheritdoc cref="Options"/>
-    public Options() { }
+    /// <inheritdoc cref="Settings"/>
+    public Settings() { }
 
     /// <summary>
     /// Specifies whether the 'default' value can be used as a valid State ID when the type represented by TState
@@ -31,5 +32,10 @@ public partial class Builder
     /// To serialize the state machine in the current state call <see cref="IStateMachine{TEvent}.Serialize"/>.
     /// </summary>
     public bool EnableStateMachinePersistence { get; set; } = false;
+
+    /// <summary>
+    /// The logger factory used to create loggers for the state machine. The loggers are used to log diagnostic information during the state machine execution.
+    /// </summary>
+    public ILoggerFactory? LoggerFactory { get; set; }
   }
 }

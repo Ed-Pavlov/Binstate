@@ -43,7 +43,7 @@ internal sealed partial class State<TState, TEvent, TArgument> : IState<TState, 
   public State(
     TState                                                   id,
     EnterAction?                                             enterAction,
-    ExitAction?                                                  exitAction,
+    ExitAction?                                              exitAction,
     IReadOnlyDictionary<TEvent, ITransition<TState, TEvent>> transitions,
     IState<TState, TEvent>?                                  parentState)
   {
@@ -60,8 +60,8 @@ internal sealed partial class State<TState, TEvent, TArgument> : IState<TState, 
 
   public TState Id { get; }
 
-  public int                     DepthInTree { get; }
   public IState<TState, TEvent>? ParentState { get; }
+  public int                     DepthInTree { get; }
 
   public TArgument Argument
   {
@@ -152,6 +152,7 @@ internal sealed partial class State<TState, TEvent, TArgument> : IState<TState, 
     return false;
   }
 
+  object IState. Id          => Id;
   IState? IState.ParentState => ParentState;
 
   public override string ToString() => Id.ToString();

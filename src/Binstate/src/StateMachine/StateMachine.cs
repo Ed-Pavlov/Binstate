@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using BeatyBit.Bits;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace BeatyBit.Binstate;
 
@@ -14,6 +16,7 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
   where TEvent : notnull
 {
   private readonly string?           _persistenceSignature;
+  private readonly ILogger           _logger;
   private readonly Action<Exception> _onException;
   private readonly AutoResetEvent    _lock = new AutoResetEvent(true);
 
@@ -28,11 +31,13 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
     IReadOnlyDictionary<TState, IState<TState, TEvent>> states,
     Action<Exception>                                   onException,
     TState                                              initialStateId,
-    string?                                             persistenceSignature)
+    string?                                             persistenceSignature,
+    ILogger?                                            logger = null)
   {
     _states               = states      ?? throw new ArgumentNullException(nameof(states));
     _onException          = onException ?? throw new ArgumentNullException(nameof(onException));
     _persistenceSignature = persistenceSignature;
+    _logger               = logger ?? NullLogger<StateMachine<TState, TEvent>>.Instance;
     _activeState          = GetStateById(initialStateId);
   }
 
@@ -146,10 +151,14 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
   private static Tuple<IArgumentProvider?, IArgumentProvider?> PrepareArgumentsForTransition<TEventArgument>(
     ITransition            transition,
     TEventArgument         argument,
-    IState<TState, TEvent> activeState)
+    IState<TState, TEvent> activeState,
+    ILogger                LOG)
   {
+    using var _ = LOG.BeginScope(nameof(PrepareArgumentsForTransition));
 
     var (stateArgumentType, eventArgumentType) = transition.ArgumentTypes;
+
+    LOG.LogInformation("Target state argument type: {0}; Event argument type: {1}", stateArgumentType, eventArgumentType);
 
     IArgumentProvider? eventArgumentProvider =
       eventArgumentType is null
@@ -161,10 +170,10 @@ internal partial class StateMachine<TState, TEvent> : IStateMachine<TEvent>
                 $"Transition requires 'event argument' but passed argument of type '{eventArgumentType}' is not assignable from '{typeof(TEventArgument)}'"
               );
 
-    var stateArgumentProvider = stateArgumentType is null ? null : Argument.Resolver.GetArgumentProvider(activeState, stateArgumentType);
+    var stateArgumentProvider = stateArgumentType is null ? null : Argument.Resolver.GetArgumentProvider(activeState, stateArgumentType, LOG);
 
     return stateArgumentProvider is null && eventArgumentProvider is null
              ? Argument.NoTransitionArguments
-             : ArgumentsTuple.Create(eventArgumentProvider, stateArgumentProvider);
+             : ArgumentsTuple.Create(stateArgumentProvider, eventArgumentProvider);
   }
 }

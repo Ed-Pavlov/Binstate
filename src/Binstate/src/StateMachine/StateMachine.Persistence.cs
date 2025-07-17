@@ -11,7 +11,7 @@ internal partial class StateMachine<TState, TEvent>
     if(_persistenceSignature is null)
       throw new InvalidOperationException(
         $"This StateMachine is not configured for persistence. "
-      + $"Set {nameof(Builder)}.{nameof(Builder.Options)}.{nameof(Builder.Options.EnableStateMachinePersistence)} to true to enable it."
+      + $"Set {nameof(Builder)}.{nameof(Builder.Settings)}.{nameof(Builder.Settings.EnableStateMachinePersistence)} to true to enable it."
       );
 
     try

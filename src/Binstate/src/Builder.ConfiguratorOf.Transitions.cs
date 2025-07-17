@@ -9,10 +9,10 @@ public partial class Builder<TState, TEvent>
   public static partial class ConfiguratorOf
   {
     private static Transition<TStateArgument, TEventArgument>.StateSelector<TState, TEvent> FuncToSelector<TStateArgument, TEventArgument>( Func<TState?> selector)
-      => (Transition<TStateArgument, TEventArgument>.Context<TState, TEvent> _, [NotNullWhen(true)] out TState? state) =>
+      => (_, [NotNullWhen(true)] out state) =>
       {
         state = selector();
-        return state is not null;
+        return !Equals(state, default(TState));
       };
 
     internal class Transitions : ITransitions

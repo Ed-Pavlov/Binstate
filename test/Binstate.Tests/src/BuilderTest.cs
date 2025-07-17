@@ -27,7 +27,7 @@ public class BuilderTest : StateMachineTestBase
     // --assert
     target.Should()
           .ThrowExactly<InvalidOperationException>()
-          .WithMessage($"The transition '{GoToX}' from the state '{Initial}' references not defined state '{wrongState}'");
+          .WithMessage($"The transition on event '{GoToX}' from the state '{Initial}' references not defined state '{wrongState}'");
   }
 
   [Test]
@@ -59,7 +59,7 @@ public class BuilderTest : StateMachineTestBase
   public void should_not_throw_exception_if_parent_and_child_states_have_not_compatible_enter_arguments_and_argument_transfer_mode_is_free()
   {
     // --arrange
-    var builder = new Builder<string, int>(OnException, new Builder.Options{ArgumentTransferMode = ArgumentTransferMode.Free});
+    var builder = new Builder<string, int>(OnException, new Builder.Settings{ArgumentTransferMode = ArgumentTransferMode.Free});
 
     builder.DefineState(Initial).AddTransition(GoToX, Child);
 

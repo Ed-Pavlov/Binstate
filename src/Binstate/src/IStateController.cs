@@ -20,7 +20,7 @@ public interface IStateController<in TEvent>
   /// <exception cref="TransitionException">
   /// Thrown if the 'enter' action of the target state requires an argument.
   /// User-defined exceptions from 'enter', 'exit', and 'dynamic transition' actions are caught and reported using the delegate
-  /// passed to <see cref="Builder{TState,TEvent}(System.Action{Exception}, Builder{TState,TEvent}.Options)"/>.
+  /// passed to <see cref="Builder{TState,TEvent}(Action{System.Exception}, Builder.Settings)" />.
   /// </exception>
   bool RaiseAsync(TEvent @event);
 
@@ -37,7 +37,7 @@ public interface IStateController<in TEvent>
   /// <exception cref="TransitionException">
   /// Thrown if the 'enter' action of the target state requires an argument.
   /// User-defined exceptions from 'enter', 'exit', and 'dynamic transition' actions are caught and reported using
-  /// the delegate passed to <see cref="Builder{TState,TEvent}(System.Action{Exception}, Builder{TState,TEvent}.Options)"/>.
+  /// the delegate passed to <see cref="Builder{TState,TEvent}(Action{System.Exception}, Builder.Settings)" />.
   /// </exception>
   /// <remarks>
   /// The argument is required if the 'enter' action of the target state or 'exit' action of the current state is configured to accept it.

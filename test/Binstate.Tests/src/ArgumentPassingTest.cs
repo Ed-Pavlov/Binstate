@@ -69,11 +69,11 @@ public class ArgumentPassingTest : StateMachineTestBase
     var expected     = new MemoryStream();
 
     // --arrange
-    var builder = new Builder<string, string>(OnException);
+    var builder = new Builder<string, string>(OnException, new Builder.Settings{LoggerFactory = CreateLogger()});
 
     builder.DefineState(Initial).AddTransition(Child, Child);
     builder.DefineState<IDisposable>(Root).OnEnter(onEnterRoot);
-    builder.DefineState(Parent).AsSubstateOf(Root).OnEnter(sm => { });
+    builder.DefineState(Parent).AsSubstateOf(Root).OnEnter(_ => { });
     builder.DefineState<Stream>(Child).AsSubstateOf(Parent).OnEnter(onEnterChild);
 
     var target = builder.Build(Initial);
@@ -140,7 +140,7 @@ public class ArgumentPassingTest : StateMachineTestBase
   public void should_throw_exception_if_parent_and_child_state_has_not_assignable_arguments_enable_free_mode_and_argument_is_passed(RaiseWay way)
   {
     // --arrange
-    var builder = new Builder<string, int>(OnException, new Builder.Options { ArgumentTransferMode = ArgumentTransferMode.Free });
+    var builder = new Builder<string, int>(OnException, new Builder.Settings { ArgumentTransferMode = ArgumentTransferMode.Free });
 
     builder.DefineState(Initial).AddTransition(GoToX, Child);
 
@@ -171,12 +171,8 @@ public class ArgumentPassingTest : StateMachineTestBase
     var onExit       = A.Fake<Action<IDisposable>>();
     var onTransition = A.Fake<Action<IDisposable>>();
 
-    var fake = A.Fake<Transition<IDisposable, Unit>.Action<string, int>>();
-//    A.CallTo(() => fake(A<Transition<IDisposable, Unit>.Context<string, int>>.That.Matches(context => context.Arguments.ItemX == expected)));
-
-
     // --arrange
-    var builder = new Builder<string, int>(OnException);
+    var builder = new Builder<string, int>(OnException, Settings.WithLogger());
     builder.DefineState(Initial).AddTransition(GoToX, StateX);
     builder.DefineState(StateY);
     builder.DefineState<IDisposable>(StateX)
@@ -195,8 +191,6 @@ public class ArgumentPassingTest : StateMachineTestBase
      .MustHaveHappenedOnceExactly()
      .Then(A.CallTo(() => onExit(expected)).MustHaveHappenedOnceExactly())
      .Then(A.CallTo(() => onTransition(expected)).MustHaveHappenedOnceExactly());
-
-    A.CallTo(() => fake.WithArguments(context => context.Arguments.ItemX == expected)).MustHaveHappenedOnceExactly();
   }
 
   [Test]

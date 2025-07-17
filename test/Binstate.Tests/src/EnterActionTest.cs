@@ -246,7 +246,7 @@ public class EnterActionTest : StateMachineTestBase
     var          onEnter               = A.Fake<Action<ITuple<StringBuilder, string>>>();
 
     // --arrange
-    var builder = new Builder<string, int>(OnException, new Builder.Options { ArgumentTransferMode = ArgumentTransferMode.Free });
+    var builder = new Builder<string, int>(OnException, new Builder.Settings { ArgumentTransferMode = ArgumentTransferMode.Free });
 
     builder.DefineState<string>(Initial).AddTransition(GoToY, StateY);
     builder.DefineState<StringBuilder>(StateY).AsSubstateOf(Initial).AddTransition(GoToX, StateX);

@@ -3,7 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using BeatyBit.Binstate;
 using FakeItEasy;
+using Microsoft.Extensions.Logging;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
 using NUnit.Framework;
+using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace Binstate.Tests;
 
@@ -50,9 +54,9 @@ public abstract class StateMachineTestBase
       Fake.ClearRecordedCalls(action);
   }
 
-  protected static Builder<string, int> CreateBaseBuilder(Builder.Options options = default)
+  protected static Builder<string, int> CreateBaseBuilder(Builder.Settings settings = default)
   {
-    var builder = new Builder<string, int>(OnException, options);
+    var builder = new Builder<string, int>(OnException, settings);
     builder
      .DefineState(Initial)
      .AddTransition(GoToX,     StateX)
@@ -101,6 +105,17 @@ public abstract class StateMachineTestBase
   {
     yield return new Action<Builder<string, int>.ConfiguratorOf.IEnterAction<string>, Action<string>>(OnEnter);
     yield return new Action<Builder<string, int>.ConfiguratorOf.IEnterAction<string>, Action<string>>(OnExit);
+  }
+
+  public ILoggerFactory CreateLogger()
+  {
+    Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Verbose()
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .CreateLogger();
+
+    return LoggerFactory.Create(builder => builder.AddSerilog(dispose: true));
   }
 }
 

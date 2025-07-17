@@ -23,6 +23,11 @@
     <PublicSign>true</PublicSign>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="BeatyBit.Bits" Version="0.0.20" />
+    <PackageReference Include="System.Text.Json" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.0" />
+  </ItemGroup>
 
   <PropertyGroup Label="nuspec">
     <IsPackable>true</IsPackable>
@@ -47,13 +52,6 @@
       - Implemented `EnumSerializer` for handling enum persistence as an example of `ICustorSerializer` implementation.
     </PackageReleaseNotes>
   </PropertyGroup>
-
-
-  <ItemGroup>
-    <PackageReference Include="BeatyBit.Bits" Version="0.0.20" />
-    <PackageReference Include="System.Text.Json" Version="9.0.3" />
-  </ItemGroup>
-
 
   <ItemGroup>
     <Compile Include="..\..\.build\AssemblyInfo.cs">
